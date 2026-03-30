@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 60" fill="white">
+  <g transform="translate(4,12) scale(1.1)">
+    <path d="M7.2 4.5h25.6l-4 4.5H3.2z"/>
+    <path d="M7.2 25h25.6l-4 4.5H3.2z"/>
+    <path d="M28.8 14.5H3.2l4-4.5h25.6z"/>
+  </g>
+  <text x="52" y="43" font-family="sans-serif" font-weight="700" font-size="36" letter-spacing="3">SOLANA</text>
+</svg>

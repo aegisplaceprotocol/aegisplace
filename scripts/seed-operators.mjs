@@ -1,0 +1,892 @@
+/**
+ * Seed the Aegis database with ALL operators from every source.
+ * Run with: node scripts/seed-operators.mjs
+ */
+import { drizzle } from "drizzle-orm/mysql2";
+import { sql } from "drizzle-orm";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+if (!process.env.DATABASE_URL) {
+  console.error("DATABASE_URL not set");
+  process.exit(1);
+}
+
+const db = drizzle(process.env.DATABASE_URL);
+
+const DEMO_WALLET = "DemoWa11etForSeedDataXXXXXXXXXXXXXXXXXXXXXX";
+
+const SEED_OPERATORS = [
+  // ── Original seed (10) ──────────────────────────────────────────
+  {
+    slug: "solana-code-auditor",
+    name: "Solana Code Auditor",
+    tagline: "Automated security analysis for Solana programs",
+    description: "Deep static analysis of Anchor programs. Detects common vulnerabilities: missing signer checks, PDA seed collisions, integer overflow, unauthorized CPI calls. Returns severity-ranked findings with fix suggestions.",
+    category: "security-audit",
+    pricePerCall: "0.050",
+    creatorWallet: "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU",
+    trustScore: 92, totalInvocations: 14823, successfulInvocations: 14501, totalEarned: "741.150000", avgResponseMs: 3200,
+    isActive: true, isVerified: true,
+    tags: ["solana", "security", "anchor", "audit"],
+  },
+  {
+    slug: "defi-sentiment-oracle",
+    name: "DeFi Sentiment Oracle",
+    tagline: "Real-time sentiment scoring for DeFi protocols",
+    description: "Aggregates sentiment from Twitter/X, Discord, Telegram, and on-chain governance data. Returns a 0-100 sentiment score with breakdown by source.",
+    category: "sentiment-analysis",
+    pricePerCall: "0.008",
+    creatorWallet: "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    trustScore: 87, totalInvocations: 89412, successfulInvocations: 87234, totalEarned: "715.296000", avgResponseMs: 1800,
+    isActive: true, isVerified: true,
+    tags: ["defi", "sentiment", "oracle", "social"],
+  },
+  {
+    slug: "nft-metadata-enricher",
+    name: "NFT Metadata Enricher",
+    tagline: "Comprehensive NFT metadata analysis and enrichment",
+    description: "Takes an NFT mint address and returns enriched metadata: rarity score, trait distribution, collection stats, floor price history, wash trading detection.",
+    category: "data-extraction",
+    pricePerCall: "0.012",
+    creatorWallet: "DRpbCBMxVnDK7maPMoGQfFKhMBNkYiaE6ghLFDRfMCQE",
+    trustScore: 78, totalInvocations: 34521, successfulInvocations: 33890, totalEarned: "414.252000", avgResponseMs: 2400,
+    isActive: true, isVerified: true,
+    tags: ["nft", "metadata", "rarity", "analysis"],
+  },
+  {
+    slug: "smart-contract-summarizer",
+    name: "Smart Contract Summarizer",
+    tagline: "Plain-English summaries of any smart contract",
+    description: "Reads Solana program bytecode or Anchor IDL and produces a human-readable summary: what the program does, its permissions model, token flows, admin capabilities, and potential risks.",
+    category: "summarization",
+    pricePerCall: "0.025",
+    creatorWallet: "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
+    trustScore: 95, totalInvocations: 22145, successfulInvocations: 22089, totalEarned: "553.625000", avgResponseMs: 4100,
+    isActive: true, isVerified: true,
+    tags: ["smart-contract", "summarization", "solana", "anchor"],
+  },
+  {
+    slug: "tx-pattern-detector",
+    name: "Transaction Pattern Detector",
+    tagline: "Identify wash trading, MEV, and suspicious patterns",
+    description: "Analyzes transaction history for a wallet or program. Detects wash trading loops, sandwich attacks, front-running patterns, and Sybil clusters.",
+    category: "financial-analysis",
+    pricePerCall: "0.035",
+    creatorWallet: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    trustScore: 91, totalInvocations: 18934, successfulInvocations: 18756, totalEarned: "662.690000", avgResponseMs: 5200,
+    isActive: true, isVerified: true,
+    tags: ["transactions", "mev", "wash-trading", "forensics"],
+  },
+  {
+    slug: "solana-program-deployer",
+    name: "Solana Program Deployer",
+    tagline: "One-click Anchor program deployment to devnet/mainnet",
+    description: "Handles the full deployment pipeline: compile Anchor program, run tests, deploy to devnet or mainnet, verify on-chain, update IDL.",
+    category: "code-review",
+    pricePerCall: "0.100",
+    creatorWallet: "So11111111111111111111111111111111111111112",
+    trustScore: 84, totalInvocations: 5621, successfulInvocations: 5234, totalEarned: "562.100000", avgResponseMs: 12000,
+    isActive: true, isVerified: true,
+    tags: ["deployment", "anchor", "devops", "solana"],
+  },
+  {
+    slug: "multilingual-translator",
+    name: "Multilingual Agent Translator",
+    tagline: "Translate agent prompts and responses across 40+ languages",
+    description: "Specialized for AI agent communication. Preserves technical terminology, code blocks, and structured data while translating natural language portions.",
+    category: "translation",
+    pricePerCall: "0.003",
+    creatorWallet: "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+    trustScore: 88, totalInvocations: 156234, successfulInvocations: 155890, totalEarned: "468.702000", avgResponseMs: 800,
+    isActive: true, isVerified: true,
+    tags: ["translation", "multilingual", "i18n", "agents"],
+  },
+  {
+    slug: "token-launch-analyzer",
+    name: "Token Launch Analyzer",
+    tagline: "Pre-launch risk assessment for new token launches",
+    description: "Analyzes token contracts, team wallets, liquidity locks, vesting schedules, and social signals before a token launches. Returns a risk score (0-100).",
+    category: "financial-analysis",
+    pricePerCall: "0.040",
+    creatorWallet: "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+    trustScore: 93, totalInvocations: 42156, successfulInvocations: 41890, totalEarned: "1686.240000", avgResponseMs: 6500,
+    isActive: true, isVerified: true,
+    tags: ["token", "risk", "launch", "due-diligence"],
+  },
+  {
+    slug: "image-gen-solana",
+    name: "On-Chain Image Generator",
+    tagline: "Generate and store images with on-chain provenance",
+    description: "Generates images from text prompts using diffusion models, stores them on Arweave, and records provenance metadata on Solana.",
+    category: "image-generation",
+    pricePerCall: "0.080",
+    creatorWallet: "HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH",
+    trustScore: 76, totalInvocations: 8934, successfulInvocations: 8234, totalEarned: "714.720000", avgResponseMs: 15000,
+    isActive: true, isVerified: false,
+    tags: ["image", "generation", "arweave", "provenance"],
+  },
+  {
+    slug: "governance-vote-analyzer",
+    name: "Governance Vote Analyzer",
+    tagline: "Analyze DAO governance proposals and voting patterns",
+    description: "Parses governance proposals from Realms, Squads, and custom DAOs. Analyzes voting power distribution, whale influence, quorum likelihood.",
+    category: "classification",
+    pricePerCall: "0.015",
+    creatorWallet: "GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw",
+    trustScore: 85, totalInvocations: 12456, successfulInvocations: 12234, totalEarned: "186.840000", avgResponseMs: 3800,
+    isActive: true, isVerified: true,
+    tags: ["governance", "dao", "voting", "realms"],
+  },
+
+  // ── From operators.ts (12) ──────────────────────────────────────
+  {
+    slug: "aegis-code-review-agent",
+    name: "Code Review Agent",
+    tagline: "Automated code review with security vulnerability detection",
+    description: "Automated code review with security vulnerability detection, performance analysis, and best practice enforcement. Supports 12 languages.",
+    category: "code-review",
+    pricePerCall: "0.025",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 94, totalInvocations: 18234, successfulInvocations: 17890, totalEarned: "455.850000", avgResponseMs: 2100,
+    isActive: true, isVerified: true,
+    tags: ["security", "code-quality", "multi-language", "ci-cd"],
+  },
+  {
+    slug: "auditdao-solidity-auditor",
+    name: "Solidity Auditor",
+    tagline: "Deep smart contract analysis using formal verification",
+    description: "Deep smart contract analysis using formal verification patterns. Detects reentrancy, integer overflow, access control issues.",
+    category: "security-audit",
+    pricePerCall: "0.100",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 96, totalInvocations: 8921, successfulInvocations: 8890, totalEarned: "892.100000", avgResponseMs: 4500,
+    isActive: true, isVerified: true,
+    tags: ["solidity", "audit", "formal-verification", "smart-contracts"],
+  },
+  {
+    slug: "pipelineai-data-pipeline-builder",
+    name: "Data Pipeline Builder",
+    tagline: "Production-ready ETL pipelines from natural language",
+    description: "Generates production-ready ETL pipelines from natural language descriptions. Supports Kafka, Spark, Airflow, and dbt.",
+    category: "data-extraction",
+    pricePerCall: "0.050",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 82, totalInvocations: 5432, successfulInvocations: 5210, totalEarned: "271.600000", avgResponseMs: 3400,
+    isActive: true, isVerified: true,
+    tags: ["etl", "kafka", "airflow", "dbt", "spark"],
+  },
+  {
+    slug: "docforge-api-documentation-gen",
+    name: "API Documentation Generator",
+    tagline: "Comprehensive API documentation from source code",
+    description: "Generates comprehensive API documentation from source code. Produces OpenAPI specs, interactive examples, and client SDK stubs.",
+    category: "other",
+    pricePerCall: "0.015",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 88, totalInvocations: 12345, successfulInvocations: 12100, totalEarned: "185.175000", avgResponseMs: 1900,
+    isActive: true, isVerified: true,
+    tags: ["openapi", "docs", "sdk-gen", "swagger"],
+  },
+  {
+    slug: "securestack-threat-model-analyzer",
+    name: "Threat Model Analyzer",
+    tagline: "Automated threat modeling using STRIDE methodology",
+    description: "Automated threat modeling using STRIDE methodology. Analyzes architecture diagrams and produces risk matrices with mitigations.",
+    category: "security-audit",
+    pricePerCall: "0.075",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 90, totalInvocations: 6780, successfulInvocations: 6700, totalEarned: "508.500000", avgResponseMs: 5100,
+    isActive: true, isVerified: true,
+    tags: ["stride", "threat-model", "architecture", "compliance"],
+  },
+  {
+    slug: "crablabs-rust-optimizer",
+    name: "Rust Optimizer",
+    tagline: "Performance bottleneck analysis for Rust codebases",
+    description: "Analyzes Rust codebases for performance bottlenecks. Suggests zero-cost abstractions, lifetime optimizations, and unsafe block safety.",
+    category: "code-review",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 86, totalInvocations: 4321, successfulInvocations: 4200, totalEarned: "172.840000", avgResponseMs: 2800,
+    isActive: true, isVerified: true,
+    tags: ["rust", "performance", "optimization", "benchmarks"],
+  },
+  {
+    slug: "yieldmind-defi-strategy-sim",
+    name: "DeFi Strategy Simulator",
+    tagline: "Simulate DeFi yield strategies across protocols",
+    description: "Simulates DeFi yield strategies across multiple protocols. Backtests against historical data and estimates impermanent loss.",
+    category: "financial-analysis",
+    pricePerCall: "0.250",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 91, totalInvocations: 3456, successfulInvocations: 3400, totalEarned: "864.000000", avgResponseMs: 7200,
+    isActive: true, isVerified: true,
+    tags: ["defi", "yield", "simulation", "backtest"],
+  },
+  {
+    slug: "testforge-test-suite-generator",
+    name: "Test Suite Generator",
+    tagline: "Comprehensive test suites from source code analysis",
+    description: "Generates comprehensive test suites from source code analysis. Produces unit tests, integration tests, and property-based tests.",
+    category: "code-review",
+    pricePerCall: "0.030",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 83, totalInvocations: 7890, successfulInvocations: 7650, totalEarned: "236.700000", avgResponseMs: 2300,
+    isActive: true, isVerified: true,
+    tags: ["testing", "coverage", "property-based", "unit-tests"],
+  },
+  {
+    slug: "migratedao-schema-migrator",
+    name: "Schema Migrator",
+    tagline: "Automated database schema migration generator",
+    description: "Automated database schema migration generator. Analyzes current schema, generates migration files for PostgreSQL, MySQL, and more.",
+    category: "data-extraction",
+    pricePerCall: "0.038",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 79, totalInvocations: 3210, successfulInvocations: 3100, totalEarned: "121.980000", avgResponseMs: 1600,
+    isActive: true, isVerified: true,
+    tags: ["database", "migration", "postgresql", "orm"],
+  },
+  {
+    slug: "alertops-incident-responder",
+    name: "Incident Responder",
+    tagline: "Automated incident response playbook execution",
+    description: "Automated incident response playbook execution. Analyzes alerts, correlates events, and executes remediation steps.",
+    category: "security-audit",
+    pricePerCall: "0.150",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 89, totalInvocations: 2345, successfulInvocations: 2300, totalEarned: "351.750000", avgResponseMs: 4800,
+    isActive: true, isVerified: true,
+    tags: ["incident-response", "automation", "soc", "runbooks"],
+  },
+  {
+    slug: "deploykit-contract-deployer",
+    name: "Contract Deployer",
+    tagline: "One-command smart contract deployment",
+    description: "One-command smart contract deployment to Solana, Ethereum, and Base. Handles verification, proxy patterns, and multi-chain deploys.",
+    category: "other",
+    pricePerCall: "0.125",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 80, totalInvocations: 1890, successfulInvocations: 1800, totalEarned: "236.250000", avgResponseMs: 9500,
+    isActive: true, isVerified: true,
+    tags: ["deployment", "solana", "ethereum", "multi-chain"],
+  },
+  {
+    slug: "regtech-compliance-checker",
+    name: "Compliance Checker",
+    tagline: "Automated regulatory compliance for DeFi protocols",
+    description: "Automated regulatory compliance checking for DeFi protocols. Covers OFAC screening, travel rule compliance, and jurisdiction mapping.",
+    category: "financial-analysis",
+    pricePerCall: "0.200",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 93, totalInvocations: 5678, successfulInvocations: 5600, totalEarned: "1135.600000", avgResponseMs: 3900,
+    isActive: true, isVerified: true,
+    tags: ["compliance", "regulatory", "ofac", "defi"],
+  },
+
+  // ── From additionalOperators.ts (20) ────────────────────────────
+  {
+    slug: "goglabs-workspace-agent",
+    name: "Workspace Agent",
+    tagline: "Full Google Workspace automation",
+    description: "Full Google Workspace automation — Gmail, Drive, Calendar, Docs, Sheets, Slides. Manage email, create documents, schedule meetings.",
+    category: "other",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 85, totalInvocations: 9800, successfulInvocations: 9600, totalEarned: "392.000000", avgResponseMs: 2100,
+    isActive: true, isVerified: true,
+    tags: ["google", "gmail", "drive", "calendar", "automation"],
+  },
+  {
+    slug: "neuralforge-self-improving-agent",
+    name: "Self-Improving Agent",
+    tagline: "Meta-learning agent that optimizes its own performance",
+    description: "Meta-learning agent that analyzes its own performance, identifies failure patterns, and generates improved prompts and strategies.",
+    category: "other",
+    pricePerCall: "0.060",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 77, totalInvocations: 4500, successfulInvocations: 4200, totalEarned: "270.000000", avgResponseMs: 5400,
+    isActive: true, isVerified: false,
+    tags: ["meta-learning", "self-improvement", "optimization", "prompts"],
+  },
+  {
+    slug: "graphmind-ontology-builder",
+    name: "Ontology Builder",
+    tagline: "Knowledge graph construction from unstructured text",
+    description: "Knowledge graph construction from unstructured text. Entity extraction, relationship mapping, and ontology generation with Neo4j export.",
+    category: "data-extraction",
+    pricePerCall: "0.050",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 81, totalInvocations: 3200, successfulInvocations: 3100, totalEarned: "160.000000", avgResponseMs: 4200,
+    isActive: true, isVerified: true,
+    tags: ["knowledge-graph", "ontology", "neo4j", "entity-extraction"],
+  },
+  {
+    slug: "tavilyai-web-search",
+    name: "Web Search Agent",
+    tagline: "Real-time web search optimized for AI agents",
+    description: "Real-time web search optimized for AI agents. Returns structured, citation-rich results with relevance scoring.",
+    category: "search",
+    pricePerCall: "0.010",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 90, totalInvocations: 45600, successfulInvocations: 45200, totalEarned: "456.000000", avgResponseMs: 1200,
+    isActive: true, isVerified: true,
+    tags: ["search", "web", "real-time", "citations"],
+  },
+  {
+    slug: "browserforge-agent-browser",
+    name: "Agent Browser",
+    tagline: "Headless browser automation for AI agents",
+    description: "Headless browser automation for AI agents. Navigate, interact, extract data, and fill forms on any website with stealth mode.",
+    category: "other",
+    pricePerCall: "0.030",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 83, totalInvocations: 12300, successfulInvocations: 11900, totalEarned: "369.000000", avgResponseMs: 3600,
+    isActive: true, isVerified: true,
+    tags: ["browser", "automation", "scraping", "headless"],
+  },
+  {
+    slug: "socialkit-twitter-agent",
+    name: "Twitter Agent",
+    tagline: "Full Twitter/X automation and analytics",
+    description: "Full Twitter/X automation — post, reply, search, analyze trends, manage followers, and monitor mentions in real time.",
+    category: "other",
+    pricePerCall: "0.020",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 82, totalInvocations: 23400, successfulInvocations: 22800, totalEarned: "468.000000", avgResponseMs: 1500,
+    isActive: true, isVerified: true,
+    tags: ["twitter", "social-media", "automation", "analytics"],
+  },
+  {
+    slug: "predictai-polymarket-agent",
+    name: "Polymarket Agent",
+    tagline: "Prediction market trading with AI probability estimation",
+    description: "Polymarket trading automation with real-time odds tracking, portfolio management, and AI-powered probability estimation.",
+    category: "financial-analysis",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 79, totalInvocations: 6700, successfulInvocations: 6400, totalEarned: "268.000000", avgResponseMs: 2800,
+    isActive: true, isVerified: true,
+    tags: ["prediction-markets", "polymarket", "trading", "probability"],
+  },
+  {
+    slug: "notionsync-notion-agent",
+    name: "Notion Agent",
+    tagline: "Full Notion workspace automation",
+    description: "Full Notion workspace automation — create pages, manage databases, sync content, and build dashboards programmatically.",
+    category: "other",
+    pricePerCall: "0.015",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 86, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "133.500000", avgResponseMs: 1800,
+    isActive: true, isVerified: true,
+    tags: ["notion", "productivity", "databases", "sync"],
+  },
+  {
+    slug: "gitmind-github-agent",
+    name: "GitHub Agent",
+    tagline: "Complete GitHub automation",
+    description: "Complete GitHub automation — manage repos, PRs, issues, actions, and releases. Code search across organizations.",
+    category: "code-review",
+    pricePerCall: "0.013",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 89, totalInvocations: 15600, successfulInvocations: 15400, totalEarned: "202.800000", avgResponseMs: 1400,
+    isActive: true, isVerified: true,
+    tags: ["github", "git", "ci-cd", "pull-requests"],
+  },
+  {
+    slug: "datapipe-etl-orchestrator",
+    name: "ETL Orchestrator",
+    tagline: "ETL pipeline orchestration for AI agents",
+    description: "ETL pipeline orchestration for AI agents. Extract from 40+ sources, transform with SQL/Python, load to warehouses.",
+    category: "data-extraction",
+    pricePerCall: "0.075",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 84, totalInvocations: 4300, successfulInvocations: 4100, totalEarned: "322.500000", avgResponseMs: 5600,
+    isActive: true, isVerified: true,
+    tags: ["etl", "data-pipeline", "airflow", "warehouse"],
+  },
+  {
+    slug: "k8sops-cluster-manager",
+    name: "Cluster Manager",
+    tagline: "Kubernetes cluster management via natural language",
+    description: "Kubernetes cluster management via natural language. Deploy, scale, debug, and optimize workloads across clusters.",
+    category: "other",
+    pricePerCall: "0.100",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 87, totalInvocations: 3400, successfulInvocations: 3300, totalEarned: "340.000000", avgResponseMs: 3200,
+    isActive: true, isVerified: true,
+    tags: ["kubernetes", "k8s", "devops", "cloud"],
+  },
+  {
+    slug: "docgen-api-documenter",
+    name: "API Documenter",
+    tagline: "Automated API documentation from code",
+    description: "Automated API documentation generation from code. Supports OpenAPI, GraphQL, gRPC, and tRPC schemas.",
+    category: "other",
+    pricePerCall: "0.020",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 85, totalInvocations: 7800, successfulInvocations: 7600, totalEarned: "156.000000", avgResponseMs: 2000,
+    isActive: true, isVerified: true,
+    tags: ["api", "documentation", "openapi", "graphql"],
+  },
+  {
+    slug: "slackbot-workspace-bot",
+    name: "Workspace Bot",
+    tagline: "Slack workspace automation",
+    description: "Slack workspace automation — channel management, message routing, workflow triggers, and intelligent notifications.",
+    category: "other",
+    pricePerCall: "0.015",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 81, totalInvocations: 11200, successfulInvocations: 10900, totalEarned: "168.000000", avgResponseMs: 900,
+    isActive: true, isVerified: true,
+    tags: ["slack", "messaging", "automation", "notifications"],
+  },
+  {
+    slug: "yieldmax-defi-optimizer",
+    name: "DeFi Optimizer",
+    tagline: "DeFi yield optimization across Solana protocols",
+    description: "DeFi yield optimization across Solana protocols. Auto-compounds, rebalances, and migrates positions for maximum returns.",
+    category: "financial-analysis",
+    pricePerCall: "0.050",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 88, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "445.000000", avgResponseMs: 4100,
+    isActive: true, isVerified: true,
+    tags: ["defi", "yield", "solana", "farming"],
+  },
+  {
+    slug: "legalai-contract-analyzer",
+    name: "Legal Contract Analyzer",
+    tagline: "Legal contract analysis with clause extraction",
+    description: "Legal contract analysis with clause extraction, risk scoring, and comparison against standard templates.",
+    category: "other",
+    pricePerCall: "0.100",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 84, totalInvocations: 2100, successfulInvocations: 2050, totalEarned: "210.000000", avgResponseMs: 6200,
+    isActive: true, isVerified: true,
+    tags: ["legal", "contracts", "analysis", "risk"],
+  },
+  {
+    slug: "ciforge-pipeline-builder",
+    name: "Pipeline Builder",
+    tagline: "CI/CD pipeline generation from natural language",
+    description: "CI/CD pipeline generation from natural language. Supports GitHub Actions, GitLab CI, CircleCI, and Jenkins.",
+    category: "code-review",
+    pricePerCall: "0.025",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 82, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "140.000000", avgResponseMs: 2400,
+    isActive: true, isVerified: true,
+    tags: ["ci-cd", "github-actions", "devops", "pipeline"],
+  },
+  {
+    slug: "memoryvault-context-manager",
+    name: "Context Manager",
+    tagline: "Long-term memory and context management for AI agents",
+    description: "Long-term memory and context management for AI agents. Vector storage, semantic retrieval, and automated summarization.",
+    category: "other",
+    pricePerCall: "0.010",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 80, totalInvocations: 18900, successfulInvocations: 18500, totalEarned: "189.000000", avgResponseMs: 600,
+    isActive: true, isVerified: true,
+    tags: ["memory", "context", "vector-store", "rag"],
+  },
+  {
+    slug: "terraops-infrastructure-agent",
+    name: "Infrastructure Agent",
+    tagline: "Infrastructure as Code from natural language",
+    description: "Infrastructure as Code generation and management. Generates Terraform, Pulumi, and CDK from natural language descriptions.",
+    category: "other",
+    pricePerCall: "0.075",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 83, totalInvocations: 2800, successfulInvocations: 2700, totalEarned: "210.000000", avgResponseMs: 4500,
+    isActive: true, isVerified: true,
+    tags: ["terraform", "infrastructure", "iac", "cloud"],
+  },
+  {
+    slug: "finsight-market-analyst",
+    name: "Market Analyst",
+    tagline: "Real-time financial market analysis",
+    description: "Real-time financial market analysis with technical indicators, sentiment scoring, and earnings analysis.",
+    category: "financial-analysis",
+    pricePerCall: "0.030",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 87, totalInvocations: 14200, successfulInvocations: 13900, totalEarned: "426.000000", avgResponseMs: 2200,
+    isActive: true, isVerified: true,
+    tags: ["finance", "markets", "technical-analysis", "sentiment"],
+  },
+  {
+    slug: "imageforge-vision-agent",
+    name: "Vision Agent",
+    tagline: "Computer vision for AI agents",
+    description: "Computer vision for AI agents — image analysis, OCR, object detection, and visual comparison with screenshot support.",
+    category: "image-generation",
+    pricePerCall: "0.020",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 81, totalInvocations: 9400, successfulInvocations: 9100, totalEarned: "188.000000", avgResponseMs: 3100,
+    isActive: true, isVerified: true,
+    tags: ["vision", "ocr", "image-analysis", "object-detection"],
+  },
+
+  // ── From awesomeLlmOperators.ts (15) ────────────────────────────
+  {
+    slug: "deepmind-research-agent",
+    name: "Deep Research Agent",
+    tagline: "Multi-source deep research with citation verification",
+    description: "Multi-source deep research with citation verification, source ranking, and synthesis into comprehensive reports.",
+    category: "search",
+    pricePerCall: "0.050",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 92, totalInvocations: 7800, successfulInvocations: 7600, totalEarned: "390.000000", avgResponseMs: 8200,
+    isActive: true, isVerified: true,
+    tags: ["research", "citations", "fact-checking", "synthesis"],
+  },
+  {
+    slug: "vclabs-due-diligence",
+    name: "VC Due Diligence",
+    tagline: "Automated startup due diligence",
+    description: "Automated startup due diligence — analyzes financials, market positioning, team background, and competitive landscape.",
+    category: "financial-analysis",
+    pricePerCall: "0.100",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 88, totalInvocations: 1200, successfulInvocations: 1150, totalEarned: "120.000000", avgResponseMs: 12000,
+    isActive: true, isVerified: true,
+    tags: ["venture-capital", "due-diligence", "startups", "investment"],
+  },
+  {
+    slug: "financeai-financial-coach",
+    name: "Financial Coach",
+    tagline: "Personal finance analysis agent",
+    description: "Personal finance analysis agent — budgeting, investment portfolio review, tax optimization, and retirement planning.",
+    category: "financial-analysis",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 85, totalInvocations: 6700, successfulInvocations: 6500, totalEarned: "268.000000", avgResponseMs: 3400,
+    isActive: true, isVerified: true,
+    tags: ["finance", "budgeting", "investing", "tax"],
+  },
+  {
+    slug: "medicalai-imaging-analyzer",
+    name: "Medical Imaging Analyzer",
+    tagline: "DICOM and medical image analysis",
+    description: "DICOM and medical image analysis — radiology report generation, anomaly detection, and measurement extraction.",
+    category: "other",
+    pricePerCall: "0.150",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 74, totalInvocations: 890, successfulInvocations: 850, totalEarned: "133.500000", avgResponseMs: 9800,
+    isActive: true, isVerified: false,
+    tags: ["medical", "imaging", "radiology", "dicom"],
+  },
+  {
+    slug: "writerpro-technical-writer",
+    name: "Technical Writer",
+    tagline: "Technical documentation generator",
+    description: "Technical documentation generator — API docs, architecture decision records, runbooks, and user guides.",
+    category: "text-generation",
+    pricePerCall: "0.030",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 86, totalInvocations: 11200, successfulInvocations: 10900, totalEarned: "336.000000", avgResponseMs: 2700,
+    isActive: true, isVerified: true,
+    tags: ["documentation", "api-docs", "technical-writing", "runbooks"],
+  },
+  {
+    slug: "plannerai-sprint-planner",
+    name: "Sprint Planner",
+    tagline: "Agile sprint planning agent",
+    description: "Agile sprint planning agent — story point estimation, capacity planning, dependency mapping, and risk identification.",
+    category: "other",
+    pricePerCall: "0.020",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 78, totalInvocations: 4500, successfulInvocations: 4300, totalEarned: "90.000000", avgResponseMs: 2100,
+    isActive: true, isVerified: true,
+    tags: ["agile", "sprint", "planning", "estimation"],
+  },
+  {
+    slug: "voicekit-customer-support",
+    name: "Customer Support Agent",
+    tagline: "Voice-based customer support agent",
+    description: "Voice-based customer support agent — real-time speech recognition, intent classification, and knowledge base retrieval.",
+    category: "other",
+    pricePerCall: "0.075",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 80, totalInvocations: 3200, successfulInvocations: 3000, totalEarned: "240.000000", avgResponseMs: 1800,
+    isActive: true, isVerified: true,
+    tags: ["voice", "customer-support", "speech", "nlp"],
+  },
+  {
+    slug: "raglabs-knowledge-graph",
+    name: "Knowledge Graph RAG",
+    tagline: "Graph-based retrieval augmented generation",
+    description: "Graph-based retrieval augmented generation — builds knowledge graphs from documents, enables relationship-aware retrieval.",
+    category: "data-extraction",
+    pricePerCall: "0.060",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 83, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "336.000000", avgResponseMs: 4800,
+    isActive: true, isVerified: true,
+    tags: ["rag", "knowledge-graph", "retrieval", "citations"],
+  },
+  {
+    slug: "agentorch-multi-agent",
+    name: "Multi-Agent Orchestrator",
+    tagline: "Coordinate multiple agent operators into workflows",
+    description: "Coordinate multiple agent operators into complex workflows — task decomposition, parallel execution, result aggregation.",
+    category: "other",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 76, totalInvocations: 2100, successfulInvocations: 1950, totalEarned: "84.000000", avgResponseMs: 6700,
+    isActive: true, isVerified: false,
+    tags: ["orchestration", "multi-agent", "workflow", "parallel"],
+  },
+  {
+    slug: "tokenopt-context-compressor",
+    name: "Context Compressor",
+    tagline: "Reduce LLM API costs by 50-90%",
+    description: "Reduce LLM API costs by 50-90% through intelligent context compression. Preserves semantic meaning while cutting tokens.",
+    category: "other",
+    pricePerCall: "0.010",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 84, totalInvocations: 34500, successfulInvocations: 34000, totalEarned: "345.000000", avgResponseMs: 400,
+    isActive: true, isVerified: true,
+    tags: ["optimization", "tokens", "compression", "cost-reduction"],
+  },
+  {
+    slug: "legalai-contract-analyzer-v2",
+    name: "Contract Analyzer V2",
+    tagline: "Advanced legal contract analysis",
+    description: "Legal contract analysis — clause extraction, risk identification, comparison against standard templates. Version 2 with improved accuracy.",
+    category: "other",
+    pricePerCall: "0.080",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 86, totalInvocations: 1800, successfulInvocations: 1750, totalEarned: "144.000000", avgResponseMs: 5500,
+    isActive: true, isVerified: true,
+    tags: ["legal", "contracts", "compliance", "risk"],
+  },
+  {
+    slug: "eduagent-teaching-assistant",
+    name: "Teaching Assistant",
+    tagline: "Adaptive teaching agent",
+    description: "Adaptive teaching agent — generates personalized lesson plans, practice problems, explanations at the learner's level.",
+    category: "other",
+    pricePerCall: "0.020",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 82, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "178.000000", avgResponseMs: 1900,
+    isActive: true, isVerified: true,
+    tags: ["education", "teaching", "learning", "tutoring"],
+  },
+  {
+    slug: "mediaforge-podcast-generator",
+    name: "Podcast Generator",
+    tagline: "Text-to-podcast conversion",
+    description: "Text-to-podcast conversion — transforms blog posts, research papers, and documents into natural-sounding podcasts.",
+    category: "other",
+    pricePerCall: "0.100",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 75, totalInvocations: 1200, successfulInvocations: 1100, totalEarned: "120.000000", avgResponseMs: 18000,
+    isActive: true, isVerified: false,
+    tags: ["podcast", "audio", "text-to-speech", "media"],
+  },
+  {
+    slug: "dataviz-visualization-expert",
+    name: "Visualization Expert",
+    tagline: "Data visualization agent",
+    description: "Data visualization agent — chart selection, interactive dashboard generation, statistical annotations with D3 and Recharts.",
+    category: "data-extraction",
+    pricePerCall: "0.030",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 83, totalInvocations: 6700, successfulInvocations: 6500, totalEarned: "201.000000", avgResponseMs: 3200,
+    isActive: true, isVerified: true,
+    tags: ["visualization", "charts", "dashboards", "data"],
+  },
+  {
+    slug: "factcheck-verifier",
+    name: "Fact Verifier",
+    tagline: "Automated fact verification",
+    description: "Automated fact verification — claim extraction, source triangulation, confidence scoring with transparent evidence chains.",
+    category: "search",
+    pricePerCall: "0.040",
+    creatorWallet: DEMO_WALLET,
+    trustScore: 87, totalInvocations: 5400, successfulInvocations: 5200, totalEarned: "216.000000", avgResponseMs: 5100,
+    isActive: true, isVerified: true,
+    tags: ["fact-checking", "verification", "misinformation", "claims"],
+  },
+
+  // ── From SkillDirectory.tsx (66) ────────────────────────────────
+  // Development
+  { slug: "skill-code-review-agent", name: "Code Review Agent", tagline: "Security-focused code review", description: "Multi-language code review with security vulnerability detection and CI/CD integration.", category: "code-review", pricePerCall: "0.025", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "222.500000", avgResponseMs: 2000, isActive: true, isVerified: true, tags: ["security", "multi-lang", "ci-cd"] },
+  { slug: "smart-contract-auditor", name: "Smart Contract Auditor", tagline: "Solidity and Rust smart contract auditing", description: "Comprehensive smart contract auditing for Solidity and Rust programs.", category: "security-audit", pricePerCall: "0.100", creatorWallet: DEMO_WALLET, trustScore: 95, totalInvocations: 6200, successfulInvocations: 6100, totalEarned: "620.000000", avgResponseMs: 4800, isActive: true, isVerified: true, tags: ["solidity", "rust", "audit"] },
+  { slug: "rust-analyzer-pro", name: "Rust Analyzer Pro", tagline: "Advanced Rust code analysis", description: "Advanced Rust code analysis with performance profiling and WASM optimization suggestions.", category: "code-review", pricePerCall: "0.040", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 3400, successfulInvocations: 3300, totalEarned: "136.000000", avgResponseMs: 2600, isActive: true, isVerified: true, tags: ["rust", "performance", "wasm"] },
+  { slug: "typescript-refactor", name: "TypeScript Refactor", tagline: "TypeScript refactoring automation", description: "Automated TypeScript refactoring — cleanup, type improvements, and code modernization.", category: "code-review", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 85, totalInvocations: 7800, successfulInvocations: 7600, totalEarned: "156.000000", avgResponseMs: 1500, isActive: true, isVerified: true, tags: ["typescript", "refactor", "cleanup"] },
+  { slug: "ci-pipeline-builder", name: "CI Pipeline Builder", tagline: "CI/CD pipeline generation", description: "Generate CI/CD pipelines for GitHub Actions and other platforms from natural language.", category: "code-review", pricePerCall: "0.025", creatorWallet: DEMO_WALLET, trustScore: 82, totalInvocations: 4500, successfulInvocations: 4300, totalEarned: "112.500000", avgResponseMs: 2200, isActive: true, isVerified: true, tags: ["ci-cd", "github-actions", "automation"] },
+  { slug: "dependency-auditor", name: "Dependency Auditor", tagline: "Dependency security auditing", description: "Audit project dependencies for security vulnerabilities, license issues, and outdated packages.", category: "security-audit", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 12300, successfulInvocations: 12100, totalEarned: "184.500000", avgResponseMs: 1800, isActive: true, isVerified: true, tags: ["security", "dependencies", "audit"] },
+  { slug: "api-schema-generator", name: "API Schema Generator", tagline: "API schema generation", description: "Generate OpenAPI schemas from code or natural language descriptions.", category: "other", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 76, totalInvocations: 2100, successfulInvocations: 2000, totalEarned: "42.000000", avgResponseMs: 2400, isActive: true, isVerified: false, tags: ["api", "schema", "openapi"] },
+  { slug: "git-commit-analyzer", name: "Git Commit Analyzer", tagline: "Git analytics and tech debt detection", description: "Analyze git history for tech debt patterns, code ownership, and contribution metrics.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 84, totalInvocations: 5600, successfulInvocations: 5500, totalEarned: "56.000000", avgResponseMs: 1200, isActive: true, isVerified: true, tags: ["git", "analytics", "tech-debt"] },
+
+  // Security
+  { slug: "solana-program-scanner", name: "Solana Program Scanner", tagline: "Solana program security scanning", description: "Security scanning for Solana programs — detects common vulnerabilities and unsafe patterns.", category: "security-audit", pricePerCall: "0.060", creatorWallet: DEMO_WALLET, trustScore: 93, totalInvocations: 9800, successfulInvocations: 9600, totalEarned: "588.000000", avgResponseMs: 3400, isActive: true, isVerified: true, tags: ["solana", "security", "programs"] },
+  { slug: "evm-exploit-detector", name: "EVM Exploit Detector", tagline: "Real-time EVM exploit detection", description: "Real-time detection of EVM exploits and vulnerability patterns across deployed contracts.", category: "security-audit", pricePerCall: "0.045", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 7200, successfulInvocations: 7000, totalEarned: "324.000000", avgResponseMs: 2800, isActive: true, isVerified: true, tags: ["evm", "exploits", "real-time"] },
+  { slug: "wallet-risk-scorer", name: "Wallet Risk Scorer", tagline: "Wallet risk and compliance scoring", description: "Score wallet addresses for risk factors — sanctions, fraud history, mixer usage, and compliance.", category: "security-audit", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 34500, successfulInvocations: 34000, totalEarned: "276.000000", avgResponseMs: 900, isActive: true, isVerified: true, tags: ["wallet", "risk", "compliance"] },
+  { slug: "contract-fuzzer", name: "Contract Fuzzer", tagline: "Smart contract fuzzing", description: "Automated smart contract fuzzing to discover edge cases and vulnerabilities.", category: "security-audit", pricePerCall: "0.080", creatorWallet: DEMO_WALLET, trustScore: 77, totalInvocations: 1800, successfulInvocations: 1700, totalEarned: "144.000000", avgResponseMs: 8500, isActive: true, isVerified: false, tags: ["fuzzing", "testing", "contracts"] },
+  { slug: "phishing-detector", name: "Phishing Detector", tagline: "Phishing URL and content detection", description: "Detect phishing URLs, fake sites, and social engineering attempts targeting crypto users.", category: "security-audit", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 56000, successfulInvocations: 55500, totalEarned: "280.000000", avgResponseMs: 400, isActive: true, isVerified: true, tags: ["phishing", "protection", "urls"] },
+
+  // Trading
+  { slug: "jupiter-swap", name: "Jupiter Swap", tagline: "Jupiter DEX swap execution", description: "Execute token swaps through Jupiter aggregator for best prices across Solana DEXes.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 96, totalInvocations: 89000, successfulInvocations: 88500, totalEarned: "445.000000", avgResponseMs: 1200, isActive: true, isVerified: true, tags: ["solana", "swap", "jupiter"] },
+  { slug: "raydium-swap", name: "Raydium Swap", tagline: "Raydium AMM swap execution", description: "Execute swaps on Raydium AMM with optimized routing.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 94, totalInvocations: 67000, successfulInvocations: 66500, totalEarned: "335.000000", avgResponseMs: 1100, isActive: true, isVerified: true, tags: ["solana", "swap", "raydium"] },
+  { slug: "orca-whirlpools", name: "Orca Whirlpools", tagline: "Orca concentrated liquidity", description: "Manage concentrated liquidity positions on Orca Whirlpools.", category: "financial-analysis", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 93, totalInvocations: 23000, successfulInvocations: 22800, totalEarned: "184.000000", avgResponseMs: 1500, isActive: true, isVerified: true, tags: ["solana", "concentrated-liquidity", "orca"] },
+  { slug: "jupiter-dca", name: "Jupiter DCA", tagline: "Dollar-cost averaging via Jupiter", description: "Set up dollar-cost averaging strategies through Jupiter protocol.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 92, totalInvocations: 15000, successfulInvocations: 14800, totalEarned: "75.000000", avgResponseMs: 1300, isActive: true, isVerified: true, tags: ["solana", "dca", "jupiter"] },
+  { slug: "jupiter-limit-orders", name: "Jupiter Limit Orders", tagline: "Jupiter limit order placement", description: "Place and manage limit orders through Jupiter protocol.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 12000, successfulInvocations: 11800, totalEarned: "60.000000", avgResponseMs: 1100, isActive: true, isVerified: true, tags: ["solana", "limit-orders", "jupiter"] },
+  { slug: "meteora-swap", name: "Meteora Swap", tagline: "Meteora DEX trading", description: "Execute swaps on Meteora DLMM pools.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "44.500000", avgResponseMs: 1200, isActive: true, isVerified: true, tags: ["solana", "swap", "meteora"] },
+  { slug: "phoenix-dex", name: "Phoenix DEX", tagline: "Phoenix order book trading", description: "Trade on Phoenix order book DEX on Solana.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 5600, successfulInvocations: 5500, totalEarned: "28.000000", avgResponseMs: 800, isActive: true, isVerified: true, tags: ["solana", "order-book", "phoenix"] },
+  { slug: "jito-mev-protection", name: "Jito MEV Protection", tagline: "MEV protection via Jito bundles", description: "Protect transactions from MEV extraction using Jito bundles.", category: "financial-analysis", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 94, totalInvocations: 45000, successfulInvocations: 44500, totalEarned: "450.000000", avgResponseMs: 600, isActive: true, isVerified: true, tags: ["solana", "mev", "jito"] },
+  { slug: "multi-dex-arbitrage", name: "Multi-DEX Arbitrage", tagline: "Cross-DEX arbitrage detection", description: "Detect and execute arbitrage opportunities across multiple Solana DEXes.", category: "financial-analysis", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 75, totalInvocations: 3400, successfulInvocations: 3100, totalEarned: "68.000000", avgResponseMs: 2200, isActive: true, isVerified: false, tags: ["solana", "arbitrage", "dex"] },
+  { slug: "signal-generator", name: "Signal Generator", tagline: "Trading signal generation", description: "Generate trading signals based on technical analysis indicators.", category: "financial-analysis", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 80, totalInvocations: 21000, successfulInvocations: 20500, totalEarned: "315.000000", avgResponseMs: 1800, isActive: true, isVerified: true, tags: ["signals", "technical-analysis", "indicators"] },
+
+  // DeFi
+  { slug: "marinade-staking", name: "Marinade Staking", tagline: "Marinade liquid staking", description: "Stake SOL through Marinade for mSOL liquid staking tokens.", category: "financial-analysis", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 95, totalInvocations: 34000, successfulInvocations: 33800, totalEarned: "170.000000", avgResponseMs: 1400, isActive: true, isVerified: true, tags: ["solana", "staking", "marinade"] },
+  { slug: "raydium-liquidity", name: "Raydium Liquidity", tagline: "Raydium liquidity provision", description: "Provide and manage liquidity on Raydium pools.", category: "financial-analysis", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 12000, successfulInvocations: 11800, totalEarned: "96.000000", avgResponseMs: 1600, isActive: true, isVerified: true, tags: ["solana", "liquidity", "raydium"] },
+  { slug: "kamino-lending", name: "Kamino Lending", tagline: "Kamino lending and borrowing", description: "Lend and borrow assets through Kamino protocol on Solana.", category: "financial-analysis", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 18000, successfulInvocations: 17800, totalEarned: "144.000000", avgResponseMs: 1300, isActive: true, isVerified: true, tags: ["solana", "lending", "kamino"] },
+  { slug: "drift-protocol", name: "Drift Protocol", tagline: "Drift perpetuals trading", description: "Trade perpetual futures on Drift Protocol.", category: "financial-analysis", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 9800, successfulInvocations: 9600, totalEarned: "98.000000", avgResponseMs: 1100, isActive: true, isVerified: true, tags: ["solana", "perps", "drift"] },
+  { slug: "yield-optimizer", name: "Yield Optimizer", tagline: "Multi-protocol yield optimization", description: "Optimize yield across multiple DeFi protocols with auto-compounding.", category: "financial-analysis", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 87, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "133.500000", avgResponseMs: 2400, isActive: true, isVerified: true, tags: ["yield", "farming", "auto-compound"] },
+  { slug: "flash-loan-executor", name: "Flash Loan Executor", tagline: "Flash loan execution", description: "Execute flash loan strategies for arbitrage and liquidation.", category: "financial-analysis", pricePerCall: "0.025", creatorWallet: DEMO_WALLET, trustScore: 73, totalInvocations: 2100, successfulInvocations: 1900, totalEarned: "52.500000", avgResponseMs: 3200, isActive: true, isVerified: false, tags: ["flash-loans", "arbitrage", "atomic"] },
+
+  // Research
+  { slug: "deep-web-researcher", name: "Deep Web Researcher", tagline: "Multi-source web research", description: "Deep web research with multi-source citations and synthesis.", category: "search", pricePerCall: "0.030", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 6700, successfulInvocations: 6500, totalEarned: "201.000000", avgResponseMs: 7500, isActive: true, isVerified: true, tags: ["research", "citations", "multi-source"] },
+  { slug: "token-fundamentals", name: "Token Fundamentals", tagline: "Token fundamental analysis", description: "Analyze token fundamentals — tokenomics, team, technology, and market positioning.", category: "financial-analysis", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 86, totalInvocations: 12300, successfulInvocations: 12000, totalEarned: "246.000000", avgResponseMs: 3400, isActive: true, isVerified: true, tags: ["tokens", "fundamentals", "analysis"] },
+  { slug: "protocol-comparator", name: "Protocol Comparator", tagline: "DeFi protocol comparison", description: "Compare DeFi protocols across metrics — TVL, yield, risk, fees, and user experience.", category: "financial-analysis", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 84, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "84.000000", avgResponseMs: 2800, isActive: true, isVerified: true, tags: ["protocols", "comparison", "metrics"] },
+
+  // Automation
+  { slug: "pipeline-orchestrator", name: "Pipeline Orchestrator", tagline: "Multi-step pipeline orchestration", description: "Orchestrate multi-step agent pipelines with branching and error handling.", category: "other", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 86, totalInvocations: 4500, successfulInvocations: 4300, totalEarned: "90.000000", avgResponseMs: 3200, isActive: true, isVerified: true, tags: ["pipelines", "orchestration", "branching"] },
+  { slug: "cron-scheduler", name: "Cron Scheduler", tagline: "Scheduled task execution", description: "Schedule and execute recurring agent tasks with cron expressions.", category: "other", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 23000, successfulInvocations: 22800, totalEarned: "115.000000", avgResponseMs: 500, isActive: true, isVerified: true, tags: ["scheduling", "cron", "triggers"] },
+  { slug: "webhook-router", name: "Webhook Router", tagline: "Webhook routing and transformation", description: "Route and transform webhooks between services with filtering and retry logic.", category: "other", pricePerCall: "0.003", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 45000, successfulInvocations: 44500, totalEarned: "135.000000", avgResponseMs: 300, isActive: true, isVerified: true, tags: ["webhooks", "routing", "events"] },
+  { slug: "multi-agent-coordinator", name: "Multi-Agent Coordinator", tagline: "Swarm coordination", description: "Coordinate swarms of agents for distributed task execution.", category: "other", pricePerCall: "0.030", creatorWallet: DEMO_WALLET, trustScore: 74, totalInvocations: 1200, successfulInvocations: 1100, totalEarned: "36.000000", avgResponseMs: 5800, isActive: true, isVerified: false, tags: ["multi-agent", "coordination", "swarm"] },
+
+  // Data & Analytics
+  { slug: "on-chain-analytics", name: "On-Chain Analytics", tagline: "Multi-chain on-chain analytics", description: "Comprehensive on-chain analytics across multiple blockchains.", category: "data-extraction", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 18000, successfulInvocations: 17800, totalEarned: "360.000000", avgResponseMs: 2200, isActive: true, isVerified: true, tags: ["on-chain", "analytics", "multi-chain"] },
+  { slug: "dex-volume-tracker", name: "DEX Volume Tracker", tagline: "DEX trading volume tracking", description: "Track trading volumes across all major Solana DEXes in real time.", category: "data-extraction", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 87, totalInvocations: 25000, successfulInvocations: 24800, totalEarned: "200.000000", avgResponseMs: 1400, isActive: true, isVerified: true, tags: ["dex", "volume", "tracking"] },
+  { slug: "wallet-profiler", name: "Wallet Profiler", tagline: "Wallet behavior profiling", description: "Profile wallet behavior patterns — trading frequency, protocol usage, and risk indicators.", category: "data-extraction", pricePerCall: "0.012", creatorWallet: DEMO_WALLET, trustScore: 85, totalInvocations: 15000, successfulInvocations: 14800, totalEarned: "180.000000", avgResponseMs: 2600, isActive: true, isVerified: true, tags: ["wallet", "profiling", "patterns"] },
+  { slug: "token-sentiment", name: "Token Sentiment", tagline: "Token sentiment analysis", description: "Analyze social sentiment for any token across Twitter, Discord, and Telegram.", category: "sentiment-analysis", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 83, totalInvocations: 28000, successfulInvocations: 27500, totalEarned: "224.000000", avgResponseMs: 1800, isActive: true, isVerified: true, tags: ["sentiment", "social", "scoring"] },
+  { slug: "nft-floor-tracker", name: "NFT Floor Tracker", tagline: "NFT floor price tracking", description: "Track NFT collection floor prices with alerts and historical data.", category: "data-extraction", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 86, totalInvocations: 19000, successfulInvocations: 18800, totalEarned: "95.000000", avgResponseMs: 800, isActive: true, isVerified: true, tags: ["nft", "floor-price", "tracking"] },
+  { slug: "gas-fee-predictor", name: "Gas Fee Predictor", tagline: "Gas fee prediction", description: "Predict optimal gas fees and transaction timing across chains.", category: "other", pricePerCall: "0.003", creatorWallet: DEMO_WALLET, trustScore: 84, totalInvocations: 67000, successfulInvocations: 66500, totalEarned: "201.000000", avgResponseMs: 400, isActive: true, isVerified: true, tags: ["gas", "fees", "prediction"] },
+  { slug: "liquidation-monitor", name: "Liquidation Monitor", tagline: "DeFi liquidation monitoring", description: "Monitor lending protocols for positions approaching liquidation.", category: "financial-analysis", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 34000, successfulInvocations: 33800, totalEarned: "340.000000", avgResponseMs: 600, isActive: true, isVerified: true, tags: ["liquidation", "monitoring", "defi"] },
+  { slug: "mev-dashboard", name: "MEV Dashboard", tagline: "MEV monitoring and analytics", description: "Monitor MEV activity on Solana with Jito bundle analytics.", category: "data-extraction", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 78, totalInvocations: 4500, successfulInvocations: 4300, totalEarned: "67.500000", avgResponseMs: 2200, isActive: true, isVerified: false, tags: ["mev", "monitoring", "jito"] },
+
+  // Prediction Markets
+  { slug: "skill-polymarket-agent", name: "Polymarket Agent", tagline: "Polymarket trading automation", description: "Trade on Polymarket prediction markets with AI-assisted probability analysis.", category: "other", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 82, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "112.000000", avgResponseMs: 2400, isActive: true, isVerified: true, tags: ["polymarket", "prediction", "trading"] },
+  { slug: "forecast-aggregator", name: "Forecast Aggregator", tagline: "Multi-source forecast aggregation", description: "Aggregate forecasts from multiple prediction markets and models.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 80, totalInvocations: 3400, successfulInvocations: 3300, totalEarned: "34.000000", avgResponseMs: 3200, isActive: true, isVerified: true, tags: ["forecasting", "aggregation", "probability"] },
+  { slug: "event-tracker", name: "Event Tracker", tagline: "Real-time event tracking", description: "Track real-world events and their impact on prediction markets.", category: "other", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 83, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "71.200000", avgResponseMs: 1500, isActive: true, isVerified: true, tags: ["events", "tracking", "alerts"] },
+  { slug: "odds-arbitrage", name: "Odds Arbitrage", tagline: "Cross-platform odds arbitrage", description: "Find arbitrage opportunities across prediction market platforms.", category: "financial-analysis", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 72, totalInvocations: 1200, successfulInvocations: 1050, totalEarned: "18.000000", avgResponseMs: 4200, isActive: true, isVerified: false, tags: ["arbitrage", "odds", "cross-platform"] },
+
+  // NFTs & Tokens
+  { slug: "token-deployer", name: "Token Deployer", tagline: "SPL token deployment", description: "Deploy SPL tokens on Solana with metadata and distribution setup.", category: "other", pricePerCall: "0.050", creatorWallet: DEMO_WALLET, trustScore: 92, totalInvocations: 7800, successfulInvocations: 7600, totalEarned: "390.000000", avgResponseMs: 4200, isActive: true, isVerified: true, tags: ["solana", "token-deploy", "spl"] },
+  { slug: "nft-minter", name: "NFT Minter", tagline: "NFT minting on Solana", description: "Mint NFTs on Solana using Metaplex standards.", category: "other", pricePerCall: "0.040", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 12000, successfulInvocations: 11800, totalEarned: "480.000000", avgResponseMs: 3800, isActive: true, isVerified: true, tags: ["solana", "nft", "metaplex"] },
+  { slug: "collection-analyzer", name: "Collection Analyzer", tagline: "NFT collection analysis", description: "Analyze NFT collections — rarity distribution, floor dynamics, and holder patterns.", category: "data-extraction", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 84, totalInvocations: 8900, successfulInvocations: 8700, totalEarned: "133.500000", avgResponseMs: 2800, isActive: true, isVerified: true, tags: ["nft", "analysis", "rarity"] },
+  { slug: "metadata-generator", name: "Metadata Generator", tagline: "NFT metadata generation", description: "Generate Metaplex-compatible NFT metadata with traits and attributes.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 81, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "56.000000", avgResponseMs: 1600, isActive: true, isVerified: true, tags: ["metadata", "metaplex", "generation"] },
+  { slug: "airdrop-manager", name: "Airdrop Manager", tagline: "Token airdrop management", description: "Manage token airdrops with merkle tree distribution and claiming.", category: "other", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 85, totalInvocations: 3400, successfulInvocations: 3300, totalEarned: "68.000000", avgResponseMs: 5200, isActive: true, isVerified: true, tags: ["airdrop", "distribution", "merkle"] },
+
+  // Oracles & Price Feeds
+  { slug: "pyth-price-feed", name: "Pyth Price Feed", tagline: "Pyth oracle price data", description: "Access real-time price data from Pyth Network oracle.", category: "data-extraction", pricePerCall: "0.002", creatorWallet: DEMO_WALLET, trustScore: 97, totalInvocations: 120000, successfulInvocations: 119500, totalEarned: "240.000000", avgResponseMs: 200, isActive: true, isVerified: true, tags: ["pyth", "prices", "oracle"] },
+  { slug: "switchboard-oracle", name: "Switchboard Oracle", tagline: "Switchboard custom data feeds", description: "Access custom data feeds from Switchboard oracle network.", category: "data-extraction", pricePerCall: "0.003", creatorWallet: DEMO_WALLET, trustScore: 94, totalInvocations: 67000, successfulInvocations: 66500, totalEarned: "201.000000", avgResponseMs: 300, isActive: true, isVerified: true, tags: ["switchboard", "oracle", "custom"] },
+  { slug: "price-aggregator", name: "Price Aggregator", tagline: "Multi-source price aggregation", description: "Aggregate prices from multiple oracles and DEXes for TWAP and VWAP.", category: "data-extraction", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 45000, successfulInvocations: 44500, totalEarned: "225.000000", avgResponseMs: 500, isActive: true, isVerified: true, tags: ["aggregation", "twap", "vwap"] },
+
+  // Bridges & Cross-Chain
+  { slug: "wormhole-bridge", name: "Wormhole Bridge", tagline: "Wormhole cross-chain bridging", description: "Bridge tokens across chains using Wormhole protocol.", category: "other", pricePerCall: "0.030", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 5600, successfulInvocations: 5400, totalEarned: "168.000000", avgResponseMs: 8200, isActive: true, isVerified: true, tags: ["wormhole", "bridge", "cross-chain"] },
+  { slug: "cross-chain-messenger", name: "Cross-Chain Messenger", tagline: "Cross-chain message passing", description: "Send verified messages across blockchains with proof verification.", category: "other", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 76, totalInvocations: 1200, successfulInvocations: 1100, totalEarned: "24.000000", avgResponseMs: 12000, isActive: true, isVerified: false, tags: ["messaging", "cross-chain", "verification"] },
+
+  // Infrastructure
+  { slug: "sns-domain-manager", name: "SNS Domain Manager", tagline: "Solana Name Service management", description: "Register and manage .sol domains through Solana Name Service.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 8900, successfulInvocations: 8800, totalEarned: "89.000000", avgResponseMs: 2400, isActive: true, isVerified: true, tags: ["sns", "domains", "naming"] },
+  { slug: "ipfs-pinner", name: "IPFS Pinner", tagline: "IPFS content pinning", description: "Pin and manage content on IPFS with automatic replication.", category: "other", pricePerCall: "0.008", creatorWallet: DEMO_WALLET, trustScore: 85, totalInvocations: 12000, successfulInvocations: 11800, totalEarned: "96.000000", avgResponseMs: 3400, isActive: true, isVerified: true, tags: ["ipfs", "storage", "pinning"] },
+  { slug: "rpc-load-balancer", name: "RPC Load Balancer", tagline: "RPC endpoint load balancing", description: "Distribute RPC requests across multiple endpoints for reliability.", category: "other", pricePerCall: "0.002", creatorWallet: DEMO_WALLET, trustScore: 92, totalInvocations: 234000, successfulInvocations: 233000, totalEarned: "468.000000", avgResponseMs: 100, isActive: true, isVerified: true, tags: ["rpc", "load-balancing", "reliability"] },
+  { slug: "transaction-builder", name: "Transaction Builder", tagline: "Solana transaction building", description: "Build complex Solana transactions with multiple instructions.", category: "other", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 34000, successfulInvocations: 33800, totalEarned: "170.000000", avgResponseMs: 800, isActive: true, isVerified: true, tags: ["transactions", "builder", "solana"] },
+  { slug: "keypair-manager", name: "Keypair Manager", tagline: "Secure keypair management", description: "Secure keypair generation and management with HSM support.", category: "security-audit", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 93, totalInvocations: 5600, successfulInvocations: 5500, totalEarned: "56.000000", avgResponseMs: 600, isActive: true, isVerified: true, tags: ["keypair", "security", "hsm"] },
+  { slug: "event-indexer", name: "Event Indexer", tagline: "Blockchain event indexing", description: "Index and query blockchain events and program logs.", category: "data-extraction", pricePerCall: "0.005", creatorWallet: DEMO_WALLET, trustScore: 87, totalInvocations: 45000, successfulInvocations: 44500, totalEarned: "225.000000", avgResponseMs: 400, isActive: true, isVerified: true, tags: ["indexing", "events", "logs"] },
+  { slug: "health-monitor", name: "Health Monitor", tagline: "Service health monitoring", description: "Monitor service health with uptime tracking and alerting.", category: "other", pricePerCall: "0.003", creatorWallet: DEMO_WALLET, trustScore: 91, totalInvocations: 89000, successfulInvocations: 88500, totalEarned: "267.000000", avgResponseMs: 200, isActive: true, isVerified: true, tags: ["monitoring", "health", "uptime"] },
+  { slug: "agent-reputation-engine", name: "Agent Reputation Engine", tagline: "Decentralized agent reputation", description: "Compute and verify agent reputation scores on-chain.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 70, totalInvocations: 890, successfulInvocations: 800, totalEarned: "8.900000", avgResponseMs: 3400, isActive: true, isVerified: false, tags: ["reputation", "trust", "experimental"] },
+
+  // ── From SkillMarketplace.tsx (12) ──────────────────────────────
+  { slug: "contract-vulnerability-scanner", name: "Contract Vulnerability Scanner", tagline: "47 vulnerability pattern detection", description: "Scans smart contracts for 47 known vulnerability patterns with automated fix suggestions.", category: "security-audit", pricePerCall: "0.050", creatorWallet: DEMO_WALLET, trustScore: 94, totalInvocations: 11200, successfulInvocations: 11000, totalEarned: "560.000000", avgResponseMs: 3600, isActive: true, isVerified: true, tags: ["security", "audit", "solidity", "rust"] },
+  { slug: "50-dex-swap-router", name: "50-DEX Swap Router", tagline: "Best swap routes across 50 DEXes", description: "Finds the absolute best swap route across 50 decentralized exchanges simultaneously.", category: "financial-analysis", pricePerCall: "0.020", creatorWallet: DEMO_WALLET, trustScore: 93, totalInvocations: 78000, successfulInvocations: 77500, totalEarned: "1560.000000", avgResponseMs: 1800, isActive: true, isVerified: true, tags: ["defi", "swap", "routing", "arbitrage"] },
+  { slug: "legal-document-translator", name: "Legal Document Translator", tagline: "40-language legal translation", description: "Translates legal documents across 40 languages with 99.2% accuracy.", category: "translation", pricePerCall: "0.120", creatorWallet: DEMO_WALLET, trustScore: 90, totalInvocations: 4500, successfulInvocations: 4400, totalEarned: "540.000000", avgResponseMs: 5200, isActive: true, isVerified: true, tags: ["legal", "translation", "multilingual"] },
+  { slug: "sentiment-pulse-engine", name: "Sentiment Pulse Engine", tagline: "Cross-platform sentiment analysis", description: "Reads the mood of any token across Twitter, Discord, Telegram, and Reddit in real time.", category: "sentiment-analysis", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 86, totalInvocations: 56000, successfulInvocations: 55500, totalEarned: "560.000000", avgResponseMs: 1200, isActive: true, isVerified: true, tags: ["sentiment", "social", "analytics", "trading"] },
+  { slug: "gas-fee-oracle", name: "Gas Fee Oracle", tagline: "24h gas fee prediction", description: "Predicts the cheapest time to send your transaction in the next 24 hours.", category: "other", pricePerCall: "0.002", creatorWallet: DEMO_WALLET, trustScore: 88, totalInvocations: 120000, successfulInvocations: 119000, totalEarned: "240.000000", avgResponseMs: 300, isActive: true, isVerified: true, tags: ["gas", "optimization", "prediction"] },
+  { slug: "nft-rarity-ranker", name: "NFT Rarity Ranker", tagline: "Instant NFT rarity calculation", description: "Instantly calculates the true rarity of any NFT in any collection.", category: "other", pricePerCall: "0.010", creatorWallet: DEMO_WALLET, trustScore: 84, totalInvocations: 23000, successfulInvocations: 22800, totalEarned: "230.000000", avgResponseMs: 1400, isActive: true, isVerified: true, tags: ["nft", "rarity", "analysis", "collections"] },
+  { slug: "yield-strategy-optimizer", name: "Yield Strategy Optimizer", tagline: "200+ protocol yield scanning", description: "Continuously scans 200+ DeFi protocols to find the highest risk-adjusted yield.", category: "financial-analysis", pricePerCall: "0.030", creatorWallet: DEMO_WALLET, trustScore: 89, totalInvocations: 12000, successfulInvocations: 11800, totalEarned: "360.000000", avgResponseMs: 3400, isActive: true, isVerified: true, tags: ["yield", "defi", "optimization", "auto-compound"] },
+  { slug: "multi-chain-bridge-finder", name: "Multi-Chain Bridge Finder", tagline: "15-chain bridge route comparison", description: "Compares every bridge route between 15 chains for best fees and speed.", category: "other", pricePerCall: "0.030", creatorWallet: DEMO_WALLET, trustScore: 82, totalInvocations: 6700, successfulInvocations: 6500, totalEarned: "201.000000", avgResponseMs: 4200, isActive: true, isVerified: true, tags: ["bridge", "cross-chain", "routing"] },
+  { slug: "senior-code-review-agent", name: "Senior Code Review Agent", tagline: "Senior engineer-level code review", description: "Reviews your code like a senior engineer — catches bugs, suggests improvements, enforces standards.", category: "code-review", pricePerCall: "0.080", creatorWallet: DEMO_WALLET, trustScore: 92, totalInvocations: 9800, successfulInvocations: 9600, totalEarned: "784.000000", avgResponseMs: 3200, isActive: true, isVerified: true, tags: ["code-review", "quality", "best-practices"] },
+  { slug: "whale-wallet-tracker", name: "Whale Wallet Tracker", tagline: "Smart money tracking", description: "Watches what the biggest wallets are doing with real-time alerts.", category: "data-extraction", pricePerCall: "0.015", creatorWallet: DEMO_WALLET, trustScore: 87, totalInvocations: 34000, successfulInvocations: 33800, totalEarned: "510.000000", avgResponseMs: 1600, isActive: true, isVerified: true, tags: ["whale", "tracking", "alerts", "multi-chain"] },
+  { slug: "meeting-summarizer", name: "Meeting Summarizer", tagline: "Meeting recording summarization", description: "Turns any meeting recording into a clear summary with action items.", category: "summarization", pricePerCall: "0.150", creatorWallet: DEMO_WALLET, trustScore: 85, totalInvocations: 4500, successfulInvocations: 4400, totalEarned: "675.000000", avgResponseMs: 8200, isActive: true, isVerified: true, tags: ["meetings", "summary", "productivity"] },
+  { slug: "liquidation-sniper", name: "Liquidation Sniper", tagline: "Lending protocol liquidation monitoring", description: "Monitors 12 lending protocols for positions about to get liquidated.", category: "financial-analysis", pricePerCall: "0.001", creatorWallet: DEMO_WALLET, trustScore: 79, totalInvocations: 89000, successfulInvocations: 87000, totalEarned: "89.000000", avgResponseMs: 500, isActive: true, isVerified: true, tags: ["liquidation", "defi", "mev", "profit"] },
+];
+
+async function seed() {
+  console.log(`Seeding ${SEED_OPERATORS.length} operators...`);
+
+  let inserted = 0;
+  for (const op of SEED_OPERATORS) {
+    try {
+      await db.execute(sql`
+        INSERT INTO operators (slug, name, tagline, description, category, endpointUrl, httpMethod, pricePerCall, creatorWallet, trustScore, totalInvocations, successfulInvocations, totalEarned, avgResponseMs, isActive, isVerified, tags)
+        VALUES (${op.slug}, ${op.name}, ${op.tagline}, ${op.description}, ${op.category}, ${null}, ${"POST"}, ${op.pricePerCall}, ${op.creatorWallet}, ${op.trustScore}, ${op.totalInvocations}, ${op.successfulInvocations}, ${op.totalEarned}, ${op.avgResponseMs}, ${op.isActive}, ${op.isVerified}, ${JSON.stringify(op.tags)})
+        ON DUPLICATE KEY UPDATE
+          name = VALUES(name),
+          tagline = VALUES(tagline),
+          description = VALUES(description),
+          trustScore = VALUES(trustScore),
+          totalInvocations = VALUES(totalInvocations),
+          totalEarned = VALUES(totalEarned)
+      `);
+      inserted++;
+      if (inserted % 20 === 0) console.log(`  ... ${inserted} operators`);
+    } catch (err) {
+      console.error(`  ! ${op.slug}: ${err.message}`);
+    }
+  }
+  console.log(`  + ${inserted} operators seeded`);
+
+  // Seed some invocations for the live feed
+  console.log("\nSeeding invocations...");
+  const callerWallets = [
+    "3Katmm9dhvLQijAvomteYMo6rfVs3Q1JjqQCjMfLvE5b",
+    "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS",
+    "8szGkuLTAux9XMgZ2vtY39jVSowEcpBfFfD8hXSEqdGC",
+    "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+    "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  ];
+
+  for (let i = 0; i < 50; i++) {
+    const opIdx = Math.floor(Math.random() * SEED_OPERATORS.length);
+    const op = SEED_OPERATORS[opIdx];
+    const price = parseFloat(op.pricePerCall);
+    const success = Math.random() > 0.05;
+    const responseMs = Math.floor(Math.random() * 8000) + 200;
+    const callerWallet = callerWallets[Math.floor(Math.random() * callerWallets.length)];
+
+    const creatorShare = (price * 0.70).toFixed(8);
+    const validatorShare = (price * 0.20).toFixed(8);
+    const treasuryShare = (price * 0.09).toFixed(8);
+    const burnAmount = (price * 0.01).toFixed(8);
+
+    try {
+      const [rows] = await db.execute(sql`SELECT id FROM operators WHERE slug = ${op.slug} LIMIT 1`);
+      if (!rows || !rows[0]) continue;
+      const operatorId = rows[0].id;
+
+      await db.execute(sql`
+        INSERT INTO invocations (operatorId, callerWallet, amountPaid, creatorShare, validatorShare, treasuryShare, burnAmount, responseMs, success, statusCode, trustDelta, createdAt)
+        VALUES (${operatorId}, ${callerWallet}, ${price.toFixed(8)}, ${creatorShare}, ${validatorShare}, ${treasuryShare}, ${burnAmount}, ${responseMs}, ${success}, ${success ? 200 : 500}, ${success ? 2 : -3}, DATE_SUB(NOW(), INTERVAL ${Math.floor(Math.random() * 72)} HOUR))
+      `);
+    } catch (err) {
+      // skip
+    }
+  }
+
+  console.log("  + 50 invocations seeded");
+  console.log("\nDone!");
+  process.exit(0);
+}
+
+seed().catch(err => {
+  console.error("Seed failed:", err);
+  process.exit(1);
+});

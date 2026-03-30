@@ -1,0 +1,27 @@
+{
+  "name": "@aegis/gateway",
+  "version": "1.0.0",
+  "description": "Aegis x402 Gateway & MCP Server — Fastify service for payment-gated AI skill invocations",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fastify": "^5.2.1",
+    "@fastify/cors": "^10.0.2",
+    "@solana/web3.js": "^1.98.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.2",
+    "mongoose": "^8.12.1",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "@types/node": "^22.13.14"
+  }
+}

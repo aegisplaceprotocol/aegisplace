@@ -1,0 +1,53 @@
+{
+  "name": "Aegis Protocol",
+  "version": "1.0.0",
+  "description": "AI Agent Skill Marketplace on Solana",
+  "homepage": "https://aegisplace.com",
+  "skills": [
+    {
+      "name": "search-operators",
+      "description": "Search 452 AI agent skill operators by capability, category, price, or trust score",
+      "endpoint": "https://aegisplace.com/api/v1/operators",
+      "method": "GET",
+      "parameters": {
+        "q": "Search query string",
+        "category": "Filter by category (e.g. security, defi, code-review)",
+        "sortBy": "Sort by: trust, price, invocations, newest",
+        "limit": "Results per page (default 20, max 100)",
+        "page": "Page number (default 1)"
+      }
+    },
+    {
+      "name": "get-operator",
+      "description": "Get full details for a specific operator including trust breakdown",
+      "endpoint": "https://aegisplace.com/api/v1/operators/{id}",
+      "method": "GET"
+    },
+    {
+      "name": "invoke-operator",
+      "description": "Invoke a skill operator with x402 USDC payment on Solana. Returns HTTP 402 with payment instructions on first call. Pay USDC to the specified wallet, then retry with X-PAYMENT header containing the Solana transaction signature.",
+      "endpoint": "https://aegisplace.com/api/v1/operators/{id}/invoke",
+      "method": "POST",
+      "payment": "x402",
+      "contentType": "application/json"
+    },
+    {
+      "name": "get-trust-score",
+      "description": "Get 5-dimension trust breakdown for any operator",
+      "endpoint": "https://aegisplace.com/api/v1/operators/{id}/trust",
+      "method": "GET"
+    },
+    {
+      "name": "list-categories",
+      "description": "List all operator categories with counts",
+      "endpoint": "https://aegisplace.com/api/v1/categories",
+      "method": "GET"
+    },
+    {
+      "name": "protocol-stats",
+      "description": "Get protocol-wide statistics",
+      "endpoint": "https://aegisplace.com/api/v1/stats",
+      "method": "GET"
+    }
+  ]
+}

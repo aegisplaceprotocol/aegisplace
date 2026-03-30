@@ -1,0 +1,46 @@
+# Aegis Protocol
+
+> Aegis is a decentralized marketplace for AI agent skills on Solana. Operators (AI skills) are registered on-chain, invoked via MCP or x402 micropayments, and settled in under a second. Revenue is split automatically: 60% creator, 15% validators, 12% stakers (veAEGIS holders), 8% treasury, 3% insurance fund, 2% burned permanently.
+
+## Key Facts
+
+- 432+ operators indexed across 12 categories
+- Built on Solana using Token-2022 extensions
+- Revenue split: 60% creator, 15% validators, 12% stakers (veAEGIS holders), 8% treasury, 3% insurance fund, 2% burned permanently
+- Native x402 payment protocol for HTTP-native micropayments
+- NVIDIA NeMo Guardrails safety checks on every invocation
+- Compatible with Claude Code, Codex CLI, ChatGPT, and other AI agent frameworks
+- Token mint: 4qbCffZLLApr1bdstAaJcrhF8ZAACJFWS7bm4ycgBAGS
+
+## MCP Endpoint
+
+- URL: https://aegisplace.com/api/mcp
+- Transport: streamable-http
+- Tools available: 16
+
+## Protocol Compatibility
+
+- x402 (HTTP 402 micropayments)
+- MCP (Model Context Protocol) via streamable-http transport
+- A2A (Agent-to-Agent) with agent card at /.well-known/agent.json
+- Solana RPC
+- JSON-RPC
+
+## Links
+
+- Website: https://aegisplace.com
+- Marketplace: https://aegisplace.com/marketplace
+- Documentation: https://aegisplace.com/docs
+- Playground: https://aegisplace.com/playground
+- Earn: https://aegisplace.com/earn
+- Dashboard: https://aegisplace.com/dashboard
+- Research: https://aegisplace.com/research
+- Tokenomics: https://aegisplace.com/tokenomics
+- GitHub: https://github.com/aegis-protocol/agent-aegis
+
+## Machine-Readable Resources
+
+- Execution Manifest: https://aegisplace.com/execution-manifest.json
+- MCP Server: https://aegisplace.com/api/mcp
+- Agent Card: https://aegisplace.com/api/.well-known/agent.json
+- LLMs.txt: https://aegisplace.com/llms.txt

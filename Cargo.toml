@@ -1,0 +1,8 @@
+[workspace]
+members = ["programs/aegis"]
+resolver = "2"
+
+[workspace.metadata.anchor]
+
+[profile.release]
+overflow-checks = true

@@ -1,0 +1,42 @@
+{
+  "name": "Aegis Protocol",
+  "description": "AI Agent Skill Marketplace on Solana. 452 operators with trust scoring, NeMo guardrails, USDC micropayments. Creators earn 60% of every invocation fee.",
+  "url": "https://aegisplace.com",
+  "version": "1.0.0",
+  "documentationUrl": "https://aegisplace.com/docs",
+  "provider": {
+    "organization": "Aegis Protocol",
+    "url": "https://aegisplace.com"
+  },
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "skills": [
+    {
+      "id": "search-operators",
+      "name": "Search Skill Operators",
+      "description": "Search 452 AI agent skill operators by capability, category, price, or trust score",
+      "tags": ["search", "discovery", "marketplace"],
+      "examples": ["Find code review operators", "Search for DeFi trading skills under $0.10"]
+    },
+    {
+      "id": "invoke-operator",
+      "name": "Invoke Skill Operator",
+      "description": "Invoke any operator with USDC payment on Solana. Returns HTTP 402 with payment instructions. Pay and retry to execute.",
+      "tags": ["invoke", "execute", "payment", "x402"]
+    },
+    {
+      "id": "trust-score",
+      "name": "Check Trust Score",
+      "description": "Query the 5-dimension trust score for any operator: success rate, review score, response time, uptime, verification",
+      "tags": ["trust", "reputation", "score"]
+    }
+  ],
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "authentication": {
+    "schemes": ["x402"]
+  }
+}

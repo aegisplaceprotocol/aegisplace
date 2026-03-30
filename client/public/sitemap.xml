@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://aegisplace.com/</loc><priority>1.0</priority></url>
+  <url><loc>https://aegisplace.com/marketplace</loc><priority>0.9</priority></url>
+  <url><loc>https://aegisplace.com/connect</loc><priority>0.9</priority></url>
+  <url><loc>https://aegisplace.com/playground</loc><priority>0.8</priority></url>
+  <url><loc>https://aegisplace.com/docs</loc><priority>0.8</priority></url>
+  <url><loc>https://aegisplace.com/earn</loc><priority>0.8</priority></url>
+  <url><loc>https://aegisplace.com/dashboard</loc><priority>0.7</priority></url>
+  <url><loc>https://aegisplace.com/research</loc><priority>0.7</priority></url>
+  <url><loc>https://aegisplace.com/tokenomics</loc><priority>0.7</priority></url>
+</urlset>

@@ -1,0 +1,33 @@
+title = "Aegis Protocol — Secret Detection"
+
+[allowlist]
+description = "Allowlisted patterns"
+paths = [
+  '''node_modules''',
+  '''dist''',
+  '''\.env\.example''',
+]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|secret|token|password|passwd|pwd)\s*[:=]\s*['"][A-Za-z0-9/+=]{20,}['"]'''
+tags = ["key", "API"]
+
+[[rules]]
+id = "solana-private-key"
+description = "Solana Private Key (Base58)"
+regex = '''[1-9A-HJ-NP-Za-km-z]{87,88}'''
+tags = ["key", "solana"]
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret"
+regex = '''JWT_SECRET\s*=\s*[A-Fa-f0-9]{32,}'''
+tags = ["key", "jwt"]
+
+[[rules]]
+id = "bags-api-key"
+description = "Bags API Key"
+regex = '''bags_prod_[A-Za-z0-9_]{30,}'''
+tags = ["key", "bags"]
