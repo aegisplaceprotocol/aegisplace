@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } fr
 import { t, text } from "../theme";
 
 /**
- * S06 — Close. Stats grid, URL, NIST badge.
+ * S06 - Close. Stats grid, URL, NIST badge.
  * No gradients. No color. Just information.
  */
 
@@ -32,7 +32,7 @@ export const S06_Close: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: t.bg, opacity: exit }}>
-      {/* Stats row — top */}
+      {/* Stats row - top */}
       <div
         style={{
           opacity: statsOp,
@@ -73,7 +73,7 @@ export const S06_Close: React.FC = () => {
         })}
       </div>
 
-      {/* URL — center */}
+      {/* URL - center */}
       <div
         style={{
           position: "absolute",
@@ -136,7 +136,7 @@ export const S06_Close: React.FC = () => {
         {/* NIST line */}
         <div style={{ textAlign: "center" }}>
           <span style={{ fontFamily: t.mono, fontSize: 10, color: t.t08, letterSpacing: "0.2em" }}>
-            NIST AI AGENT STANDARDS INITIATIVE — APRIL 2026
+            NIST AI AGENT STANDARDS INITIATIVE - APRIL 2026
           </span>
         </div>
       </div>

@@ -1,12 +1,14 @@
 import "dotenv/config";
 import { createServer } from "http";
 import net from "net";
-import { createApp } from "./app";
 import { serveStatic, setupVite } from "./vite";
 import { recalculateTrustScores } from "../trust-engine";
 import { startHealthCheckLoop } from "../operator-health";
 import { cleanupRateLimits } from "../db";
 import { logger } from "../logger";
+import { startHealthMonitor } from "../health-monitor";
+import { getSwarmStatus } from "../swarm-engine";
+import { createApp } from "./app";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -28,7 +30,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  const app = createApp();
+  const app = await createApp();
+
   const server = createServer(app);
 
   // In dev, use Vite middleware for HMR; in prod, serve static build
@@ -62,6 +65,12 @@ async function startServer() {
 
   server.listen(port, () => {
     logger.info(`Server running on http://localhost:${port}/`);
+    startHealthMonitor();
+    const swarm = getSwarmStatus();
+    logger.info(
+      { rufloConnected: swarm.rufloConnected },
+      "[SwarmEngine] Available - ruflo runtime " + (swarm.rufloConnected ? "connected" : "not installed")
+    );
   });
 }
 

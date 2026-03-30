@@ -91,11 +91,11 @@ export default function OperatorEvolution() {
   }, [inView, step]);
 
   return (
-    <section ref={ref} className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section ref={ref} className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
 
         {/* Header */}
-        <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold text-white leading-[1.1] tracking-tight mb-3">
+        <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-3">
           Your operators improve themselves.
         </h2>
         <p className="text-base text-zinc-500 max-w-2xl mb-16 leading-relaxed">
@@ -112,7 +112,7 @@ export default function OperatorEvolution() {
             { label: "The result", text: "A generic code reviewer becomes a world-class Rust security auditor in 90 days. No human training required." },
           ].map((card) => (
             <div key={card.label} className="rounded border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col">
-              <div className="text-[11px] font-bold tracking-wider uppercase text-zinc-500 mb-3">{card.label}</div>
+              <div className="text-[11px] font-normal tracking-wider uppercase text-zinc-500 mb-3">{card.label}</div>
               <p className="text-sm text-zinc-400 leading-relaxed flex-1">{card.text}</p>
             </div>
           ))}
@@ -126,10 +126,10 @@ export default function OperatorEvolution() {
             {AXES.map((axis, i) => (
               <div key={axis.num} className="rounded border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded px-2 py-0.5">
+                  <span className="text-[11px] font-normal text-white/50 bg-white/[0.015] border border-white/[0.04] rounded px-2 py-0.5">
                     {axis.num}
                   </span>
-                  <span className="text-sm font-bold text-white">{axis.title}</span>
+                  <span className="text-sm font-normal text-white">{axis.title}</span>
                 </div>
                 <p className="text-[13px] text-zinc-400 leading-relaxed flex-1 mb-4">{axis.desc}</p>
                 <div className="mt-auto">
@@ -145,7 +145,7 @@ export default function OperatorEvolution() {
 
           {/* Right 1/3: Timeline */}
           <div className="rounded border border-zinc-800 bg-zinc-900/40 p-6 flex flex-col">
-            <div className="text-[11px] font-bold tracking-wider uppercase text-zinc-500 mb-1">
+            <div className="text-[11px] font-normal tracking-wider uppercase text-zinc-500 mb-1">
               90-day evolution
             </div>
             <div className="text-[11px] text-zinc-600 mb-6">One operator, zero human input</div>
@@ -182,7 +182,7 @@ export default function OperatorEvolution() {
 
         {/* Bottom: The loop */}
         <div className="rounded border border-zinc-800 bg-zinc-900/40 p-6">
-          <div className="text-[11px] font-bold tracking-wider uppercase text-zinc-500 mb-6">The self-improvement loop</div>
+          <div className="text-[11px] font-normal tracking-wider uppercase text-zinc-500 mb-6">The self-improvement loop</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
               { n: "01", label: "Deploy", desc: "Launch with basic skills and a bond deposit" },
@@ -193,8 +193,8 @@ export default function OperatorEvolution() {
               { n: "06", label: "Level up", desc: "Better skills, better jobs, better rates. Repeat" },
             ].map((s) => (
               <div key={s.n} className="p-4 border border-zinc-800/50 rounded bg-zinc-950/30">
-                <div className="text-[10px] font-bold text-emerald-500/60 mb-1">{s.n}</div>
-                <div className="text-sm font-bold text-white mb-1">{s.label}</div>
+                <div className="text-[10px] font-normal text-white/40 mb-1">{s.n}</div>
+                <div className="text-sm font-normal text-white mb-1">{s.label}</div>
                 <div className="text-[11px] text-zinc-500 leading-relaxed">{s.desc}</div>
               </div>
             ))}
@@ -209,7 +209,7 @@ export default function OperatorEvolution() {
             { value: "99.7%", label: "Uptime after 90 days" },
           ].map((s) => (
             <div key={s.label} className="rounded border border-zinc-800 bg-zinc-900/40 p-5 text-center">
-              <div className="text-2xl font-bold text-white">{s.value}</div>
+              <div className="text-2xl font-normal text-white">{s.value}</div>
               <div className="text-[11px] text-zinc-500 mt-1">{s.label}</div>
             </div>
           ))}

@@ -37,6 +37,17 @@ const NAV_ITEMS = [
     ),
   },
   {
+    id: "aegisx",
+    label: "AegisX",
+    href: "/aegisx",
+    icon: (active: boolean) => (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#9945FF" : "rgba(255,255,255,0.35)"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="4 17 10 11 4 5" />
+        <line x1="12" y1="19" x2="20" y2="19" />
+      </svg>
+    ),
+  },
+  {
     id: "ecosystem",
     label: "Stack",
     href: "/ecosystem",
@@ -98,6 +109,8 @@ export default function MobileBottomNav() {
 
   return (
     <nav
+      role="navigation"
+      aria-label="Mobile navigation"
       className={`fixed bottom-0 left-0 right-0 z-50 lg:hidden transition-all duration-300 ${
         visible ? "translate-y-0" : "translate-y-full"
       }`}
@@ -105,7 +118,7 @@ export default function MobileBottomNav() {
       {/* Top edge glow */}
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-[#A1A1AA]/20 to-transparent" />
 
-      <div className="bg-white/[0.02]/95 backdrop-blur-2xl border-t border-white/[0.07]">
+      <div className="bg-zinc-950/95 backdrop-blur-2xl border-t border-white/[0.07]">
         <div className="flex items-center justify-around h-[56px] px-2">
           {NAV_ITEMS.map((item) => {
             const isActive = activeId === item.id;
@@ -117,10 +130,11 @@ export default function MobileBottomNav() {
                   isActive ? "scale-105" : "opacity-70"
                 }`}
                 aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
               >
                 {item.icon(isActive)}
                 <span
-                  className={`text-[9px] font-medium tracking-wider transition-colors duration-200 ${
+                  className={`text-[10px] font-medium tracking-wider transition-colors duration-200 ${
                     isActive ? "text-zinc-300" : "text-white/30"
                   }`}
                 >
@@ -136,7 +150,7 @@ export default function MobileBottomNav() {
       </div>
 
       {/* Safe area padding for notched phones */}
-      <div className="bg-white/[0.02]/95 h-[env(safe-area-inset-bottom)]" />
+      <div className="bg-zinc-950/95 h-[env(safe-area-inset-bottom)]" />
     </nav>
   );
 }

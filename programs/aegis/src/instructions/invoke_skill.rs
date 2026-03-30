@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Burn, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
 use crate::errors::AegisError;
 use crate::events::SkillInvoked;
 use crate::state::{InvocationReceipt, Operator, ProtocolConfig};
@@ -22,9 +22,11 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
 
     // Operator must be active to accept invocations.
     require!(operator.is_active, AegisError::OperatorNotActive);
+    // Safety net: enforce minimum price floor even at invocation time.
+    require!(operator.price_usdc_base >= 10_000, AegisError::PriceTooLow);
 
     let config = &ctx.accounts.config;
-    let amount = operator.price_lamports;
+    let amount = operator.price_usdc_base;
     let fee_bps = config.fee_bps;
 
     // Calculate fee splits using u128 intermediate arithmetic.
@@ -147,12 +149,12 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         )?;
     }
 
-    // Burn USDC: caller -> burned permanently (2%)
+    // Burn the burn share (actual on-chain burn, not transfer to treasury)
     if burn_share > 0 {
         token::burn(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
-                Burn {
+                token::Burn {
                     mint: ctx.accounts.usdc_mint.to_account_info(),
                     from: ctx.accounts.caller_token_account.to_account_info(),
                     authority: ctx.accounts.caller.to_account_info(),
@@ -171,7 +173,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
     receipt.caller = ctx.accounts.caller.key();
     receipt.amount_paid = amount;
     receipt.response_ms = 0; // Updated off-chain by validator.
-    receipt.success = true;  // Optimistic — updated by trust oracle if needed.
+    receipt.success = true;  // Optimistic - updated by trust oracle if needed.
     receipt.trust_delta = 0; // Updated by trust oracle.
     receipt.timestamp = now;
     receipt.bump = ctx.bumps.receipt;
@@ -235,10 +237,12 @@ pub struct InvokeSkill<'info> {
     )]
     pub config: Box<Account<'info, ProtocolConfig>>,
 
-    /// The operator being invoked. Must be active.
+    /// The operator being invoked. Must be active. PDA verified via seeds.
     #[account(
         mut,
-        constraint = operator.is_active @ AegisError::OperatorNotActive,
+        seeds = [b"operator", operator.creator.as_ref(), operator.operator_id.to_le_bytes().as_ref()],
+        bump = operator.bump,
+        constraint = operator.is_active @ AegisError::OperatorInactive,
     )]
     pub operator: Box<Account<'info, Operator>>,
 
@@ -258,7 +262,6 @@ pub struct InvokeSkill<'info> {
 
     /// The USDC mint. Validated against the stored config.usdc_mint.
     #[account(
-        mut,
         constraint = usdc_mint.key() == config.usdc_mint @ AegisError::InvalidUsdcMint,
     )]
     pub usdc_mint: Box<Account<'info, Mint>>,
@@ -276,6 +279,10 @@ pub struct InvokeSkill<'info> {
         mut,
         constraint = creator_token_account.owner == operator.creator,
         constraint = creator_token_account.mint == usdc_mint.key(),
+        constraint = creator_token_account.key() != validator_pool_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = creator_token_account.key() != staker_pool_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = creator_token_account.key() != treasury_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = creator_token_account.key() != insurance_fund_token_account.key() @ AegisError::DuplicateAccounts,
     )]
     pub creator_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -283,6 +290,9 @@ pub struct InvokeSkill<'info> {
     #[account(
         mut,
         constraint = validator_pool_token_account.key() == config.validator_pool @ AegisError::InvalidPoolAccount,
+        constraint = validator_pool_token_account.key() != staker_pool_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = validator_pool_token_account.key() != treasury_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = validator_pool_token_account.key() != insurance_fund_token_account.key() @ AegisError::DuplicateAccounts,
     )]
     pub validator_pool_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -290,6 +300,8 @@ pub struct InvokeSkill<'info> {
     #[account(
         mut,
         constraint = staker_pool_token_account.key() == config.staker_pool @ AegisError::InvalidPoolAccount,
+        constraint = staker_pool_token_account.key() != treasury_token_account.key() @ AegisError::DuplicateAccounts,
+        constraint = staker_pool_token_account.key() != insurance_fund_token_account.key() @ AegisError::DuplicateAccounts,
     )]
     pub staker_pool_token_account: Box<Account<'info, TokenAccount>>,
 
@@ -297,6 +309,7 @@ pub struct InvokeSkill<'info> {
     #[account(
         mut,
         constraint = treasury_token_account.key() == config.treasury @ AegisError::InvalidPoolAccount,
+        constraint = treasury_token_account.key() != insurance_fund_token_account.key() @ AegisError::DuplicateAccounts,
     )]
     pub treasury_token_account: Box<Account<'info, TokenAccount>>,
 

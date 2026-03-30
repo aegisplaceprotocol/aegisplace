@@ -101,7 +101,7 @@ const STATUS_CONFIG = {
   planned: {
     dot: "bg-white/20",
     glow: "",
-    line: "bg-white/[0.06]",
+    line: "bg-white/[0.04]",
     label: "PLANNED",
     labelColor: "text-white/30",
     labelBg: "bg-white/[0.04]",
@@ -112,13 +112,13 @@ export default function Roadmap() {
   const { ref, inView } = useInView(0.05);
 
   return (
-    <section id="roadmap" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="roadmap" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="ROADMAP" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <h2
-            className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}
+            className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}
           >
             Deployment timeline.
             <br />

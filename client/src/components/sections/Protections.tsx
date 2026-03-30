@@ -212,12 +212,12 @@ function WireframeCanvas({ type }: { type: Card["vizType"] }) {
 
 export default function Protections() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
             <div>
-              <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold text-white leading-[1.1] tracking-tight mb-2">
+              <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-2">
                 Why Aegis is Different.
               </h2>
               <p className="text-zinc-500 text-base">Four guarantees. Zero assumptions.</p>
@@ -243,7 +243,7 @@ export default function Protections() {
                 <span className="text-xs font-medium text-zinc-400 border border-zinc-700 rounded px-2.5 py-1 uppercase tracking-wider self-start mb-5">
                   {card.tag}
                 </span>
-                <h3 className="text-xl font-bold text-white mb-3">{card.title}</h3>
+                <h3 className="text-xl font-normal text-white mb-3">{card.title}</h3>
                 <p className="text-[14px] text-zinc-400 leading-relaxed flex-1">{card.body}</p>
               </div>
             </div>

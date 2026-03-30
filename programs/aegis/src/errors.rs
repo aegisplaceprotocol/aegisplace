@@ -53,4 +53,48 @@ pub enum AegisError {
     /// A pool/treasury/insurance account does not match protocol config.
     #[msg("Account does not match protocol config")]
     InvalidPoolAccount,
+
+    /// The operator is inactive.
+    #[msg("Operator is inactive")]
+    OperatorInactive,
+
+    /// Invalid input provided.
+    #[msg("Invalid input: zero address not allowed")]
+    InvalidInput,
+
+    /// Account is not owned by the expected program.
+    #[msg("Account is not owned by the expected program")]
+    InvalidAccount,
+
+    /// Duplicate accounts detected where distinct accounts are required.
+    #[msg("Duplicate accounts where distinct accounts are required")]
+    DuplicateAccounts,
+
+    /// Operator price is below the minimum floor of 10,000 base units ($0.01 USDC).
+    #[msg("Operator price is below the minimum floor")]
+    PriceTooLow,
+
+    /// Trust score delta exceeds the maximum allowed per update (+/- 500).
+    #[msg("Trust score delta exceeds maximum allowed per update")]
+    TrustDeltaTooLarge,
+
+    /// Operator is already active and cannot be reactivated.
+    #[msg("Operator is already active")]
+    OperatorAlreadyActive,
+
+    /// Pending admin has not been set - cannot accept admin transfer.
+    #[msg("Pending admin has not been set")]
+    PendingAdminNotSet,
+
+    /// No single fee may exceed 7000 bps (70%).
+    #[msg("Individual fee exceeds maximum of 7000 bps")]
+    FeeTooHigh,
+
+    /// Creator fee must be at least 4000 bps (40%).
+    #[msg("Creator fee must be at least 4000 bps")]
+    CreatorFeeTooLow,
+
+    /// Burn fee must be at least 100 bps (1%).
+    #[msg("Burn fee must be at least 100 bps")]
+    BurnFeeTooLow,
 }

@@ -1,0 +1,40 @@
+{
+  "name": "Aegis Protocol",
+  "description": "Economic layer for autonomous agent commerce on Solana. Discover, invoke, and pay for AI skills with USDC settlement and NeMo Guardrails safety.",
+  "version": "1.0.0",
+  "url": "https://aegisplace.com",
+  "capabilities": {
+    "mcp": {
+      "endpoint": "https://mcp.aegisplace.com/api/mcp",
+      "transport": ["http", "sse"]
+    },
+    "rest": {
+      "endpoint": "https://mcp.aegisplace.com/api/v1",
+      "docs": "https://aegisplace.com/docs"
+    },
+    "a2a": {
+      "endpoint": "https://mcp.aegisplace.com/api/a2a",
+      "version": "1.0.0"
+    }
+  },
+  "skills": [
+    { "name": "list_operators", "description": "List all registered skill operators" },
+    { "name": "invoke_skill", "description": "Execute a skill and settle payment in USDC" },
+    { "name": "search_operators", "description": "Search operators by name, category, or tag" },
+    { "name": "get_trust_score", "description": "Get trust score breakdown for any operator" },
+    { "name": "protocol_stats", "description": "Get protocol-wide statistics" },
+    { "name": "file_dispute", "description": "File a dispute against an invocation" },
+    { "name": "claim_royalties", "description": "Claim accumulated skill royalties" }
+  ],
+  "authentication": {
+    "type": "bearer",
+    "description": "API key from aegisplace.com/dashboard"
+  },
+  "chain": "solana",
+  "settlement": "USDC",
+  "protocols": ["mcp", "x402", "a2a"],
+  "contact": {
+    "website": "https://aegisplace.com",
+    "github": "https://github.com/aegis-protocol/aegis"
+  }
+}

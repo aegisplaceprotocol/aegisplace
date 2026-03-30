@@ -9,7 +9,7 @@
  * Signature is verified with tweetnacl / ed25519.
  */
 
-import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "../../shared/const";
 import type { Express, Request, Response } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import { nanoid } from "nanoid";
@@ -20,6 +20,7 @@ import { ENV } from "./env";
 // ── Nonce store (in-memory, auto-expires) ──────────────────────────
 
 const NONCE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const MAX_NONCE_STORE_SIZE = 10_000;
 const nonceStore = new Map<string, { nonce: string; createdAt: number }>();
 
 function cleanExpiredNonces() {
@@ -40,7 +41,7 @@ export async function createSessionToken(wallet: string): Promise<string> {
   return new SignJWT({ wallet })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("365d")
+    .setExpirationTime("7d")
     .sign(getSecret());
 }
 
@@ -90,6 +91,13 @@ export function registerAuthRoutes(app: Express) {
       return;
     }
 
+    if (nonceStore.size >= MAX_NONCE_STORE_SIZE) {
+      cleanExpiredNonces();
+      if (nonceStore.size >= MAX_NONCE_STORE_SIZE) {
+        res.status(429).json({ error: "Too many pending auth requests" });
+        return;
+      }
+    }
     const nonce = nanoid(32);
     nonceStore.set(wallet, { nonce, createdAt: Date.now() });
     res.json({ nonce });

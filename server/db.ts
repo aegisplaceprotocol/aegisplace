@@ -8,7 +8,13 @@ import logger from "./logger";
 
 const MONGO_URI =
   process.env.DATABASE_URL ||
-  "mongodb://aegis_admin:PASSWORD@127.0.0.1:27017/aegis?authSource=admin";
+  "mongodb://localhost:27017/aegis";
+
+const isLocalhost = MONGO_URI.includes("localhost") || MONGO_URI.includes("127.0.0.1");
+const options: mongoose.ConnectOptions = {
+  tls: !isLocalhost && process.env.NODE_ENV === "production",
+  ...(isLocalhost ? {} : { tlsAllowInvalidCertificates: process.env.NODE_ENV !== "production" }),
+};
 
 let _connected = false;
 
@@ -16,7 +22,7 @@ export async function getDb() {
   if (!_connected && MONGO_URI) {
     try {
       if (mongoose.connection.readyState === 0) {
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGO_URI, options);
       }
       _connected = true;
     } catch (error) {
@@ -28,7 +34,7 @@ export async function getDb() {
 }
 
 // Eagerly connect
-mongoose.connect(MONGO_URI).catch((err) => {
+mongoose.connect(MONGO_URI, options).catch((err) => {
   logger.warn({ err }, "[Database] Initial connection failed");
 });
 
@@ -111,7 +117,7 @@ operatorSchema.index({ isActive: 1 });
 
 const invocationSchema = new mongoose.Schema(
   {
-    operatorId: { type: Number, required: true },
+    operatorId: { type: mongoose.Schema.Types.Mixed, required: true },
     callerWallet: { type: String, default: null, maxlength: 64 },
     amountPaid: dec128("0"),
     creatorShare: dec128("0"),
@@ -159,7 +165,7 @@ validatorSchema.index({ reputationScore: -1 });
 
 const operatorBondSchema = new mongoose.Schema(
   {
-    operatorId: { type: Number, required: true },
+    operatorId: { type: mongoose.Schema.Types.Mixed, required: true },
     bondWallet: { type: String, required: true, maxlength: 64 },
     amountLamports: { type: Number, required: true },
     txSignature: { type: String, default: null, maxlength: 128 },
@@ -176,7 +182,7 @@ operatorBondSchema.index({ status: 1 });
 const disputeSchema = new mongoose.Schema(
   {
     invocationId: { type: Number, required: true },
-    operatorId: { type: Number, required: true },
+    operatorId: { type: mongoose.Schema.Types.Mixed, required: true },
     challengerWallet: { type: String, required: true, maxlength: 64 },
     reason: {
       type: String,
@@ -207,7 +213,7 @@ disputeSchema.index({ invocationId: 1 });
 
 const skillReviewSchema = new mongoose.Schema(
   {
-    operatorId: { type: Number, required: true },
+    operatorId: { type: mongoose.Schema.Types.Mixed, required: true },
     reviewerWallet: { type: String, required: true, maxlength: 64 },
     reviewerUserId: { type: Number, default: null },
     rating: { type: Number, required: true, min: 1, max: 5 },
@@ -221,7 +227,7 @@ skillReviewSchema.index({ reviewerWallet: 1 });
 
 const reportSchema = new mongoose.Schema(
   {
-    operatorId: { type: Number, required: true },
+    operatorId: { type: mongoose.Schema.Types.Mixed, required: true },
     validatorId: { type: Number, default: null },
     reporterWallet: { type: String, default: null, maxlength: 64 },
     reportType: {
@@ -241,7 +247,7 @@ reportSchema.index({ validatorId: 1 });
 
 const paymentSchema = new mongoose.Schema(
   {
-    invocationId: { type: Number, required: true },
+    invocationId: { type: mongoose.Schema.Types.Mixed, required: true },
     txSignature: { type: String, required: true, maxlength: 128 },
     totalAmount: dec128("0"),
     operatorShare: dec128("0"),
@@ -354,7 +360,7 @@ const revokedTokenSchema = new mongoose.Schema(
 const operatorTokenSchema = new mongoose.Schema(
   {
     operatorSlug: { type: String, required: true, unique: true },
-    operatorId: { type: Number, default: null },
+    operatorId: { type: mongoose.Schema.Types.Mixed, default: null },
     tokenMint: { type: String, default: null },
     bagsUrl: { type: String, default: null },
     dexscreenerPair: { type: String, default: null },
@@ -362,6 +368,40 @@ const operatorTokenSchema = new mongoose.Schema(
   },
   { timestamps: true, collection: "operator_tokens" }
 );
+
+const mcpServerSchema = new mongoose.Schema(
+  {
+    serverUrl: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    ownerWallet: { type: String },
+    description: { type: String },
+    toolCount: { type: Number, default: 0 },
+    tools: [{ name: String, description: String }],
+    verificationStatus: {
+      type: String,
+      enum: ["unverified", "pending", "verified", "revoked"],
+      default: "unverified",
+    },
+    trustScore: { type: Number, default: 0 },
+    lastScannedAt: { type: Date },
+    scanResults: {
+      connectivity: { type: Boolean, default: false },
+      schemaValid: { type: Boolean, default: false },
+      ssrfSafe: { type: Boolean, default: false },
+      responseTimeMs: { type: Number },
+      toolsEnumerated: { type: Number, default: 0 },
+    },
+    badgeType: {
+      type: String,
+      enum: ["none", "basic", "verified", "premium"],
+      default: "none",
+    },
+  },
+  { timestamps: true, collection: "mcp_servers" }
+);
+mcpServerSchema.index({ verificationStatus: 1 });
+mcpServerSchema.index({ trustScore: -1 });
 
 // ── Model registration ──────────────────────────────────────
 
@@ -382,6 +422,7 @@ const ProposalModel = mongoose.models.Proposal || mongoose.model("Proposal", pro
 const AgentModel = mongoose.models.Agent || mongoose.model("Agent", agentSchema);
 const RevokedTokenModel = mongoose.models.RevokedToken || mongoose.model("RevokedToken", revokedTokenSchema);
 const OperatorTokenModel = mongoose.models.OperatorToken || mongoose.model("OperatorToken", operatorTokenSchema);
+const McpServerModel = mongoose.models.McpServer || mongoose.model("McpServer", mcpServerSchema);
 
 // Export models for direct use (e.g. in mcp.ts)
 export {
@@ -389,6 +430,7 @@ export {
   OperatorBondModel, DisputeModel, SkillReviewModel, ReportModel,
   PaymentModel, RateLimitModel, AuditLogModel, ProtocolStatsModel,
   TaskModel, ProposalModel, AgentModel, RevokedTokenModel, OperatorTokenModel,
+  McpServerModel as McpServer,
 };
 
 // ────────────────────────────────────────────────────────────
@@ -504,7 +546,8 @@ export async function listOperators(opts: {
   if (opts.activeOnly !== false) filter.isActive = true;
   if (opts.category && opts.category !== "all") filter.category = opts.category;
   if (opts.search) {
-    const re = new RegExp(opts.search, "i");
+    const escaped = String(opts.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").slice(0, 200);
+    const re = new RegExp(escaped, "i");
     filter.$or = [{ name: re }, { tagline: re }];
   }
 
@@ -991,11 +1034,14 @@ export async function getAuditLog(opts: { userId?: number; action?: string; limi
 // ────────────────────────────────────────────────────────────
 
 export async function getProtocolStats() {
-  const [totalOps, totalVals, totalDisp, openDisp] = await Promise.all([
+  const [totalOps, realOps, totalVals, totalDisp, openDisp, healthyOps, degradedOps] = await Promise.all([
     OperatorModel.countDocuments({ isActive: true }),
+    OperatorModel.countDocuments({ isActive: true, endpointUrl: { $ne: null } }),
     ValidatorModel.countDocuments({ status: "active" }),
     DisputeModel.countDocuments(),
     DisputeModel.countDocuments({ status: "open" }),
+    OperatorModel.countDocuments({ healthStatus: "healthy" }),
+    OperatorModel.countDocuments({ healthStatus: "degraded" }),
   ]);
 
   const invocationAgg = await OperatorModel.aggregate([
@@ -1003,13 +1049,38 @@ export async function getProtocolStats() {
   ]);
   const agg = invocationAgg[0] || { totalInvocations: 0, totalEarnings: 0 };
 
+  // Compute real avg trust score
+  const trustAgg = await OperatorModel.aggregate([
+    { $match: { isActive: true, trustScore: { $gt: 0 } } },
+    { $group: { _id: null, avg: { $avg: "$trustScore" } } },
+  ]);
+  const avgTrustScore = trustAgg[0]?.avg ? Math.round(trustAgg[0].avg * 10) / 10 : 0;
+
+  // Guardrail metrics
+  const [guardrailChecks, guardrailBlocks] = await Promise.all([
+    InvocationModel.countDocuments({ guardrailInputPassed: { $exists: true } }),
+    InvocationModel.countDocuments({ guardrailInputPassed: false }),
+  ]);
+
   return {
     totalOperators: totalOps,
+    realOperators: realOps,
     totalInvocations: agg.totalInvocations,
     totalEarnings: String(agg.totalEarnings || 0),
+    avgTrustScore,
     totalValidators: totalVals,
     totalDisputes: totalDisp,
     openDisputes: openDisp,
+    health: {
+      healthy: healthyOps,
+      degraded: degradedOps,
+    },
+    guardrails: {
+      totalChecks: guardrailChecks,
+      blocked: guardrailBlocks,
+      passRate: guardrailChecks > 0 ? ((guardrailChecks - guardrailBlocks) / guardrailChecks * 100).toFixed(1) : "100.0",
+      serverStatus: (process.env.GUARDRAILS_ENABLED ?? "true") === "true" ? "active" : "standby",
+    },
   };
 }
 
@@ -1021,28 +1092,81 @@ export async function getGuardrailStats(operatorId?: number | string) {
   const match: Record<string, any> = { guardrailLatencyMs: { $gt: 0 } };
   if (operatorId) match.operatorId = operatorId;
 
-  const result = await InvocationModel.aggregate([
-    { $match: match },
-    {
-      $group: {
-        _id: null,
-        totalChecked: { $sum: 1 },
-        inputPassCount: { $sum: { $cond: ["$guardrailInputPassed", 1, 0] } },
-        outputPassCount: { $sum: { $cond: ["$guardrailOutputPassed", 1, 0] } },
-        avgLatencyMs: { $avg: "$guardrailLatencyMs" },
+  const [result, operatorsProtected] = await Promise.all([
+    InvocationModel.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: null,
+          totalChecked: { $sum: 1 },
+          inputPassCount: { $sum: { $cond: ["$guardrailInputPassed", 1, 0] } },
+          outputPassCount: { $sum: { $cond: ["$guardrailOutputPassed", 1, 0] } },
+          inputFailCount: { $sum: { $cond: [{ $eq: ["$guardrailInputPassed", false] }, 1, 0] } },
+          outputFailCount: { $sum: { $cond: [{ $eq: ["$guardrailOutputPassed", false] }, 1, 0] } },
+          avgLatencyMs: { $avg: "$guardrailLatencyMs" },
+        },
       },
-    },
+    ]),
+    operatorId
+      ? Promise.resolve(1)
+      : InvocationModel.distinct("operatorId", { guardrailLatencyMs: { $gt: 0 } }).then((ids: any[]) => ids.length),
   ]);
 
   const row = result[0];
   const total = row?.totalChecked || 0;
+  const inputFail = row?.inputFailCount || 0;
+  const outputFail = row?.outputFailCount || 0;
+  const totalViolations = inputFail + outputFail;
 
   return {
     totalChecked: total,
     inputPassRate: total > 0 ? Math.round(((row?.inputPassCount || 0) / total) * 10000) / 100 : 100,
     outputPassRate: total > 0 ? Math.round(((row?.outputPassCount || 0) / total) * 10000) / 100 : 100,
+    inputFailCount: inputFail,
+    outputFailCount: outputFail,
+    violationRate: total > 0 ? Math.round((totalViolations / total) * 10000) / 100 : 0,
+    operatorsProtected: operatorsProtected as number,
     avgLatencyMs: Math.round(row?.avgLatencyMs || 0),
+    guardrailsEnabled: process.env.GUARDRAILS_ENABLED === "true",
   };
+}
+
+export async function getGuardrailViolationTypes(limit = 5) {
+  const result = await InvocationModel.aggregate([
+    { $match: { guardrailViolations: { $exists: true, $ne: [] } } },
+    { $unwind: "$guardrailViolations" },
+    { $group: { _id: "$guardrailViolations", count: { $sum: 1 } } },
+    { $sort: { count: -1 as const } },
+    { $limit: limit },
+  ]);
+  return result.map((r: any) => ({ type: r._id as string, count: r.count as number }));
+}
+
+export async function getRecentGuardrailViolations(limit = 10) {
+  const docs = await InvocationModel.find({
+    $or: [{ guardrailInputPassed: false }, { guardrailOutputPassed: false }],
+  })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  // Join with operator data
+  const operatorIds = [...new Set(docs.map((d: any) => d.operatorId))];
+  const operators = await OperatorModel.find({ _id: { $in: operatorIds } })
+    .select("name slug category")
+    .lean();
+  const opMap = new Map(operators.map((o: any) => [String(o._id), o]));
+
+  return docs.map((inv: any) => {
+    const op = opMap.get(String(inv.operatorId));
+    return {
+      operatorName: op?.name || "Unknown",
+      type: inv.guardrailInputPassed === false ? "input" : "output",
+      violations: (inv.guardrailViolations || []) as string[],
+      timestamp: inv.createdAt,
+      latencyMs: inv.guardrailLatencyMs,
+    };
+  });
 }
 
 // ────────────────────────────────────────────────────────────
@@ -1263,7 +1387,8 @@ export async function listTasks(opts: {
   if (opts.category) filter.category = opts.category;
   if (opts.status) filter.status = opts.status;
   if (opts.search) {
-    const re = new RegExp(opts.search, "i");
+    const escaped = String(opts.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").slice(0, 200);
+    const re = new RegExp(escaped, "i");
     filter.$or = [{ title: re }, { description: re }];
   }
   const limit = opts.limit || 20;
@@ -1296,3 +1421,26 @@ export async function createAgent(data: Record<string, any>) {
   delete plain.apiKeyHash;
   return plain;
 }
+
+// ────────────────────────────────────────────────────────────
+// API Key Schema
+// ────────────────────────────────────────────────────────────
+
+const apiKeySchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: { type: String, required: true },
+    keyHash: { type: String, required: true, unique: true }, // SHA-256 of the key
+    keyPrefix: { type: String, required: true }, // First 14 chars for display: "sk-aegis-..."
+    scopes: [{ type: String, enum: ["read", "invoke", "register", "admin"] }],
+    lastUsedAt: { type: Date },
+    usageCount: { type: Number, default: 0 },
+    rateLimit: { type: Number, default: 60 }, // requests per minute
+    isActive: { type: Boolean, default: true },
+    expiresAt: { type: Date },
+  },
+  { timestamps: true, collection: "apikeys" }
+);
+
+apiKeySchema.index({ userId: 1 });
+export const ApiKey = mongoose.model("ApiKey", apiKeySchema);

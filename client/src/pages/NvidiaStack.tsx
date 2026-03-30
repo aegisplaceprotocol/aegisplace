@@ -135,6 +135,34 @@ const NEMO_COMPONENTS = [
   },
 ];
 
+/* -- Guardrail types detail ----------------------------------------------- */
+const GUARDRAIL_TYPES = [
+  {
+    type: "Input Validation",
+    description: "Screens every request before it reaches the operator. Blocks jailbreak attempts, prompt injection attacks, off-topic queries, and PII leakage. Uses pattern matching and classifier models to detect adversarial inputs in real-time.",
+    examples: ["Jailbreak detection", "Prompt injection blocking", "PII stripping", "Topic boundary enforcement"],
+    competitors: "None of Cursor, Windsurf, Copilot, Bolt.new, or Replit have input validation guardrails.",
+  },
+  {
+    type: "Output Filtering",
+    description: "Inspects every operator response before delivery. Catches unsafe content, format violations, leaked credentials, and responses that contradict the operator's stated capabilities. Enforces compliance with operator-specific content policies.",
+    examples: ["Unsafe content filtering", "Format compliance", "Credential leak prevention", "Policy enforcement"],
+    competitors: "Competing IDEs rely solely on the model's built-in alignment. No post-generation filtering layer exists.",
+  },
+  {
+    type: "Topic Control",
+    description: "Constrains operators to their declared domain. A Solana smart contract auditor cannot suddenly start giving medical advice. Topic rails use Colang definitions to create hard boundaries around operator capabilities.",
+    examples: ["Domain boundary enforcement", "Capability scope limiting", "Off-topic rejection", "Context switching prevention"],
+    competitors: "No competitor enforces topic boundaries at the infrastructure level. Agents can drift freely.",
+  },
+  {
+    type: "Hallucination Detection",
+    description: "Cross-references operator outputs against source data and known facts. Uses retrieval-augmented verification to flag claims that cannot be traced to source material. Particularly critical for code auditing and financial data operators.",
+    examples: ["Fact verification", "Source attribution", "Confidence scoring", "Ungrounded claim flagging"],
+    competitors: "Zero competitors have automated hallucination detection. Users must manually verify all outputs.",
+  },
+];
+
 /* -- Architecture layers ---------------------------------------------------- */
 const ARCH_LAYERS = [
   { layer: "Data", tool: "NeMo Curator", desc: "Clean, filter, and deduplicate training data at scale" },
@@ -154,14 +182,14 @@ export default function NvidiaStack() {
       <Navbar />
 
       {/* -- Hero ------------------------------------------------------------ */}
-      <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.07]">
+      <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
           <div className="flex items-center gap-3 mb-8">
             <NvidiaBadge text="NVIDIA NeMo" size="md" />
             <span className="text-[10px] font-medium text-white/20 tracking-wider">PROTOCOL INTEGRATION</span>
           </div>
 
-          <h1 className="text-[clamp(2rem,5vw,3.25rem)] font-bold text-white leading-[1.1] tracking-tight mb-5">
+          <h1 className="text-[clamp(2rem,5vw,3.25rem)] font-normal text-white leading-[1.1] tracking-tight mb-5">
             What NVIDIA NeMo actually is,
             <br />
             <span className="text-white/40">and how Aegis uses every piece of it.</span>
@@ -176,8 +204,79 @@ export default function NvidiaStack() {
         </div>
       </section>
 
+      {/* -- Guardrails Deep Dive (NEW) -------------------------------------- */}
+      <section className="py-16 sm:py-24 border-b border-white/[0.04]">
+        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+          <div className="flex items-center gap-2 mb-6">
+            <NvidiaEyeLogo size={14} className="text-[#76B900]/60" />
+            <span className="text-[11px] font-medium tracking-wider uppercase text-white/30">
+              GUARDRAILS DEEP DIVE
+            </span>
+          </div>
+
+          <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-normal text-white leading-[1.1] tracking-tight mb-3">
+            The safety layer no competitor has.
+          </h2>
+          <p className="text-[14px] text-white/30 max-w-2xl leading-relaxed mb-12">
+            NeMo Guardrails gives Aegis four types of runtime safety enforcement. Every operator invocation
+            passes through these rails. Guardrail compliance rates feed directly into on-chain trust scores.
+            No other AI IDE or marketplace has anything comparable.
+          </p>
+
+          <div className="space-y-px">
+            {GUARDRAIL_TYPES.map((rail) => (
+              <div
+                key={rail.type}
+                className="border border-white/[0.05] bg-white/[0.015] hover:bg-white/[0.025] transition-colors duration-200 p-6 sm:p-8"
+              >
+                <div className="flex flex-col lg:flex-row gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <NvidiaEyeLogo size={12} className="text-[#76B900]/40" />
+                      <h3 className="text-[16px] font-normal text-white/80">{rail.type}</h3>
+                    </div>
+                    <p className="text-[13px] text-white/40 leading-relaxed mb-4">
+                      {rail.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {rail.examples.map((ex) => (
+                        <span
+                          key={ex}
+                          className="text-[11px] font-medium text-white/30 bg-white/[0.03] border border-white/[0.06] px-2.5 py-1"
+                        >
+                          {ex}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="border-t border-white/[0.04] pt-3">
+                      <div className="text-[10px] font-medium tracking-wider text-emerald-400/50 mb-1">COMPETITIVE ADVANTAGE</div>
+                      <p className="text-[12px] text-white/25 leading-relaxed">{rail.competitors}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Guardrails metrics */}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04]">
+            {[
+              { value: "4", label: "Rail Types" },
+              { value: "~0.5s", label: "Added Latency" },
+              { value: "1.4x", label: "Detection vs Baseline" },
+              { value: "None", label: "Competitors with Guardrails" },
+            ].map((m) => (
+              <div key={m.label} className="bg-white/[0.02] p-4 sm:p-6 text-center">
+                <div className="text-[22px] sm:text-[28px] font-normal text-zinc-300 tracking-tight">{m.value}</div>
+                <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* -- 7 Components ---------------------------------------------------- */}
-      <section className="py-16 sm:py-24 border-b border-white/[0.07]">
+      <section className="py-16 sm:py-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
           <div className="flex items-center gap-2 mb-6">
             <NvidiaEyeLogo size={14} className="text-[#76B900]/60" />
@@ -186,7 +285,7 @@ export default function NvidiaStack() {
             </span>
           </div>
 
-          <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-bold text-white leading-[1.1] tracking-tight mb-3">
+          <h2 className="text-[clamp(1.5rem,3.5vw,2.25rem)] font-normal text-white leading-[1.1] tracking-tight mb-3">
             The full stack, explained plainly.
           </h2>
           <p className="text-[14px] text-white/30 max-w-2xl leading-relaxed mb-12">
@@ -203,7 +302,7 @@ export default function NvidiaStack() {
                   className={`border transition-colors duration-200 cursor-pointer ${
                     isOpen
                       ? "bg-white/[0.02] border-white/[0.08]"
-                      : "bg-transparent border-white/[0.05] hover:bg-white/[0.015] hover:border-white/[0.07]"
+                      : "bg-transparent border-white/[0.05] hover:bg-white/[0.015] hover:border-white/[0.04]"
                   }`}
                   onClick={() => setOpenId(isOpen ? null : comp.id)}
                 >
@@ -212,7 +311,7 @@ export default function NvidiaStack() {
                     <div className={`shrink-0 px-2 py-0.5 border text-[10px] font-medium tracking-wider ${
                       isOpen
                         ? "border-[#76B900]/20 text-[#76B900]/70 bg-[#76B900]/[0.03]"
-                        : "border-white/[0.07] text-white/15"
+                        : "border-white/[0.04] text-white/15"
                     }`}>
                       {comp.phase}
                     </div>
@@ -263,7 +362,7 @@ export default function NvidiaStack() {
                       </div>
 
                       {/* Stats */}
-                      <div className="grid grid-cols-3 gap-px bg-white/[0.03] border border-white/[0.05]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-px bg-white/[0.03] border border-white/[0.05]">
                         {comp.stats.map((s) => (
                           <div key={s.label} className="bg-white/[0.02] p-3 sm:p-4">
                             <div className="text-[15px] font-normal text-white/60 ">{s.value}</div>
@@ -299,9 +398,9 @@ export default function NvidiaStack() {
       </section>
 
       {/* -- Architecture Stack ---------------------------------------------- */}
-      <section className="py-16 sm:py-24 border-b border-white/[0.07]">
+      <section className="py-16 sm:py-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The operator lifecycle, layer by layer.
           </h2>
           <p className="text-[13px] text-white/25 mb-10">
@@ -342,7 +441,7 @@ export default function NvidiaStack() {
       {/* -- Why this matters ------------------------------------------------ */}
       <section className="py-16 sm:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
-          <div className="border border-white/[0.07] p-6 rounded sm:p-10">
+          <div className="border border-white/[0.04] p-6 rounded sm:p-10">
             <div className="flex items-center gap-2 mb-4">
               <NvidiaEyeLogo size={16} className="text-[#76B900]/50" />
               <span className="text-[10px] font-medium tracking-wider text-white/20 uppercase">
@@ -352,8 +451,11 @@ export default function NvidiaStack() {
             <p className="text-[15px] sm:text-[16px] text-white/50 leading-relaxed mb-4">
               Most AI marketplaces are just directories. They list models or agents and let users pick one. There is no quality guarantee, no safety enforcement, no automated evaluation, and no continuous improvement.
             </p>
-            <p className="text-[15px] sm:text-[16px] text-white/50 leading-relaxed mb-6">
+            <p className="text-[15px] sm:text-[16px] text-white/50 leading-relaxed mb-4">
               Aegis integrates the full NVIDIA NeMo stack so that every operator is curated, evaluated, guarded, and optimized at the protocol level. Combined with bonded economic validation on Solana, this creates a marketplace where quality is not optional. It is enforced by infrastructure.
+            </p>
+            <p className="text-[15px] sm:text-[16px] text-white/50 leading-relaxed mb-6">
+              The guardrails integration alone is a category differentiator. Cursor, Windsurf, Copilot, Bolt.new, and Replit have <span className="text-zinc-300 font-medium">zero guardrails</span>. Their AI agents can hallucinate, drift off-topic, leak PII, and produce unsafe outputs with no automated detection. AegisX catches all of this at the infrastructure level before it reaches the user.
             </p>
             <div className="flex flex-wrap gap-4">
               <a

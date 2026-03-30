@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 380" fill="none">
+  <!-- Top knot -->
+  <ellipse cx="150" cy="55" rx="55" ry="35" fill="#00D632"/>
+  <!-- Bag body -->
+  <path d="M40 140 C40 95 80 110 150 110 C220 110 260 95 260 140 C270 260 240 350 150 350 C60 350 30 260 40 140Z" fill="#00D632"/>
+  <!-- Dollar sign -->
+  <text x="150" y="260" text-anchor="middle" font-family="Arial Black, sans-serif" font-weight="900" font-size="140" fill="#000">$</text>
+</svg>

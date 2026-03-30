@@ -82,13 +82,13 @@ export default function AgentStack() {
   const activeLayer = STACK.find((l) => l.id === hoveredLayer) || STACK.find((l) => l.isAegis)!;
 
   return (
-    <section id="stack" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="stack" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="INFRASTRUCTURE" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <h2
-            className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}
+            className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}
           >
             The Agent Economy Stack.
             <br />
@@ -119,9 +119,9 @@ export default function AgentStack() {
                     className={`relative group cursor-pointer transition-all duration-300 ${
                       isActive
                         ? layer.isAegis
-                          ? "bg-white/[0.08] border border-white/30"
-                          : "bg-white/[0.04] border border-white/[0.12]"
-                        : "bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.03]"
+                          ? "bg-white/[0.04] border border-white/[0.08]"
+                          : "bg-white/[0.04] border border-white/[0.04]"
+                        : "bg-white/[0.015] border border-white/[0.04] hover:bg-white/[0.015]"
                     }`}
                     style={{ transitionDelay: `${i * 60}ms` }}
                     onMouseEnter={() => setHoveredLayer(layer.id)}
@@ -208,8 +208,8 @@ export default function AgentStack() {
             <div
               className={`p-5 sm:p-8 lg:p-10 border transition-all duration-300 ${
                 activeLayer.isAegis
-                  ? "border-white/20 bg-white/[0.03]"
-                  : "border-white/[0.07] bg-white/[0.02]"
+                  ? "border-white/20 bg-white/[0.015]"
+                  : "border-white/[0.04] bg-white/[0.015]"
               }`}
             >
               <div className="flex items-center justify-between mb-6">
@@ -223,8 +223,8 @@ export default function AgentStack() {
                 <span
                   className={`text-[10px] font-medium tracking-wider px-2.5 py-1 rounded ${
                     activeLayer.isAegis
-                      ? "bg-white/10 text-zinc-300"
-                      : "bg-white/10 text-zinc-300/80"
+                      ? "bg-white/[0.04] text-zinc-300"
+                      : "bg-white/[0.04] text-zinc-300/80"
                   }`}
                 >
                   {activeLayer.status}
@@ -243,7 +243,7 @@ export default function AgentStack() {
                 {activeLayer.desc}
               </p>
 
-              <div className="flex items-center justify-between pt-6 border-t border-white/[0.07]">
+              <div className="flex items-center justify-between pt-6 border-t border-white/[0.04]">
                 <span className="text-[12px] font-medium text-white/20">{activeLayer.stats}</span>
                 {activeLayer.isAegis && (
                   <a

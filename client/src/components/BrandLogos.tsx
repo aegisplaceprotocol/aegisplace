@@ -36,7 +36,7 @@ export function LogoBar({ variant = "hero", label, className = "" }: LogoBarProp
           color: 'rgba(255,255,255,0.25)',
           marginBottom: 24,
           textAlign: 'center',
-          fontWeight: 500,
+          fontWeight: 400,
         }}
       >
         SKILLS ON AEGIS LEVERAGE THE ENTIRE AI AND BLOCKCHAIN STACK

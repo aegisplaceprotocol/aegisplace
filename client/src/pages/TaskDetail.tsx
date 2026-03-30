@@ -3,8 +3,7 @@ import { useRoute } from "wouter";
 import { motion } from "framer-motion";
 import { fadeInView } from "@/lib/animations";
 import Navbar from "@/components/Navbar";
-
-import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -52,17 +51,17 @@ function timeAgo(date: string | Date): string {
 function statusDotColor(status: string): string {
   switch (status) {
     case "open":
-      return "bg-white/80";
+      return "bg-emerald-400";
     case "assigned":
-      return "bg-white/50";
+      return "bg-amber-400";
     case "in-review":
-      return "bg-white/40";
+      return "bg-blue-400";
     case "completed":
       return "bg-white";
     case "cancelled":
-      return "bg-white/20";
+      return "bg-red-500";
     default:
-      return "bg-white/30";
+      return "bg-zinc-500";
   }
 }
 
@@ -89,17 +88,17 @@ function truncateWallet(wallet: string): string {
 }
 
 const CATEGORY_BADGE_COLORS: Record<string, string> = {
-  "text-generation": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  "image-generation": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  "code-review": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  "security-audit": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  "data-extraction": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  "financial-analysis": "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  development: "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  research: "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  content: "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  design: "bg-white/[0.04] text-white/50 border-white/[0.06]",
-  social: "bg-white/[0.04] text-white/50 border-white/[0.06]",
+  "text-generation": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "image-generation": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "code-review": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "security-audit": "bg-red-500/15 text-red-400 border-red-500/20",
+  "data-extraction": "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  "financial-analysis": "bg-green-500/15 text-green-400 border-green-500/20",
+  "development": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "research": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "content": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+  "design": "bg-amber-500/15 text-amber-400 border-amber-500/20",
+  "social": "bg-violet-500/15 text-violet-400 border-violet-500/20",
 };
 
 /* ── Proposal Status Badge ───────────────────────────────────────────── */
@@ -107,13 +106,13 @@ const CATEGORY_BADGE_COLORS: Record<string, string> = {
 function proposalStatusBadge(status: string): string {
   switch (status) {
     case "pending":
-      return "bg-white/[0.04] text-white/40 border-white/[0.06]";
+      return "bg-amber-500/10 text-amber-400 border-amber-500/15";
     case "accepted":
-      return "bg-white/[0.06] text-white/60 border-white/[0.10]";
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/15";
     case "rejected":
-      return "bg-white/[0.02] text-white/25 border-white/[0.06]";
+      return "bg-red-500/10 text-red-400 border-red-500/15";
     default:
-      return "bg-white/[0.04] text-white/40 border-white/[0.06]";
+      return "bg-white/10 text-white/50 border-white/15";
   }
 }
 
@@ -124,69 +123,45 @@ export default function TaskDetail() {
   const taskId = params?.id || "";
 
   const [showProposalForm, setShowProposalForm] = useState(false);
-  const [proposalAmount, setProposalAmount] = useState("");
-  const [proposalCoverLetter, setProposalCoverLetter] = useState("");
-  const [proposalTimeEstimate, setProposalTimeEstimate] = useState("");
 
-  const submitProposal = { mutateAsync: async () => ({}), isPending: false, mutate: () => {} } as any;
+  const { data: taskData, isLoading, error } = trpc.task.get.useQuery(
+    { id: taskId },
+    { enabled: !!taskId }
+  );
 
-  const handleProposalSubmit = () => {
-    const amount = parseFloat(proposalAmount);
-    if (isNaN(amount) || amount < 0.01) {
-      toast.error("Please enter a valid amount (minimum $0.01)");
-      return;
-    }
-    if (!proposalCoverLetter || proposalCoverLetter.length < 10) {
-      toast.error("Cover letter must be at least 10 characters");
-      return;
-    }
-    submitProposal.mutate({
-      taskId,
-      amount,
-      coverLetter: proposalCoverLetter,
-      timeEstimate: proposalTimeEstimate || undefined,
-    });
-  };
-
-  const {
-    data: taskData,
-    isLoading,
-    error,
-  } = { data: undefined as any, isLoading: false, error: null };
-
-  const { data: proposalData } = { data: undefined as any };
+  const { data: proposalData } = trpc.proposal.list.useQuery(
+    { taskId },
+    { enabled: !!taskId }
+  );
 
   const task = taskData as Task | undefined;
   const proposalResult = proposalData as { proposals?: Proposal[] } | undefined;
   const proposals = (proposalResult?.proposals || []) as Proposal[];
 
   const badgeColor = task
-    ? CATEGORY_BADGE_COLORS[task.category] ||
-      "bg-white/10 text-white/50 border-white/15"
+    ? CATEGORY_BADGE_COLORS[task.category] || "bg-white/10 text-white/50 border-white/15"
     : "";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
-      <div className="pt-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
+      <div className="pt-[72px]">
+        <div className="container py-12 md:py-16 max-w-4xl">
           {/* Loading */}
           {isLoading && (
             <div className="space-y-6 animate-pulse">
-              <div className="h-8 bg-white/[0.05] w-2/3" />
-              <div className="h-4 bg-white/[0.04] w-1/4" />
+              <div className="h-8 bg-white/[0.05] w-2/3 rounded" />
+              <div className="h-4 bg-white/[0.04] w-1/4 rounded" />
               <div className="h-32 bg-white/[0.03]" />
             </div>
           )}
 
           {/* Error */}
           {error && (
-            <div className="border border-white/[0.10] bg-white/[0.02] p-6 text-center">
-              <p className="text-white/60 text-sm">Failed to load task.</p>
-              <p className="text-white/20 text-xs mt-2">
-                Error: {error.message}
-              </p>
+            <div className="border border-red-500/20 bg-red-500/5 p-6 text-center">
+              <p className="text-red-400/80 text-sm">Failed to load task.</p>
+              <p className="text-white/20 text-xs mt-2">Error: {error.message}</p>
             </div>
           )}
 
@@ -197,21 +172,17 @@ export default function TaskDetail() {
               <div className="mb-8">
                 <div className="flex items-center gap-3 flex-wrap mb-4">
                   <span
-                    className={`inline-block text-[10px] font-medium px-2.5 py-0.5 border ${badgeColor}`}
+                    className={`inline-block text-[10px] font-medium px-2.5 py-0.5 border rounded-full ${badgeColor}`}
                   >
                     {task.category}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`block w-2 h-2 ${statusDotColor(task.status)}`}
+                      className={`block w-2.5 h-2.5 rounded-full ${statusDotColor(task.status)}`}
                     />
-                    <span className="text-[12px] text-white/40">
-                      {statusLabel(task.status)}
-                    </span>
+                    <span className="text-[12px] text-white/40">{statusLabel(task.status)}</span>
                   </div>
-                  <span className="text-[11px] text-white/20">
-                    {timeAgo(task.createdAt)}
-                  </span>
+                  <span className="text-[11px] text-white/20">{timeAgo(task.createdAt)}</span>
                 </div>
 
                 <h1 className="text-3xl md:text-4xl font-bold text-white/95 tracking-tight mb-4">
@@ -219,12 +190,15 @@ export default function TaskDetail() {
                 </h1>
 
                 <div className="flex items-center gap-4 flex-wrap">
-                  <span className="text-[14px] font-light text-white/70 bg-white/[0.04] border border-white/[0.06] px-4 py-1.5">
+                  <span
+                    className="text-[14px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-4 py-1.5 rounded-full"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  >
                     ${parseFloat(task.budget).toLocaleString()} USDC
                   </span>
                   <span className="text-[12px] text-white/25">
                     Posted by{" "}
-                    <span className="text-white/40 font-light text-[11px]">
+                    <span className="text-white/40 font-mono text-[11px]">
                       {truncateWallet(task.postedBy)}
                     </span>
                   </span>
@@ -232,8 +206,8 @@ export default function TaskDetail() {
               </div>
 
               {/* Description */}
-              <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6 rounded-[6px]">
-                <h2 className="text-[13px] font-normal text-white/60 tracking-wider uppercase mb-4">
+              <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6">
+                <h2 className="text-[13px] font-semibold text-white/60 tracking-wider uppercase mb-4">
                   Description
                 </h2>
                 <p className="text-[14px] text-white/40 leading-relaxed whitespace-pre-wrap">
@@ -243,8 +217,8 @@ export default function TaskDetail() {
 
               {/* Requirements */}
               {task.requirements && (
-                <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6 rounded-[6px]">
-                  <h2 className="text-[13px] font-normal text-white/60 tracking-wider uppercase mb-4">
+                <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6">
+                  <h2 className="text-[13px] font-semibold text-white/60 tracking-wider uppercase mb-4">
                     Requirements
                   </h2>
                   <p className="text-[14px] text-white/40 leading-relaxed whitespace-pre-wrap">
@@ -256,10 +230,10 @@ export default function TaskDetail() {
               {/* Tags */}
               {task.tags && task.tags.length > 0 && (
                 <div className="flex gap-2 flex-wrap mb-8">
-                  {task.tags.map(tag => (
+                  {task.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="text-[11px] text-white/30 bg-white/[0.04] border border-white/[0.06] px-3 py-1"
+                      className="text-[11px] text-white/30 bg-white/[0.04] border border-white/[0.06] px-3 py-1 rounded-full"
                     >
                       {tag}
                     </span>
@@ -276,7 +250,7 @@ export default function TaskDetail() {
                   {task.status === "open" && (
                     <button
                       onClick={() => setShowProposalForm(!showProposalForm)}
-                      className="text-[13px] font-normal bg-white text-[#0A0A0A] px-5 py-2.5 hover:bg-white transition-colors"
+                      className="text-[13px] font-semibold bg-emerald-500 text-white px-5 py-2.5 hover:bg-emerald-400 transition-colors"
                     >
                       {showProposalForm ? "Cancel" : "Submit Proposal"}
                     </button>
@@ -285,8 +259,8 @@ export default function TaskDetail() {
 
                 {/* Inline Proposal Form */}
                 {showProposalForm && (
-                  <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6 rounded-[6px]">
-                    <h3 className="text-[14px] font-normal text-white/70 mb-4">
+                  <div className="border border-white/[0.06] bg-white/[0.01] p-6 mb-6">
+                    <h3 className="text-[14px] font-semibold text-white/70 mb-4">
                       Your Proposal
                     </h3>
                     <div className="space-y-4">
@@ -297,9 +271,8 @@ export default function TaskDetail() {
                         <input
                           type="number"
                           placeholder="0.00"
-                          value={proposalAmount}
-                          onChange={e => setProposalAmount(e.target.value)}
-                          className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all font-light"
+                          className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all"
+                          style={{ fontFamily: "'JetBrains Mono', monospace" }}
                         />
                       </div>
                       <div>
@@ -309,10 +282,6 @@ export default function TaskDetail() {
                         <input
                           type="text"
                           placeholder="e.g. 2 hours, 3 days"
-                          value={proposalTimeEstimate}
-                          onChange={e =>
-                            setProposalTimeEstimate(e.target.value)
-                          }
                           className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all"
                         />
                       </div>
@@ -323,17 +292,11 @@ export default function TaskDetail() {
                         <textarea
                           rows={4}
                           placeholder="Describe your approach..."
-                          value={proposalCoverLetter}
-                          onChange={e => setProposalCoverLetter(e.target.value)}
                           className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all resize-none"
                         />
                       </div>
-                      <button
-                        onClick={handleProposalSubmit}
-                        disabled={submitProposal.isPending}
-                        className="text-[13px] font-normal bg-white text-[#0A0A0A] px-6 py-2.5 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {submitProposal.isPending ? "Submitting..." : "Submit"}
+                      <button className="text-[13px] font-semibold bg-emerald-500 text-white px-6 py-2.5 hover:bg-emerald-400 transition-colors">
+                        Submit
                       </button>
                     </div>
                   </div>
@@ -342,23 +305,26 @@ export default function TaskDetail() {
                 {/* Proposals List */}
                 {proposals.length > 0 ? (
                   <div className="space-y-3">
-                    {proposals.map(proposal => (
+                    {proposals.map((proposal) => (
                       <div
                         key={proposal.id}
-                        className="border border-white/[0.06] bg-white/[0.01] p-6 rounded-[6px]"
+                        className="border border-white/[0.06] bg-white/[0.01] p-6"
                       >
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <span className="text-[14px] font-normal text-white/80">
+                            <span className="text-[14px] font-semibold text-white/80">
                               {proposal.agentName}
                             </span>
                             <span
-                              className={`text-[10px] font-medium px-2.5 py-0.5 border ${proposalStatusBadge(proposal.status)}`}
+                              className={`text-[10px] font-medium px-2.5 py-0.5 border rounded-full ${proposalStatusBadge(proposal.status)}`}
                             >
                               {proposal.status}
                             </span>
                           </div>
-                          <span className="text-[13px] font-light text-white/60">
+                          <span
+                            className="text-[13px] font-medium text-emerald-400/80"
+                            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                          >
                             ${parseFloat(proposal.amount).toLocaleString()} USDC
                           </span>
                         </div>

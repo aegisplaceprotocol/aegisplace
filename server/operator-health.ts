@@ -6,6 +6,22 @@
 import { OperatorModel, logAudit } from "./db";
 import logger from "./logger";
 
+function isPrivateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host === '169.254.169.254') return true;
+    if (host === '100.100.100.200') return true;
+    if (host.startsWith('10.')) return true;
+    if (host.startsWith('192.168.')) return true;
+    if (host.startsWith('172.') && parseInt(host.split('.')[1]) >= 16 && parseInt(host.split('.')[1]) <= 31) return true;
+    if (host.endsWith('.internal') || host.endsWith('.local')) return true;
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return true;
+    return false;
+  } catch { return true; }
+}
+
 /** Health check interval: 5 minutes */
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -35,6 +51,16 @@ async function checkOperatorHealth(
   endpointUrl: string,
 ): Promise<HealthCheckResult> {
   const start = Date.now();
+
+  if (isPrivateUrl(endpointUrl)) {
+    return {
+      operatorId,
+      slug,
+      status: "down",
+      responseMs: 0,
+      error: "Endpoint URL is not allowed (private/internal address)",
+    };
+  }
 
   try {
     const controller = new AbortController();
@@ -67,7 +93,7 @@ async function checkOperatorHealth(
     const responseMs = Date.now() - start;
 
     if (res.status >= 200 && res.status < 500) {
-      // 2xx-4xx are considered "alive" — the endpoint is responding
+      // 2xx-4xx are considered "alive" - the endpoint is responding
       const status: HealthStatus = responseMs > 5000 ? "degraded" : "healthy";
       return { operatorId, slug, status, responseMs };
     }
@@ -177,6 +203,10 @@ export async function runHealthChecks(): Promise<void> {
  * Returns true if the endpoint responds within the timeout, false otherwise.
  */
 export async function validateEndpoint(endpointUrl: string): Promise<{ reachable: boolean; responseMs: number; error?: string }> {
+  if (isPrivateUrl(endpointUrl)) {
+    return { reachable: false, responseMs: 0, error: "Endpoint URL is not allowed (private/internal address)" };
+  }
+
   const start = Date.now();
 
   try {
@@ -198,7 +228,7 @@ export async function validateEndpoint(endpointUrl: string): Promise<{ reachable
     // Accept any response (even 4xx) as proof the server is alive
     return { reachable: true, responseMs };
   } catch (headErr: any) {
-    // Try GET as fallback — some servers don't support HEAD
+    // Try GET as fallback - some servers don't support HEAD
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15_000);

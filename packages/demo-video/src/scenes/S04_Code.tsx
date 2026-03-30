@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { t, text } from "../theme";
 
 /**
- * S04 — The actual code. Two panels side by side.
+ * S04 - The actual code. Two panels side by side.
  * Left: Anchor/Rust (the on-chain program)
  * Right: TypeScript (the gateway)
  * Lines appear one by one. Real code, not pseudocode.

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 /* -- Link types ---------------------------------------------------------- */
 interface NavLink {
@@ -9,7 +10,6 @@ interface NavLink {
   external?: boolean;
   page?: boolean;
   description?: string;
-  /** Optional small inline logo URL (white PNG) */
   iconUrl?: string;
 }
 
@@ -21,53 +21,62 @@ interface NavGroup {
 /* -- Grouped navigation structure ---------------------------------------- */
 const NAV_GROUPS: NavGroup[] = [
   {
+    label: "Products",
+    links: [
+      { label: "AegisX IDE", href: "/aegisx", page: true, description: "57-tool AI dev environment for Solana", iconUrl: "/assets/vectorwhite.svg" },
+      { label: "Skill Marketplace", href: "/skill-marketplace", page: true, description: "19,000+ MCP skills with trust and payments", iconUrl: "/assets/vectorwhite.svg" },
+      { label: "Operator Marketplace", href: "/marketplace", page: true, description: "Browse bonded AI operators" },
+      { label: "Playground", href: "/playground", page: true, description: "Test operator invocations live" },
+    ],
+  },
+  {
     label: "Earn",
     links: [
-      { label: "Creator Economy", href: "/earn", page: true, description: "Upload skills, earn from every agent invocation" },
-      { label: "Upload Operator", href: "/submit", page: true, description: "Deploy and start earning" },
-      { label: "Marketplace", href: "/marketplace", page: true, description: "Browse and discover operators" },
-      { label: "Skill Marketplace", href: "/skill-marketplace", page: true, description: "Build skills, earn per use" },
-      { label: "Earnings Calculator", href: "/earn#calculator", page: true, description: "Model your operator revenue" },
+      { label: "Creator Economy", href: "/earn", page: true, description: "Upload skills, earn per invocation" },
+      { label: "Deploy Operator", href: "/submit", page: true, description: "Bond stake and start earning" },
+      { label: "Bags.fm Integration", href: "/skill-fi", page: true, description: "Trade operator tokens on Bags", iconUrl: "/assets/solana-gradient_e9806652.png" },
+      { label: "Tasks & Bounties", href: "/tasks", page: true, description: "Open work and rewards" },
     ],
   },
   {
-    label: "Protocol",
+    label: "Technology",
     links: [
-      { label: "Arsenal", href: "/arsenal", page: true, description: "15 protocol primitives" },
-      { label: "Evolution Engine", href: "/evolution", page: true, description: "Operator lifecycle and upgrades" },
-      { label: "Swarm Intelligence", href: "/swarms", page: true, description: "Autonomous multi-agent coordination" },
-      { label: "Research", href: "/research", page: true, description: "Whitepaper and technical docs" },
+      { label: "Protocol Overview", href: "/ecosystem", page: true, description: "Full stack architecture" },
+      { label: "NeMo Guardrails", href: "/nvidia", page: true, description: "AI safety powered by NVIDIA", iconUrl: "/assets/nvidia_519f6f4b.png" },
+      { label: "x402 Payments", href: "/x402", page: true, description: "Micropayments for agent commerce", iconUrl: "/assets/solana_f851568f.png" },
+      { label: "Swarm Intelligence", href: "/swarms", page: true, description: "Multi-agent coordination" },
+      { label: "Validators", href: "/validators", page: true, description: "Stake and validate quality", iconUrl: "/assets/solana_f851568f.png" },
     ],
   },
   {
-    label: "Ecosystem",
+    label: "Research",
     links: [
-      { label: "Full Stack", href: "/ecosystem", page: true, description: "Where Aegis sits in the AI agent economy" },
-      { label: "NVIDIA NeMo Stack", href: "/nvidia", page: true, description: "7 NeMo pillars powering every operator", iconUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663305557175/YNULcqsamfwqB8eQkc2VNX/nvidia_519f6f4b.png" },
-      { label: "GPU Compute", href: "/compute", page: true, description: "Every GPU becomes a potential earner", iconUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663305557175/YNULcqsamfwqB8eQkc2VNX/nvidia_519f6f4b.png" },
-      { label: "Validator Corps", href: "/validators", page: true, description: "Stake and validate operator quality", iconUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663305557175/YNULcqsamfwqB8eQkc2VNX/solana_f851568f.png" },
-      { label: "x402 Tracker", href: "/x402", page: true, description: "Live x402 payment stream", iconUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663305557175/YNULcqsamfwqB8eQkc2VNX/solana_f851568f.png" },
-      { label: "Intel Feed", href: "/live-feed", page: true, description: "Real-time operator invocations" },
+      { label: "Working Papers", href: "/research", page: true, description: "3 academic papers on agent economics" },
+      { label: "Competitive Analysis", href: "/compare", page: true, description: "AegisX vs Cursor, Copilot, Windsurf" },
+      { label: "Why Aegis", href: "/why", page: true, description: "$29B market, zero trust layers" },
+      { label: "Live Feed", href: "/live-feed", page: true, description: "Real-time protocol activity" },
     ],
   },
   {
-    label: "Build",
+    label: "Developers",
     links: [
-      { label: "SDK Integration", href: "/sdk", page: true, description: "5 minutes, 10 lines of code" },
-      { label: "Mission Builder", href: "/missions/new", page: true, description: "Compose structured task briefings" },
-      { label: "Playground", href: "/playground", page: true, description: "Interactive terminal simulator" },
+      { label: "Connect via MCP", href: "/connect", page: true, description: "One line agent config" },
+      { label: "SDK", href: "/sdk", page: true, description: "5 minutes, 10 lines of code" },
+      { label: "Documentation", href: "/docs", page: true, description: "Full API and tool reference" },
+      { label: "Skill Directory", href: "/skills", page: true, description: "Browse by category" },
     ],
   },
 ];
 
 const FLAT_LINKS: NavLink[] = [
-  { label: "Research", href: "/research", page: true },
-  { label: "Docs", href: "/docs", page: true },
+  { label: "Tokenomics", href: "/tokenomics", page: true },
+  { label: "FAQ", href: "/faq", page: true },
 ];
 
 /* -- Component ----------------------------------------------------------- */
 
 export default function Navbar() {
+  const { isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -119,6 +128,13 @@ export default function Navbar() {
   const handleClick = (link: NavLink, e: React.MouseEvent) => {
     setMobileOpen(false);
     setOpenDropdown(null);
+    if (link.href === "/aegisx") {
+      e.preventDefault();
+      toast("Coming soon", {
+        description: "AegisX IDE is coming soon.",
+      });
+      return;
+    }
     if (link.external) return;
     if (link.page) return;
     if (link.href.startsWith("#")) {
@@ -135,6 +151,13 @@ export default function Navbar() {
     }
   };
 
+  const handleComingSoonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toast("Coming soon", {
+      description: "This feature is coming soon.",
+    });
+  };
+
   /* -- Check if a link is active ----------------------------------------- */
   const isActive = (href: string) => {
     if (href.startsWith("#")) return activeSection === href.slice(1);
@@ -148,15 +171,21 @@ export default function Navbar() {
     <>
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/50 bg-zinc-950/80 backdrop-blur-xl"
+        aria-label="Main navigation"
+        style={{ willChange: 'transform, background-color' }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+          scrolled
+            ? "bg-zinc-950/92 backdrop-blur-xl border-b border-white/[0.07]"
+            : "bg-transparent"
+        }`}
       >
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 flex items-center justify-between h-16">
+        <div className="container flex items-center justify-between h-[56px]">
           {/* -- Logo ---------------------------------------------------- */}
           <a href="/" className="flex items-center shrink-0 group">
             <img
               src="/assets/fullvectorwhite.svg"
               alt="Aegis"
-              className="h-5 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
+              className="h-6 object-contain opacity-90 group-hover:opacity-100 transition-opacity"
             />
           </a>
 
@@ -170,12 +199,12 @@ export default function Navbar() {
                 onMouseLeave={closeDrop}
               >
                 <button
-                  className={`text-sm px-3 py-2 transition-colors flex items-center gap-1.5 ${
+                  className={`text-[12px] font-medium tracking-wide px-3 py-2 transition-colors duration-200 flex items-center gap-1.5 ${
                     isGroupActive(group)
-                      ? "text-white"
+                      ? "text-zinc-100"
                       : openDropdown === group.label
-                        ? "text-white"
-                        : "text-zinc-400 hover:text-white"
+                        ? "text-zinc-300"
+                        : "text-zinc-500 hover:text-zinc-300"
                   }`}
                 >
                   {group.label}
@@ -198,31 +227,30 @@ export default function Navbar() {
                       : "opacity-0 pointer-events-none"
                   }`}
                 >
-                  <div className="bg-zinc-800/97 backdrop-blur-xl border border-white/[0.07] rounded min-w-[240px] overflow-hidden shadow-xl shadow-black/20">
+                  <div className="bg-zinc-900/97 backdrop-blur-xl border border-white/[0.07] rounded-xl min-w-[260px] overflow-hidden shadow-xl shadow-black/30">
                     {group.links.map((link, i) => (
                       <a
                         key={link.label}
                         href={link.href}
                         onClick={(e) => handleClick(link, e)}
+                        aria-current={isActive(link.href) ? "page" : undefined}
                         className={`block px-4 py-2.5 transition-colors duration-150 group/item hover:bg-white/[0.04] ${
                           i > 0 ? "border-t border-white/[0.04]" : ""
                         } ${isActive(link.href) ? "bg-white/[0.03]" : ""}`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className={`text-[12px] font-medium flex items-center gap-2 ${
+                          <span className={`text-[12px] font-medium flex items-center gap-2.5 ${
                             isActive(link.href) ? "text-zinc-100" : "text-zinc-400 group-hover/item:text-zinc-200"
                           } transition-colors`}>
                             {link.iconUrl && (
-                              <img src={link.iconUrl} alt="" className="h-3 w-auto opacity-50 group-hover/item:opacity-80 transition-opacity" />
+                              <img src={link.iconUrl} alt="" className="h-3.5 w-auto opacity-50 group-hover/item:opacity-80 transition-opacity" />
                             )}
                             {link.label}
                           </span>
-                          {link.page && (
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-zinc-700 group-hover/item:text-zinc-500 transition-colors">
-                              <path d="M3 1.5H8.5V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-                              <path d="M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-                            </svg>
-                          )}
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-zinc-700 group-hover/item:text-zinc-500 transition-colors shrink-0">
+                            <path d="M3 1.5H8.5V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                            <path d="M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                          </svg>
                         </div>
                         {link.description && (
                           <p className="text-[11px] text-zinc-600 mt-0.5 group-hover/item:text-zinc-500 transition-colors">
@@ -242,8 +270,9 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={(e) => handleClick(link, e)}
-                className={`text-sm px-3 py-2 transition-colors ${
-                  isActive(link.href) ? "text-white" : "text-zinc-400 hover:text-white"
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={`text-[12px] font-medium tracking-wide px-3 py-2 transition-colors duration-200 ${
+                  isActive(link.href) ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
                 {link.label}
@@ -252,20 +281,32 @@ export default function Navbar() {
           </div>
 
           {/* -- Right side CTAs ----------------------------------------- */}
-          <div className="hidden xl:flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => toast("Dashboard coming soon", { description: "The full dashboard launches with mainnet." })}
-              className="border border-white/[0.12] px-4 py-1.5 text-[13px] hover:border-white/20 transition-colors text-zinc-300 hover:text-white rounded cursor-pointer"
-            >
-              Dashboard
-            </button>
+          <div className="hidden xl:flex items-center gap-1.5 shrink-0">
+            {/* Dashboard (authenticated) */}
+            {isAuthenticated && (
+              <a href="/dashboard" className="text-[12px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-2">
+                Dashboard
+              </a>
+            )}
 
-            <button
-              onClick={() => toast("Wallet connect coming soon", { description: "Phantom and Solflare support launching with mainnet." })}
-              className="bg-white text-zinc-900 px-4 py-1.5 text-[13px] font-medium hover:bg-zinc-200 transition-colors rounded cursor-pointer"
+            <a
+              href="https://aegisplace.com/aegisx"
+              target="_blank"
+              rel="noopener"
+              onClick={handleComingSoonClick}
+              className="hidden xl:inline-flex items-center gap-2 px-4 py-1.5 text-[12px] font-medium border border-white/[0.08] text-white/60 hover:text-white hover:border-white/20 transition-all rounded"
             >
-              Connect Wallet
-            </button>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Open IDE
+            </a>
+
+            <a
+              href="/marketplace"
+              onClick={handleComingSoonClick}
+              className="text-[12px] font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-md hover:bg-zinc-200 transition-colors duration-200"
+            >
+              Launch App
+            </a>
           </div>
 
           {/* -- Mobile toggle ------------------------------------------- */}
@@ -273,6 +314,7 @@ export default function Navbar() {
             className="xl:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
           >
             <span className={`block w-5 h-px bg-zinc-400 transition-all duration-300 origin-center ${mobileOpen ? "rotate-45 translate-y-[3.5px]" : ""}`} />
             <span className={`block w-5 h-px bg-zinc-400 duration-300 ${mobileOpen ? "opacity-0 scale-x-0" : ""}`} />
@@ -292,11 +334,15 @@ export default function Navbar() {
 
         {/* Panel */}
         <div
-          className={`absolute top-[56px] left-0 right-0 bottom-0 bg-white/[0.02]/98 backdrop-blur-xl overflow-y-auto transition-transform duration-300 ${
+          className={`absolute top-[56px] left-0 right-0 bottom-0 bg-zinc-950/98 backdrop-blur-xl overflow-y-auto transition-transform duration-300 ${
             mobileOpen ? "translate-y-0" : "-translate-y-4"
           }`}
         >
           <div className="p-6 space-y-6">
+            {/* Mobile menu logo */}
+            <div className="pb-4 border-b border-white/[0.07]">
+              <img src="/assets/fullvectorwhite.svg" alt="Aegis" className="h-5 opacity-70" />
+            </div>
             {NAV_GROUPS.map((group) => (
               <div key={group.label}>
                 <p className="text-[10px] font-medium tracking-wider text-zinc-500 uppercase mb-3">{group.label}</p>
@@ -306,24 +352,28 @@ export default function Navbar() {
                       key={link.label}
                       href={link.href}
                       onClick={(e) => handleClick(link, e)}
-                      className={`flex items-center justify-between py-2.5 px-3 rounded transition-colors duration-150 ${
+                      aria-current={isActive(link.href) ? "page" : undefined}
+                      className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors duration-150 ${
                         isActive(link.href)
                           ? "text-zinc-100 bg-white/[0.04]"
                           : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
                       }`}
                     >
-                      <div>
-                        <span className="text-[13px] font-medium">{link.label}</span>
-                        {link.description && (
-                          <p className="text-[11px] text-zinc-600 mt-0.5">{link.description}</p>
+                      <div className="flex items-center gap-2.5">
+                        {link.iconUrl && (
+                          <img src={link.iconUrl} alt="" className="h-3.5 w-auto opacity-50" />
                         )}
+                        <div>
+                          <span className="text-[13px] font-medium">{link.label}</span>
+                          {link.description && (
+                            <p className="text-[11px] text-zinc-600 mt-0.5">{link.description}</p>
+                          )}
+                        </div>
                       </div>
-                      {link.page && (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-zinc-700 shrink-0">
-                          <path d="M3 1.5H8.5V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-                          <path d="M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-                        </svg>
-                      )}
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-zinc-700 shrink-0">
+                        <path d="M3 1.5H8.5V7" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                        <path d="M8.5 1.5L1.5 8.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                      </svg>
                     </a>
                   ))}
                 </div>
@@ -339,7 +389,8 @@ export default function Navbar() {
                     key={link.label}
                     href={link.href}
                     onClick={(e) => handleClick(link, e)}
-                    className={`block py-2.5 px-3 text-[13px] font-medium rounded transition-colors duration-150 ${
+                    aria-current={isActive(link.href) ? "page" : undefined}
+                    className={`block py-2.5 px-3 text-[13px] font-medium rounded-lg transition-colors duration-150 ${
                       isActive(link.href)
                         ? "text-zinc-100 bg-white/[0.04]"
                         : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
@@ -364,7 +415,7 @@ export default function Navbar() {
               </button>
               <a
                 href="/docs"
-                className="block text-center py-2.5 text-[12px] font-medium text-zinc-400 border border-white/[0.07] rounded"
+                className="block text-center py-2.5 text-[12px] font-medium text-zinc-400 border border-white/[0.07] rounded-lg"
               >
                 Documentation
               </a>

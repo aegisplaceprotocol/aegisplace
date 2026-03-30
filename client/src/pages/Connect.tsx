@@ -6,67 +6,16 @@ import Footer from "@/components/sections/Footer";
 import { fadeInView } from "@/lib/animations";
 
 const TOOLS = [
-  {
-    name: "aegis_list_operators",
-    description:
-      "Browse and filter 452 AI agent skills by category, search, and success rate",
-  },
-  {
-    name: "aegis_get_operator",
-    description:
-      "Get detailed info about a specific operator including trust breakdown and pricing",
-  },
-  {
-    name: "aegis_invoke_operator",
-    description:
-      "Execute an AI skill with payload, guardrail checks, and success scoring",
-  },
-  {
-    name: "aegis_get_trust_score",
-    description:
-      "Get the 5-dimension trust breakdown: quality, guardrails, uptime, reviews, disputes",
-  },
-  {
-    name: "aegis_search_operators",
-    description:
-      "Full-text search across all operators by name and description",
-  },
-  {
-    name: "aegis_get_categories",
-    description: "Get all skill categories with operator counts",
-  },
-  {
-    name: "aegis_get_stats",
-    description: "Get real-time marketplace statistics",
-  },
-  {
-    name: "aegis_discover_tools",
-    description:
-      "Trigger autonomous discovery of new tools from GitHub and registries",
-  },
-  {
-    name: "aegis_discovery_stats",
-    description: "Get growth metrics for the discovery engine",
-  },
-  {
-    name: "aegis_list_tasks",
-    description:
-      "Browse open tasks and bounties. agents can find work to bid on",
-  },
-  {
-    name: "aegis_create_task",
-    description:
-      "Post a new task with budget, requirements, and deliverable specs",
-  },
-  {
-    name: "aegis_submit_proposal",
-    description: "Submit a proposal/bid for a task with price and cover letter",
-  },
-  {
-    name: "aegis_agent_register",
-    description:
-      "Register as an AI agent and get an API key for programmatic access",
-  },
+  { name: "aegisx_launch", description: "Launch a token on Bags.fm with custom fee vaults and creator royalties" },
+  { name: "aegisx_audit", description: "Audit a Solana program for 15 vulnerability classes including missing signers and unsafe CPI" },
+  { name: "aegisx_trade", description: "Execute swaps, limit orders, and DCA strategies via Jupiter V6" },
+  { name: "aegisx_research", description: "Search Reddit, Hacker News, GitHub, and DexScreener for any topic" },
+  { name: "aegisx_codemap", description: "Generate Solana-aware architecture maps with PDA and CPI analysis" },
+  { name: "aegisx_intel", description: "Track competitors across GitHub, CoinGecko, and DexScreener in real time" },
+  { name: "aegisx_browser", description: "Automate browser tasks with Puppeteer for testing and data extraction" },
+  { name: "aegisx_video", description: "Generate AI images and videos with FLUX, Veo, and 40+ models" },
+  { name: "aegisx_swarm", description: "Orchestrate up to 16 parallel agents working on different tasks" },
+  { name: "aegisx_payments", description: "Accept and send micropayments via x402 and Stripe" },
 ];
 
 const CONFIG_JSON = `{
@@ -132,10 +81,10 @@ export default function Connect() {
         {/* Hero */}
         <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center pb-16">
           <h1 className="text-4xl md:text-5xl font-normal tracking-[-0.02em] text-white/90 mb-4">
-            Connect your agent
+            Connect to AegisX
           </h1>
           <p className="text-[15px] text-white/35 leading-relaxed max-w-2xl mx-auto">
-            Any MCP-compatible AI agent can access 452 skills with one line of
+            Any MCP-compatible AI agent can access 61 tools with one line of
             config. Works with Claude, Cursor, Windsurf, and OpenCode.
           </p>
         </motion.div>
@@ -163,7 +112,7 @@ export default function Connect() {
             </p>
             <Code code={DUAL_MCP_CONFIG} label="json" />
             <a
-              href="/wallet"
+              href="/docs"
               className="inline-flex items-center gap-2 text-[13px] font-medium text-white/50 hover:text-white/80 transition-colors mt-4"
             >
               Full wallet setup guide
@@ -199,7 +148,7 @@ export default function Connect() {
         {/* Tools */}
         <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
-            16 Tools Available
+            61 Tools Available
           </div>
           <div className="border border-white/[0.05] overflow-x-auto">
             <table className="w-full text-left">

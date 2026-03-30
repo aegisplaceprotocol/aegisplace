@@ -3,10 +3,10 @@
  *
  * Ported from server/validator.ts.
  * Scores operator invocations based on 4 weighted components:
- *   latency  20% — response time
- *   status   30% — HTTP status code
- *   schema   25% — response matches expected schema
- *   content  25% — non-empty, reasonable length
+ *   latency  20% - response time
+ *   status   30% - HTTP status code
+ *   schema   25% - response matches expected schema
+ *   content  25% - non-empty, reasonable length
  */
 
 export interface QualityInput {

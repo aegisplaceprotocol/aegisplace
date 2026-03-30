@@ -10,5 +10,5 @@ export const ENV = {
   adminWallets: (process.env.ADMIN_WALLETS ?? "").split(",").filter(Boolean),
   nvidiaApiKey: process.env.NVIDIA_API_KEY ?? "",
   guardrailsServerUrl: process.env.GUARDRAILS_SERVER_URL ?? "http://localhost:4001",
-  guardrailsEnabled: process.env.GUARDRAILS_ENABLED === "true",
+  guardrailsEnabled: (process.env.GUARDRAILS_ENABLED ?? "true") === "true",
 };

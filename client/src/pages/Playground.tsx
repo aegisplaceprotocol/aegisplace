@@ -1,5 +1,5 @@
-import ComingSoon from "@/components/ComingSoon";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 
@@ -1334,10 +1334,6 @@ function processCommand(
 
 /* ── Main Component ──────────────────────────────────────────────────── */
 export default function Playground() {
-  return <ComingSoon title="Playground" description="Interactive terminal simulator for testing operator invocations." />;
-}
-
-function _Playground() {
   const operatorsQuery = trpc.operator.list.useQuery({ limit: 200 });
   // Populate module-level ALL_OPERATORS from tRPC data
   const operatorsList = useMemo(() => {
@@ -1582,7 +1578,7 @@ function _Playground() {
     switch (type) {
       case "prompt": return "text-zinc-300 font-normal";
       case "success": return "text-zinc-300/65";
-      case "error": return "text-red-400/80";
+      case "error": return "text-[rgba(220,100,60,0.50)]";
       case "warning": return "text-amber-400/70";
       case "result": return "text-white/55";
       case "header": return "text-white/30 font-normal";
@@ -1592,7 +1588,7 @@ function _Playground() {
       case "balance": return "text-white/65 font-normal";
       case "dim": return "text-white/18";
       case "table-row": return "text-white/45";
-      case "ascii": return "text-zinc-300/30 font-bold";
+      case "ascii": return "text-zinc-300/30 font-normal";
       case "blank": return "";
       default: return "text-white/35";
     }
@@ -1609,7 +1605,7 @@ function _Playground() {
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
               <div>
                 <div className="text-[11px] font-mono text-zinc-300/40 tracking-[0.2em] mb-4">PLAYGROUND</div>
-                <h1 className="text-[clamp(2rem,4vw,3rem)] font-bold text-white leading-[1.1] tracking-tight">
+                <h1 className="text-[clamp(2rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight">
                   Try Agent Aegis.
                   <span className="text-white/30 font-normal"> Live.</span>
                 </h1>
@@ -1741,7 +1737,7 @@ function _Playground() {
             ].map((stat) => (
               <div key={stat.label} className="bg-[oklch(0.09_0.005_285)] p-5 lg:p-6">
                 <div className="text-[10px] font-mono text-white/15 tracking-wider">{stat.label}</div>
-                <div className="text-[18px] font-bold text-white/60 mt-1 tracking-tight">{stat.value}</div>
+                <div className="text-[18px] font-normal text-white/60 mt-1 tracking-tight">{stat.value}</div>
               </div>
             ))}
           </div>
@@ -1761,6 +1757,8 @@ function _Playground() {
           </div>
         </div>
       </div>
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

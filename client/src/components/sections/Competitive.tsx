@@ -72,11 +72,11 @@ export default function Competitive() {
   const designCount = CRITERIA.filter((r) => r.aegisStatus === "design").length;
 
   return (
-    <section id="competitive" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="competitive" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="LANDSCAPE" />
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
-          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
             Named competitors.<br />
             <span className="text-white/30">Honest comparison.</span>
           </h2>
@@ -90,13 +90,13 @@ export default function Competitive() {
         <div className="flex gap-3 mb-8">
           <button
             onClick={() => setShowMarketData(false)}
-            className={`px-4 py-2 text-[12px] font-medium tracking-wider rounded transition-all ${!showMarketData ? "bg-white/10 text-zinc-300 border border-white/20" : "bg-white/[0.03] text-white/30 border border-white/[0.07] hover:text-white/50"}`}
+            className={`px-4 py-2 text-[12px] font-medium tracking-wider rounded transition-all ${!showMarketData ? "bg-white/[0.04] text-zinc-300 border border-white/[0.08]" : "bg-white/[0.015] text-white/30 border border-white/[0.04] hover:text-white/50"}`}
           >
             FEATURES
           </button>
           <button
             onClick={() => setShowMarketData(true)}
-            className={`px-4 py-2 text-[12px] font-medium tracking-wider rounded transition-all ${showMarketData ? "bg-white/10 text-zinc-300 border border-white/20" : "bg-white/[0.03] text-white/30 border border-white/[0.07] hover:text-white/50"}`}
+            className={`px-4 py-2 text-[12px] font-medium tracking-wider rounded transition-all ${showMarketData ? "bg-white/[0.04] text-zinc-300 border border-white/[0.08]" : "bg-white/[0.015] text-white/30 border border-white/[0.04] hover:text-white/50"}`}
           >
             MARKET DATA
           </button>
@@ -106,7 +106,7 @@ export default function Competitive() {
         <div className={`overflow-x-auto`}>
           <table className="w-full border-collapse min-w-[800px]">
             <thead>
-              <tr className="border-b border-white/[0.08]">
+              <tr className="border-b border-white/[0.04]">
                 <th className="text-left py-4 pr-6 text-[11px] font-medium text-white/20 tracking-wider w-[220px]">
                   {showMarketData ? "METRIC" : "CAPABILITY"}
                 </th>
@@ -132,7 +132,7 @@ export default function Competitive() {
                 return (
                   <tr
                     key={ri}
-                    className={`border-b border-white/[0.04] transition-colors duration-200 ${hoveredRow === ri ? "bg-white/[0.02]" : ""}`}
+                    className={`border-b border-white/[0.04] transition-colors duration-200 ${hoveredRow === ri ? "bg-white/[0.015]" : ""}`}
                     onMouseEnter={() => setHoveredRow(ri)}
                     onMouseLeave={() => setHoveredRow(null)}
                   >
@@ -145,7 +145,7 @@ export default function Competitive() {
                     {row.values.map((v, ci) => (
                       <td key={ci} className="text-center py-3.5 px-2">
                         {v === true ? (
-                          <span className={`inline-block w-5 h-5 rounded-full ${COMPETITORS[ci].highlight ? "bg-white/20 text-zinc-300" : "bg-white/10 text-white/60"} text-[11px] leading-5 font-bold`}>
+                          <span className={`inline-block w-5 h-5 rounded-full ${COMPETITORS[ci].highlight ? "bg-white/[0.04] text-zinc-300" : "bg-white/[0.015] text-white/60"} text-[11px] leading-5 font-normal`}>
                             {"\u2713"}
                           </span>
                         ) : v === "partial" ? (
@@ -162,7 +162,7 @@ export default function Competitive() {
               }) : MARKET_DATA.map((row, ri) => (
                 <tr
                   key={ri}
-                  className={`border-b border-white/[0.04] transition-colors duration-200 ${hoveredRow === ri ? "bg-white/[0.02]" : ""}`}
+                  className={`border-b border-white/[0.04] transition-colors duration-200 ${hoveredRow === ri ? "bg-white/[0.015]" : ""}`}
                   onMouseEnter={() => setHoveredRow(ri)}
                   onMouseLeave={() => setHoveredRow(null)}
                 >
@@ -180,13 +180,13 @@ export default function Competitive() {
           {/* Score bar + status legend */}
           {!showMarketData && (
             <>
-              <div className="flex items-center mt-6 pt-6 border-t border-white/[0.07]">
+              <div className="flex items-center mt-6 pt-6 border-t border-white/[0.04]">
                 <div className="w-[220px] pr-6 text-[11px] font-medium text-white/20 tracking-wider">SCORE</div>
                 <div className="w-[80px]" />
                 {SCORES.map((s, i) => (
                   <div key={i} className="flex-1 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="h-1 rounded-full bg-white/[0.06] flex-1 max-w-[60px] overflow-hidden">
+                      <div className="h-1 rounded-full bg-white/[0.04] flex-1 max-w-[60px] overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${COMPETITORS[i].highlight ? "bg-white" : "bg-white/20"}`}
                           style={{ width: `${(s / CRITERIA.length) * 100}%` }}
@@ -221,7 +221,7 @@ export default function Competitive() {
         </div>
 
         {/* Bottom insight -- honest framing */}
-        <div className={`mt-8 sm:mt-16 p-4 sm:p-8 bg-white/[0.02] border border-white/[0.07] rounded`}>
+        <div className={`mt-8 sm:mt-16 p-4 sm:p-8 bg-white/[0.015] border border-white/[0.04] rounded`}>
           <div className="flex flex-col lg:flex-row lg:items-center gap-6">
             <div className="flex-1">
               <div className="text-[11px] font-medium text-white/20 tracking-wider mb-3">HONEST ASSESSMENT</div>
@@ -235,7 +235,7 @@ export default function Competitive() {
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <div className="text-[28px] sm:text-[36px] font-bold text-zinc-300 tracking-tight">{SCORES[0]}/{CRITERIA.length}</div>
+              <div className="text-[28px] sm:text-[36px] font-normal text-zinc-300 tracking-tight">{SCORES[0]}/{CRITERIA.length}</div>
               <div className="text-[11px] font-medium text-white/20">PLANNED COVERAGE</div>
               <div className="text-[10px] text-white/12 mt-1">vs next best: {Math.max(...SCORES.slice(1))}/{CRITERIA.length}</div>
             </div>

@@ -8,6 +8,9 @@ use crate::state::{Operator, ProtocolConfig};
 /// Only the protocol admin (or a future authorized validator) can call this.
 /// The trust score is clamped to [0, 10000] after applying the delta.
 pub fn handler(ctx: Context<UpdateTrust>, delta: i16) -> Result<()> {
+    // Cap the delta to +/- 500 per update to prevent trust score manipulation.
+    require!(delta >= -500 && delta <= 500, AegisError::TrustDeltaTooLarge);
+
     let operator = &mut ctx.accounts.operator;
     let old_score = operator.trust_score;
 
@@ -31,7 +34,6 @@ pub fn handler(ctx: Context<UpdateTrust>, delta: i16) -> Result<()> {
 #[derive(Accounts)]
 pub struct UpdateTrust<'info> {
     /// The protocol admin. Only the admin can update trust scores.
-    #[account(mut)]
     pub admin: Signer<'info>,
 
     /// The protocol configuration. Used to validate admin authority.
@@ -43,6 +45,10 @@ pub struct UpdateTrust<'info> {
     pub config: Account<'info, ProtocolConfig>,
 
     /// The operator whose trust score is being updated.
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"operator", operator.creator.as_ref(), operator.operator_id.to_le_bytes().as_ref()],
+        bump = operator.bump,
+    )]
     pub operator: Account<'info, Operator>,
 }

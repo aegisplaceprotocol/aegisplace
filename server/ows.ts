@@ -1,7 +1,7 @@
 /**
  * Open Wallet Standard (OWS) integration for Aegis Protocol.
  * OWS provides encrypted local wallets with isolated signing for AI agents.
- * Keys never touch the agent, LLM, or Aegis — signing happens in OWS's mlocked memory.
+ * Keys never touch the agent, LLM, or Aegis - signing happens in OWS's mlocked memory.
  */
 
 import { execFile as execFileCb } from "child_process";

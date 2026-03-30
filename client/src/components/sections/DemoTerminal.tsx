@@ -1,6 +1,7 @@
 import { useInView } from "@/hooks/useInView";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import SectionLabel from "@/components/SectionLabel";
+import { trpc } from "@/lib/trpc";
 
 const LINES: { type: string; text: string; delay?: number }[] = [
   { type: "prompt", text: "$ agent-aegis init", delay: 800 },
@@ -60,9 +61,18 @@ const LINES: { type: string; text: string; delay?: number }[] = [
 ];
 
 export default function DemoTerminal() {
+  const { data: stats } = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
   const { ref, inView } = useInView(0.15);
   const [visibleLines, setVisibleLines] = useState(0);
   const [started, setStarted] = useState(false);
+
+  const lines = useMemo(() => {
+    const count = stats?.totalOperators?.toLocaleString() ?? "82,074";
+    return LINES.map((line) => ({
+      ...line,
+      text: line.text.replace(/82,074/g, count),
+    }));
+  }, [stats?.totalOperators]);
 
   const startDemo = useCallback(() => {
     setVisibleLines(0);
@@ -75,9 +85,9 @@ export default function DemoTerminal() {
 
   useEffect(() => {
     if (!started) return;
-    if (visibleLines >= LINES.length) return;
+    if (visibleLines >= lines.length) return;
 
-    const currentLine = LINES[visibleLines];
+    const currentLine = lines[visibleLines];
     const delay = currentLine?.type === "prompt" ? (currentLine.delay || 600) :
                   currentLine?.type === "blank" ? 200 : 70;
 
@@ -86,7 +96,7 @@ export default function DemoTerminal() {
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [started, visibleLines]);
+  }, [started, visibleLines, lines]);
 
   const getColor = (type: string) => {
     switch (type) {
@@ -104,14 +114,14 @@ export default function DemoTerminal() {
     }
   };
 
-  const isComplete = visibleLines >= LINES.length;
+  const isComplete = visibleLines >= lines.length;
 
   return (
-    <section id="terminal" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.06]" ref={ref}>
+    <section id="terminal" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container max-w-4xl">
         <div className="text-center mb-16">
           <SectionLabel text="DEMO" />
-          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight mt-6`}>
+          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight mt-6`}>
             Search. Pay. Execute. Earn.
           </h2>
           <p className={`text-[14px] text-white/30 mt-4 max-w-lg mx-auto`}>
@@ -120,11 +130,11 @@ export default function DemoTerminal() {
         </div>
 
         {/* Terminal window */}
-        <div className={`relative border border-white/[0.08] overflow-hidden scale-100`} style={{
+        <div className={`relative border border-white/[0.04] overflow-hidden scale-100`} style={{
           boxShadow: "0 0 80px rgba(161,161,170,0.03)",
         }}>
           {/* Title bar */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.04] bg-white/[0.015]">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/50" />
               <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/50" />
@@ -134,7 +144,7 @@ export default function DemoTerminal() {
             {isComplete && (
               <button
                 onClick={startDemo}
-                className="font-mono text-[11px] tracking-wider uppercase text-white/25 hover:text-zinc-300 transition-colors border border-white/8 hover:border-white/25 px-3 py-1.5"
+                className="font-mono text-[11px] tracking-wider uppercase text-white/25 hover:text-zinc-300 transition-colors border border-white/[0.04] hover:border-white/[0.08] px-3 py-1.5"
               >
                 Replay
               </button>
@@ -143,7 +153,7 @@ export default function DemoTerminal() {
 
           {/* Terminal body  -  all lines pre-rendered to prevent layout shift */}
           <div className="p-3 sm:p-6 lg:p-8 font-mono text-[10px] sm:text-[11px] lg:text-[12px] leading-[1.9] bg-[oklch(0.09_0.005_285)] overflow-x-auto">
-            {LINES.map((line, i) => (
+            {lines.map((line, i) => (
               <div
                 key={i}
                 className={`${getColor(line.type)} ${line.type === "blank" ? "h-3" : ""} duration-150`}
@@ -156,7 +166,7 @@ export default function DemoTerminal() {
                 className="inline-block w-[7px] h-[14px] bg-white/70 animate-pulse ml-0.5"
                 style={{
                   position: "relative",
-                  top: `-${(LINES.length - visibleLines) * 1.9}em`,
+                  top: `-${(lines.length - visibleLines) * 1.9}em`,
                 }}
               />
             )}
@@ -167,7 +177,7 @@ export default function DemoTerminal() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="/playground"
-            className="inline-flex items-center gap-2 text-[13px] font-medium text-zinc-300/60 hover:text-zinc-300 border border-white/15 hover:border-white/30 px-5 py-2.5 transition-all duration-300 hover:bg-white/[0.04]"
+            className="inline-flex items-center gap-2 text-[13px] font-medium text-zinc-300/60 hover:text-zinc-300 border border-white/[0.04] hover:border-white/[0.08] px-5 py-2.5 transition-all duration-300 hover:bg-white/[0.04]"
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 2L12 8L4 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Try it yourself in the Playground

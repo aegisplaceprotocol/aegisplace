@@ -1,5 +1,8 @@
 import { createApp } from "../server/_core/app";
 
-// Export the Express app as the default Vercel handler.
-// Vercel calls app(req, res) for each incoming request.
-export default createApp();
+const appPromise = createApp();
+
+export default async function handler(req: any, res: any) {
+  const app = await appPromise;
+  return app(req, res);
+}

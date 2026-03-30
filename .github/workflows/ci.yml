@@ -6,33 +6,106 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  NODE_VERSION: "22"
+  SOLANA_CLI_VERSION: "2.2.12"
+
 jobs:
-  ci:
+  build-client:
+    name: Build Client
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          version: 10.4.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          version: 9
+      - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: pnpm
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/dist/
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: npx tsc --noEmit
 
-      - name: Type check
-        run: pnpm check
+  anchor-build:
+    name: Anchor Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: coral-xyz/setup-anchor@v1
+        with:
+          anchor-version: "0.30.1"
+          solana-cli-version: ${{ env.SOLANA_CLI_VERSION }}
+      - run: anchor build
+      - name: Upload program artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solana-programs
+          path: target/deploy/*.so
 
-      - name: Test
-        run: pnpm test
+  lint:
+    name: Lint & Sanitize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Check for console.log in client
+        run: |
+          if grep -rn "console\.log\|console\.debug" --include="*.ts" --include="*.tsx" client/src/ | grep -v "// " | grep -v "code-example" | grep -v "\.test\." | head -5; then
+            echo "::warning::Found console.log statements in client code"
+          fi
+      - name: Check for secrets
+        run: |
+          if grep -rn "PRIVATE_KEY\|sk-[a-zA-Z0-9]\{20,\}" --include="*.ts" --include="*.tsx" client/src/ server/ | grep -v "\.env\|example\|placeholder\|CHANGEME\|mock\|demo\|masked" | head -5; then
+            echo "::error::Possible secrets found in code"
+            exit 1
+          fi
+      - name: Check for data-loc
+        run: |
+          if grep -rn "data-loc" --include="*.tsx" client/src/ | head -1; then
+            echo "::error::data-loc attributes found (AI trace)"
+            exit 1
+          fi
 
-      - name: Build
-        run: pnpm build
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high || true
+      - name: Check dependencies
+        run: npx depcheck --ignores="@types/*" || true

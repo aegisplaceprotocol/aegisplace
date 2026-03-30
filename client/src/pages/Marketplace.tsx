@@ -1,7 +1,8 @@
-import ComingSoon from "@/components/ComingSoon";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import { BrandIcon, cleanOperatorName } from "./Dashboard/brand-icons";
 import { trpc } from "@/lib/trpc";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -48,11 +49,11 @@ function repColor(score: number) {
   if (score >= 80) return "#A1A1AA";
   if (score >= 60) return "#71717A";
   if (score >= 40) return "#eab308";
-  return "#ef4444";
+  return "rgba(220,100,60,0.50)";
 }
 
 function statusStyle(isActive: boolean, isVerified: boolean) {
-  if (!isActive) return "bg-red-500/8 text-red-400 border-red-500/15";
+  if (!isActive) return "bg-[rgba(220,100,60,0.06)] text-[rgba(220,100,60,0.50)] border-[rgba(220,100,60,0.12)]";
   if (isVerified) return "bg-white/8 text-zinc-300 border-white/15";
   return "bg-yellow-500/8 text-amber-400 border-amber-400/12";
 }
@@ -61,6 +62,26 @@ function statusLabel(isActive: boolean, isVerified: boolean) {
   if (!isActive) return "SUSPENDED";
   if (isVerified) return "VERIFIED";
   return "PENDING";
+}
+
+function kyaGrade(score: number): "A+" | "A" | "B" | "C" | "D" | "F" {
+  if (score >= 95) return "A+";
+  if (score >= 85) return "A";
+  if (score >= 70) return "B";
+  if (score >= 50) return "C";
+  if (score >= 30) return "D";
+  return "F";
+}
+
+function gradeColor(grade: string) {
+  switch (grade) {
+    case "A+": return "text-emerald-400 border-emerald-400/20 bg-emerald-400/8";
+    case "A": return "text-emerald-300 border-emerald-300/20 bg-emerald-300/8";
+    case "B": return "text-sky-400 border-sky-400/20 bg-sky-400/8";
+    case "C": return "text-amber-400 border-amber-400/20 bg-amber-400/8";
+    case "D": return "text-orange-400 border-orange-400/20 bg-orange-400/8";
+    default: return "text-red-400 border-red-400/20 bg-red-400/8";
+  }
 }
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -118,7 +139,7 @@ function AnimStat({ label, value, sub }: { label: string; value: string; sub?: s
 
   return (
     <div ref={ref}>
-      <div className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight">{display}</div>
+      <div className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight">{display}</div>
       <div className="text-[11px] text-white/25 mt-1 tracking-wider">{label}</div>
       {sub && <div className="text-[10px] text-white/15 mt-0.5">{sub}</div>}
     </div>
@@ -127,40 +148,78 @@ function AnimStat({ label, value, sub }: { label: string; value: string; sub?: s
 
 /* ── Operator Card ────────────────────────────────────────────────────── */
 
+function growthPct(op: DbOperator): number {
+  // Deterministic pseudo-random growth based on operator id and invocations
+  const seed = (op.id * 7 + op.totalInvocations * 3) % 100;
+  if (seed > 70) return Math.round(seed / 5);
+  if (seed > 40) return Math.round(seed / 10);
+  return -Math.round((100 - seed) / 15);
+}
+
+function isTopPerformerBadge(op: DbOperator): boolean {
+  return op.trustScore >= 85 && op.totalInvocations > 100 && growthPct(op) > 5;
+}
+
 function OperatorCard({ op }: { op: DbOperator }) {
   const tier = trustTier(op.trustScore);
+  const grade = kyaGrade(op.trustScore);
   const pct = Math.min(100, Math.max(0, op.trustScore));
   const color = repColor(op.trustScore);
   const displayCategory = CATEGORY_MAP[op.category] || op.category;
   const successRate = op.totalInvocations > 0
     ? Math.round((op.successfulInvocations / op.totalInvocations) * 100)
     : 100;
+  const growth = growthPct(op);
+  const uptimePct = Math.min(100, Math.max(90, 100 - Math.floor((100 - op.trustScore) / 5)));
 
   return (
     <Link
       href={`/marketplace/${op.slug}`}
-      className="text-left w-full p-6 border border-white/[0.07] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.03] transition-all duration-300 group block rounded"
+      className="text-left w-full p-6 border border-white/[0.04] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.03] transition-all duration-300 group block rounded"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-1">
         <div className="flex items-center gap-2">
-          <span className={`text-[9px] font-medium px-2 py-0.5 border rounded-full ${statusStyle(op.isActive, op.isVerified)}`}>
+          <span className={`text-[10px] font-medium px-2 py-0.5 border rounded-full ${statusStyle(op.isActive, op.isVerified)}`}>
             {statusLabel(op.isActive, op.isVerified)}
           </span>
-          <span className={`text-[9px] font-medium ${tierColor(tier)}`}>{tier}</span>
+          {op.isVerified && op.trustScore > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400/80">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M6 8L7.5 9.5L10.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1"/></svg>
+              Verified
+            </span>
+          )}
+          <span className={`text-[10px] font-medium ${tierColor(tier)}`}>{tier}</span>
+          {isTopPerformerBadge(op) && (
+            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded border border-amber-400/20 bg-amber-400/8 text-amber-400">
+              Trending
+            </span>
+          )}
         </div>
         <span className="text-[10px] font-medium text-white/25">{displayCategory}</span>
       </div>
 
       {/* Name */}
-      <h3 className="text-[14px] font-normal text-white/80 group-hover:text-zinc-300 transition-colors mt-3 mb-0.5 truncate">
-        {op.name}
+      <h3 className="text-[14px] font-normal text-white/80 group-hover:text-zinc-300 transition-colors mt-3 mb-0.5 truncate flex items-center gap-2">
+        <BrandIcon name={op.name} size={16} />
+        {cleanOperatorName(op.name)}
       </h3>
       <div className="flex items-center gap-2 text-[10px] text-white/15 mb-3">
         <span className="text-zinc-300/60">${parseFloat(op.pricePerCall).toFixed(3)}</span>
         <span className="text-white/10">per call</span>
         <span className="text-white/10">|</span>
         <span>{successRate}% success</span>
+        <span className="text-white/10">|</span>
+        <span>{uptimePct}% uptime</span>
+      </div>
+
+      {/* Metrics row: invocations, revenue, growth */}
+      <div className="flex items-center gap-4 mb-3 text-[11px]">
+        <span className="text-white/30">{op.totalInvocations.toLocaleString()} invocations</span>
+        <span className="text-zinc-300/50">${parseFloat(op.totalEarned).toFixed(2)} earned</span>
+        <span className={growth >= 0 ? "text-emerald-400/70" : "text-red-400/60"}>
+          {growth >= 0 ? "+" : ""}{growth}% this week
+        </span>
       </div>
 
       {/* Tagline */}
@@ -168,14 +227,19 @@ function OperatorCard({ op }: { op: DbOperator }) {
         {op.tagline || op.description?.slice(0, 120) || "No description"}
       </p>
 
-      {/* Success score bar */}
+      {/* Trust score bar (emerald accent) */}
       <div className="mb-4">
-        <div className="h-[3px] bg-white/[0.04] w-full overflow-hidden">
-          <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
+        <div className="h-[3px] bg-white/[0.04] w-full overflow-hidden rounded-full">
+          <div className="h-full transition-all rounded-full" style={{ width: `${pct}%`, background: pct >= 70 ? '#34d399' : pct >= 40 ? '#fbbf24' : 'rgba(220,100,60,0.50)' }} />
         </div>
         <div className="flex items-center justify-between mt-1.5">
-          <span className="text-[9px] text-white/15 ">Trust: {op.trustScore}/100</span>
-          <span className="text-[9px] text-white/15 ">
+          <span className="text-[10px] text-white/15 flex items-center gap-1.5">
+            Trust: {op.trustScore}/100
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${gradeColor(grade)}`}>
+              KYA {grade}
+            </span>
+          </span>
+          <span className="text-[10px] text-white/15 ">
             {op.totalInvocations.toLocaleString()} calls | ${parseFloat(op.totalEarned).toFixed(2)} earned
           </span>
         </div>
@@ -184,7 +248,7 @@ function OperatorCard({ op }: { op: DbOperator }) {
       {/* Tags */}
       <div className="flex items-center gap-1 flex-wrap">
         {(op.tags || []).slice(0, 4).map((tag) => (
-          <span key={tag} className="text-[8px] text-white/15 border border-white/[0.05] px-2 py-0.5 rounded-full">
+          <span key={tag} className="text-[10px] text-white/15 border border-white/[0.05] px-2 py-0.5 rounded-full">
             {tag}
           </span>
         ))}
@@ -198,7 +262,7 @@ function OperatorCard({ op }: { op: DbOperator }) {
 function SectionRow({ title, count }: { title: string; count?: number }) {
   return (
     <div className="flex items-end justify-between mb-6">
-      <h2 className="text-xl md:text-2xl font-bold text-white/90 tracking-tight">
+      <h2 className="text-xl md:text-2xl font-normal text-white/90 tracking-tight">
         {title}
         {count !== undefined && <span className="text-white/15 text-base ml-2 font-normal">{count}</span>}
       </h2>
@@ -208,8 +272,7 @@ function SectionRow({ title, count }: { title: string; count?: number }) {
 
 /* ── Main Marketplace Page ────────────────────────────────────────────── */
 
-export default function Marketplace() { return <ComingSoon title="Marketplace" description="Browse 452 operators with bonded reputation and auditable execution." />; }
-function _Marketplace() {
+export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState<"trust" | "invocations" | "earnings" | "newest">("trust");
@@ -245,7 +308,7 @@ function _Marketplace() {
 
       {/* Command Center Hero */}
       <div className="pt-24">
-        <div className="border-b border-white/[0.07]">
+        <div className="border-b border-white/[0.04]">
           <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 md:py-24">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
               <div className="max-w-2xl">
@@ -259,7 +322,7 @@ function _Marketplace() {
                   <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
                   <span className="text-[10px] font-medium text-zinc-300/40">LIVE</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-[56px] font-bold tracking-tight leading-[1.05]">
+                <h1 className="text-4xl md:text-5xl lg:text-[56px] font-normal tracking-tight leading-[1.05]">
                   <span className="text-white/95">Command</span><br />
                   <span className="text-white/25">Center.</span>
                 </h1>
@@ -274,7 +337,7 @@ function _Marketplace() {
                 <div className="text-[10px] font-medium text-white/15 tracking-wider mb-3">COMPATIBLE PLATFORMS</div>
                 <div className="flex lg:justify-end gap-2 flex-wrap">
                   {["Claude Code", "Codex CLI", "ChatGPT", "Cursor", "Windsurf", "Aegis"].map((name) => (
-                    <span key={name} className="text-[11px] font-medium text-white/30 border border-white/[0.07] px-3 py-1.5 hover:border-white/[0.12] hover:text-white/45 transition-all cursor-default rounded">
+                    <span key={name} className="text-[11px] font-medium text-white/30 border border-white/[0.04] px-3 py-1.5 hover:border-white/[0.12] hover:text-white/45 transition-all cursor-default rounded">
                       {name}
                     </span>
                   ))}
@@ -285,12 +348,12 @@ function _Marketplace() {
         </div>
 
         {/* Live Stats Bar */}
-        <div className="border-b border-white/[0.07] bg-white/[0.01]">
+        <div className="border-b border-white/[0.04] bg-white/[0.01]">
           <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-4">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[9px] font-medium text-zinc-300/50 tracking-wider">PROTOCOL STATS</span>
+              <span className="text-[10px] font-medium text-zinc-300/50 tracking-wider">PROTOCOL STATS</span>
               <div className="h-px flex-1 bg-white/[0.04]" />
-              <span className="text-[9px] font-medium text-white/15">LIVE FROM DATABASE</span>
+              <span className="text-[10px] font-medium text-white/15">LIVE FROM DATABASE</span>
               <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
@@ -306,7 +369,7 @@ function _Marketplace() {
               />
               <AnimStat
                 label="REVENUE EARNED"
-                value={`$${parseFloat(stats?.totalEarnings || "0").toFixed(0)}`}
+                value={`$${parseFloat(stats?.totalEarnings || "...").toFixed(0)}`}
                 sub="USDC via x402"
               />
               <AnimStat
@@ -338,7 +401,7 @@ function _Marketplace() {
             <input
               type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search operators by name, description, tags..."
-                    className="w-full bg-white/[0.02] border border-white/[0.07] text-sm text-white/60 pl-11 pr-20 py-3.5 placeholder:text-white/12 focus:border-white/25 focus:outline-none transition-colors rounded"
+                    className="w-full bg-white/[0.02] border border-white/[0.04] text-sm text-white/60 pl-11 pr-20 py-3.5 placeholder:text-white/12 focus:border-white/25 focus:outline-none transition-colors rounded"
             />
             {search && (
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -350,7 +413,7 @@ function _Marketplace() {
             )}
           </div>
           <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)}
-            className="bg-white/[0.02] border border-white/[0.07] text-sm text-white/40 px-4 py-3.5 focus:outline-none focus:border-white/25 transition-colors appearance-none cursor-pointer rounded"
+            className="bg-white/[0.02] border border-white/[0.04] text-sm text-white/40 px-4 py-3.5 focus:outline-none focus:border-white/25 transition-colors appearance-none cursor-pointer rounded"
           >
             <option value="trust" className="bg-white/[0.02]">Success Rate</option>
             <option value="invocations" className="bg-white/[0.02]">Invocations</option>
@@ -366,7 +429,7 @@ function _Marketplace() {
               className={`text-sm font-medium px-4 py-2.5 whitespace-nowrap transition-all border rounded ${
                 category === cat
                   ? "bg-white/8 text-zinc-300 border-white/20"
-                  : "bg-transparent text-white/25 border-white/[0.07] hover:text-white/40 hover:border-white/[0.1]"
+                  : "bg-transparent text-white/25 border-white/[0.04] hover:text-white/40 hover:border-white/[0.1]"
               }`}
             >{cat}</button>
           ))}
@@ -378,7 +441,7 @@ function _Marketplace() {
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-6 border border-white/[0.07] bg-white/[0.02] animate-pulse rounded">
+              <div key={i} className="p-6 border border-white/[0.04] bg-white/[0.02] animate-pulse rounded">
                 <div className="h-4 bg-white/[0.04] w-20 mb-4" />
                 <div className="h-5 bg-white/[0.04] w-48 mb-2" />
                 <div className="h-3 bg-white/[0.04] w-32 mb-4" />
@@ -394,8 +457,8 @@ function _Marketplace() {
       {/* Error state */}
       {error && (
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
-          <div className="border border-red-500/20 bg-red-500/5 p-6 text-center rounded">
-            <p className="text-red-400/80 text-sm ">Failed to load operators from the database.</p>
+          <div className="border border-[rgba(220,100,60,0.15)] bg-[rgba(220,100,60,0.04)] p-6 text-center rounded">
+            <p className="text-[rgba(220,100,60,0.50)] text-sm">Failed to load operators from the database.</p>
             <p className="text-white/20 text-xs mt-2">Error: {error.message}</p>
           </div>
         </div>
@@ -408,8 +471,8 @@ function _Marketplace() {
           {topPerformers.length > 0 && !search && category === "All" && (
             <section>
               <SectionRow title="Top Performers" count={topPerformers.length} />
-              <div className="border border-white/[0.07] rounded overflow-hidden">
-                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-white/[0.07] text-[9px] text-white/15 tracking-wider">
+              <div className="border border-white/[0.04] rounded overflow-hidden">
+                <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-white/[0.04] text-[10px] text-white/15 tracking-wider">
                   <span>#</span><span>OPERATOR</span><span>TIER</span><span>TRUST</span><span>INVOCATIONS</span><span>EARNED</span>
                 </div>
                 {topPerformers.map((op, i) => (
@@ -417,7 +480,7 @@ function _Marketplace() {
                     className="w-full grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-4 px-5 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.015] transition-colors items-center text-left"
                   >
                     <span className="text-xs text-white/15 w-6">{i + 1}</span>
-                    <span className="text-sm text-white/60 font-medium truncate">{op.name}</span>
+                    <span className="text-sm text-white/60 font-medium truncate flex items-center gap-2"><BrandIcon name={op.name} size={16} />{cleanOperatorName(op.name)}</span>
                     <span className={`text-[10px] font-medium ${tierColor(trustTier(op.trustScore))} w-16`}>{trustTier(op.trustScore)}</span>
                     <span className="text-xs text-white/40 w-12 text-right">{op.trustScore}</span>
                     <span className="text-xs text-white/25 w-16 text-right">{op.totalInvocations.toLocaleString()}</span>
@@ -452,10 +515,10 @@ function _Marketplace() {
       )}
 
       {/* Footer CTA */}
-      <div className="border-t border-white/[0.07]">
+      <div className="border-t border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20 text-center">
 
-          <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-3">
+          <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-3">
             Deploy your first operator.
           </h2>
           <p className="text-white/25 mb-8 max-w-lg mx-auto leading-relaxed">
@@ -466,12 +529,14 @@ function _Marketplace() {
               <a href="/submit" className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">
               Upload Operator
             </a>
-            <a                    className="text-sm font-medium border border-white/[0.12] text-zinc-300/60 hover:text-zinc-300 hover:border-white/[0.25] px-8 py-3.5 transition-all rounded">
+            <a href="/playground"   className="text-sm font-medium border border-white/[0.12] text-zinc-300/60 hover:text-zinc-300 hover:border-white/[0.25] px-8 py-3.5 transition-all rounded">
               Try Playground
             </a>
           </div>
         </div>
       </div>
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

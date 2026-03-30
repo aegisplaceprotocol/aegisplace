@@ -38,6 +38,9 @@ COPY --from=builder /app/dist ./dist
 # Copy drizzle migrations if needed at runtime
 COPY --from=builder /app/drizzle ./drizzle
 
+RUN addgroup -g 1001 -S aegis && adduser -S aegis -u 1001
+USER aegis
+
 EXPOSE 3000
 
 CMD ["node", "dist/index.js"]

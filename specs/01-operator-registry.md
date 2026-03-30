@@ -4,21 +4,21 @@
 AI agent skills have no on-chain registry. No discovery, no payment verification, no trust scoring, no fee distribution. Everything is off-chain and unverifiable.
 
 ## Solution
-An Anchor program on Solana that registers operator skills, handles invocation payments, distributes fees to 4 parties, and tracks trust scores — all on-chain and verifiable.
+An Anchor program on Solana that registers operator skills, handles invocation payments, distributes fees to 4 parties, and tracks trust scores - all on-chain and verifiable.
 
 ## Data Model
 
 ### ProtocolConfig PDA
 - Seeds: `["config"]`
 - Fields:
-  - `admin: Pubkey` — upgrade authority
-  - `treasury: Pubkey` — protocol treasury wallet
-  - `staker_pool: Pubkey` — $AEGIS staker reward pool
-  - `aegis_mint: Pubkey` — $AEGIS Token-2022 mint
+  - `admin: Pubkey` - upgrade authority
+  - `treasury: Pubkey` - protocol treasury wallet
+  - `staker_pool: Pubkey` - $AEGIS staker reward pool
+  - `aegis_mint: Pubkey` - $AEGIS Token-2022 mint
   - `total_operators: u64`
   - `total_invocations: u64`
   - `total_volume_lamports: u64`
-  - `fee_bps: [u16; 4]` — [creator=7000, stakers=2000, treasury=900, referrer=100]
+  - `fee_bps: [u16; 4]` - [creator=7000, stakers=2000, treasury=900, referrer=100]
   - `bump: u8`
 
 ### Operator PDA
@@ -28,9 +28,9 @@ An Anchor program on Solana that registers operator skills, handles invocation p
   - `operator_id: u64`
   - `name: String` (max 64)
   - `endpoint_url: String` (max 256)
-  - `price_lamports: u64` — price per invocation in USDC lamports (6 decimals)
-  - `category: u8` — enum index
-  - `trust_score: u16` — 0-10000 (basis points, so 9500 = 95.00)
+  - `price_lamports: u64` - price per invocation in USDC lamports (6 decimals)
+  - `category: u8` - enum index
+  - `trust_score: u16` - 0-10000 (basis points, so 9500 = 95.00)
   - `total_invocations: u64`
   - `successful_invocations: u64`
   - `total_earned_lamports: u64`

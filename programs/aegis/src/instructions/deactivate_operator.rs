@@ -34,6 +34,8 @@ pub struct DeactivateOperator<'info> {
     /// The operator to deactivate. `has_one` ensures the signer is the creator.
     #[account(
         mut,
+        seeds = [b"operator", operator.creator.as_ref(), operator.operator_id.to_le_bytes().as_ref()],
+        bump = operator.bump,
         has_one = creator @ AegisError::Unauthorized,
     )]
     pub operator: Account<'info, Operator>,

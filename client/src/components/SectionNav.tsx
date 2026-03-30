@@ -167,7 +167,7 @@ export default function SectionNav() {
         visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
     >
-      <div className="bg-white/[0.04] backdrop-blur-md border border-white/[0.07] rounded py-4 px-2 flex flex-col items-center gap-1">
+      <div className="bg-white/[0.04] backdrop-blur-md border border-white/[0.04] rounded py-4 px-2 flex flex-col items-center gap-1">
         {SECTIONS.map((s) => {
           const isActive = activeId === s.id;
           return (

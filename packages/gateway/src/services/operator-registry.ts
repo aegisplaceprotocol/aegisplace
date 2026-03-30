@@ -20,7 +20,7 @@ async function ensureConnection(): Promise<boolean> {
   if (_connected && mongoose.connection.readyState === 1) return true;
 
   if (!DATABASE_URL) {
-    console.warn("[operator-registry] DATABASE_URL not set — running without database");
+    console.warn("[operator-registry] DATABASE_URL not set - running without database");
     return false;
   }
 

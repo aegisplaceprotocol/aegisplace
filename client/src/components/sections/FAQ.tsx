@@ -118,11 +118,11 @@ export default function FAQ() {
   const { ref, inView } = useInView(0.05);
 
   return (
-    <section id="faq" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="faq" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container max-w-3xl">
         <SectionLabel text="FAQ" />
 
-        <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight mb-16`}>
+        <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight mb-16`}>
           Frequently asked
           <br />
           <span className="text-white/35 font-normal">questions.</span>
@@ -134,7 +134,7 @@ export default function FAQ() {
             return (
               <div
                 key={i}
-                className={`border-b ${isOpen ? "border-white/[0.08]" : "border-white/[0.05]"}`}
+                className={`border-b ${isOpen ? "border-white/[0.04]" : "border-white/[0.04]"}`}
                 style={{ transitionDelay: `${i * 40}ms` }}
               >
                 <button
@@ -154,7 +154,7 @@ export default function FAQ() {
                   </span>
 
                   <span className={`flex items-center justify-center w-7 h-7 border shrink-0 text-sm transition-all duration-300 ${
-                    isOpen ? "border-white/25 text-zinc-300/50 rotate-45" : "border-white/8 text-white/15 group-hover:border-white/15"
+                    isOpen ? "border-white/[0.08] text-zinc-300/50 rotate-45" : "border-white/[0.04] text-white/15 group-hover:border-white/[0.08]"
                   }`}>
                     +
                   </span>

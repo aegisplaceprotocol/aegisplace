@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import SectionLabel from "@/components/SectionLabel";
 import { useInView } from "@/hooks/useInView";
 import { useLiveFeed, type LiveFeedEvent } from "@/hooks/useLiveFeed";
+import { trpc } from "@/lib/trpc";
 
 interface Invocation {
   id: string;
@@ -69,7 +70,7 @@ function FeedRow({ inv, isNew }: { inv: Invocation; isNew: boolean }) {
   const ageStr = age < 2 ? "now" : `${age}s ago`;
 
   return (
-    <div className={`grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_80px_70px_60px_70px_60px] gap-2 sm:gap-3 items-center py-3 px-3 sm:px-4 border-b border-white/[0.04] transition-all ${isNew ? "bg-white/[0.03]" : "bg-transparent"}`}>
+    <div className={`grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_80px_70px_60px_70px_60px] gap-2 sm:gap-3 items-center py-3 px-3 sm:px-4 border-b border-white/[0.04] transition-all ${isNew ? "bg-white/[0.015]" : "bg-transparent"}`}>
       <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
         <StatusDot status={inv.status} />
         <span className="text-[12px] sm:text-[13px] font-medium text-white/70 truncate">{inv.operator}</span>
@@ -109,13 +110,24 @@ function sseToInvocation(evt: LiveFeedEvent): Invocation | null {
 }
 
 export default function LiveFeed() {
+  const { data: stats } = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
   const { ref, inView } = useInView(0.05);
   const { events: sseEvents, connected: sseConnected } = useLiveFeed();
   const [simInvocations, setSimInvocations] = useState<Invocation[]>([]);
   const [newestId, setNewestId] = useState<string>("");
-  const [totalCount, setTotalCount] = useState(82074);
-  const [totalVolume, setTotalVolume] = useState(1847293.42);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
+  const statsInitialized = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  // Seed counters from live stats once available
+  useEffect(() => {
+    if (stats && !statsInitialized.current) {
+      statsInitialized.current = true;
+      if (stats.totalInvocations) setTotalCount(stats.totalInvocations);
+      if (stats.totalEarnings) setTotalVolume(parseFloat(String(stats.totalEarnings)));
+    }
+  }, [stats]);
 
   // Convert SSE events to invocation display format
   const sseInvocations = useMemo(() => {
@@ -169,26 +181,26 @@ export default function LiveFeed() {
   }, [inView, addInvocation, hasSSEData]);
 
   return (
-    <section id="live-feed" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="live-feed" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="LIVE PROTOCOL" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div>
-            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Every invocation.<br />
               <span className="text-white/30">On-chain. Verifiable.</span>
             </h2>
           </div>
           <div className="flex gap-4 sm:gap-8">
             <div className="text-right">
-              <div className="text-[18px] sm:text-[24px] font-bold text-zinc-300 tracking-tight">
+              <div className="text-[18px] sm:text-[24px] font-normal text-zinc-300 tracking-tight">
                 {totalCount.toLocaleString()}
               </div>
               <div className="text-[10px] font-medium text-white/20 tracking-wider">TOTAL INVOCATIONS</div>
             </div>
             <div className="text-right">
-              <div className="text-[18px] sm:text-[24px] font-bold text-white/60 tracking-tight">
+              <div className="text-[18px] sm:text-[24px] font-normal text-white/60 tracking-tight">
                 ${totalVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div className="text-[10px] font-medium text-white/20 tracking-wider">PROTOCOL VOLUME</div>
@@ -197,9 +209,9 @@ export default function LiveFeed() {
         </div>
 
         {/* Feed container */}
-        <div className={`border border-white/[0.07] bg-white/[0.01] rounded overflow-hidden`}>
+        <div className={`border border-white/[0.04] bg-white/[0.01] rounded overflow-hidden`}>
           {/* Header */}
-          <div className="hidden sm:grid grid-cols-[1fr_100px_80px_70px_60px_70px_60px] gap-3 items-center py-3 px-4 border-b border-white/[0.08] bg-white/[0.02]">
+          <div className="hidden sm:grid grid-cols-[1fr_100px_80px_70px_60px_70px_60px] gap-3 items-center py-3 px-4 border-b border-white/[0.04] bg-white/[0.015]">
             <span className="text-[10px] font-medium text-white/20 tracking-wider">OPERATOR</span>
             <span className="text-[10px] font-medium text-white/20 tracking-wider">CALLER</span>
             <span className="text-[10px] font-medium text-white/20 tracking-wider text-right">AMOUNT</span>
@@ -217,7 +229,7 @@ export default function LiveFeed() {
           </div>
 
           {/* Footer */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-3 px-3 sm:px-4 border-t border-white/[0.08] bg-white/[0.02]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-3 px-3 sm:px-4 border-t border-white/[0.04] bg-white/[0.015]">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/40 opacity-75" />
@@ -235,21 +247,21 @@ export default function LiveFeed() {
 
         {/* Callout */}
         <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="flex-1 p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">INVOCATION RECEIPTS</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Every settled invocation mints a compressed NFT (cNFT) via Bubblegum at ~$0.00005 per mint.
               Portable proof-of-work that builds an agent's on-chain portfolio.
             </p>
           </div>
-          <div className="flex-1 p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="flex-1 p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">HEALTH ENDPOINT</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Every registered operator exposes <span className="font-medium text-zinc-300/50">GET /aegis/health</span> returning
               uptime, p99 latency, error rate, and queue depth. Real-time badges, not static metadata.
             </p>
           </div>
-          <div className="flex-1 p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="flex-1 p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">.AEGIS.SOL IDENTITY</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Agents register via Solana Name Service. <span className="font-medium text-zinc-300/50">translate.aegis.sol</span> resolves

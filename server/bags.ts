@@ -1,5 +1,5 @@
 /**
- * Aegis Protocol — Bags API Client
+ * Aegis Protocol - Bags API Client
  *
  * Typed wrapper for the Bags.fm public API v2.
  * All methods gracefully handle missing BAGS_API_KEY.
@@ -22,7 +22,7 @@ export class BagsApiError extends Error {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Token Launch
+// Types - Token Launch
 // ────────────────────────────────────────────────────────────
 
 export interface CreateTokenInfoRequest {
@@ -54,7 +54,7 @@ export interface CreateLaunchTxResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Trading
+// Types - Trading
 // ────────────────────────────────────────────────────────────
 
 export interface TradeQuoteParams {
@@ -86,7 +86,7 @@ export interface SwapTxResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Fee Sharing
+// Types - Fee Sharing
 // ────────────────────────────────────────────────────────────
 
 export interface CreateFeeShareConfigRequest {
@@ -151,7 +151,7 @@ export interface ClaimEventsResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Partner Fees
+// Types - Partner Fees
 // ────────────────────────────────────────────────────────────
 
 export interface CreatePartnerConfigRequest {
@@ -200,7 +200,7 @@ export interface PartnerClaimTxsResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Analytics
+// Types - Analytics
 // ────────────────────────────────────────────────────────────
 
 export interface LifetimeFeesParams {
@@ -257,7 +257,7 @@ export interface TokenFeedResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — State
+// Types - State
 // ────────────────────────────────────────────────────────────
 
 export interface PoolInfoParams {
@@ -291,7 +291,7 @@ export interface TokenStateResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Agent Auth
+// Types - Agent Auth
 // ────────────────────────────────────────────────────────────
 
 export interface AgentAuthInitRequest {
@@ -351,7 +351,7 @@ export interface AgentDevKeysCreateResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — DexScreener
+// Types - DexScreener
 // ────────────────────────────────────────────────────────────
 
 export interface DexScreenerOrderCreateRequest {
@@ -380,7 +380,7 @@ export interface DexScreenerOrderSubmitPaymentResponse {
 }
 
 // ────────────────────────────────────────────────────────────
-// Types — Transaction
+// Types - Transaction
 // ────────────────────────────────────────────────────────────
 
 export interface TransactionSendRequest {

@@ -2,17 +2,16 @@ import { motion } from "framer-motion";
 import { fadeInView } from "@/lib/animations";
 
 const DIMENSIONS = [
-  { label: "Success Rate", value: 94, color: "#10B981" },
-  { label: "Response Quality", value: 91, color: "#10B981" },
-  { label: "Uptime", value: 99, color: "#10B981" },
-  { label: "User Reviews", value: 87, color: "#10B981" },
-  { label: "Dispute Rate", value: 2, color: "#ef4444", inverted: true },
+  { label: "AegisX IDE Tools", value: 57, color: "#10B981" },
+  { label: "Bags.fm Integration", value: 6, color: "#10B981" },
+  { label: "Vulnerability Classes", value: 15, color: "#10B981" },
+  { label: "Concurrent Agents", value: 16, color: "#10B981" },
+  { label: "On-Chain Actions", value: 24, color: "#10B981" },
 ];
 
-function Gauge({ label, value, color, inverted }: { label: string; value: number; color: string; inverted?: boolean }) {
+function Gauge({ label, value, color }: { label: string; value: number; color: string; inverted?: boolean }) {
   const circumference = 2 * Math.PI * 34;
-  const displayValue = inverted ? value : value;
-  const fillPercent = inverted ? (100 - value) / 100 : value / 100;
+  const fillPercent = Math.min(value / 60, 1);
   const offset = circumference * (1 - fillPercent);
 
   return (
@@ -31,8 +30,8 @@ function Gauge({ label, value, color, inverted }: { label: string; value: number
           strokeDashoffset={offset}
         />
       </svg>
-      <div className="text-2xl font-bold text-white mb-1" style={{ color }}>
-        {displayValue}%
+      <div className="text-2xl font-normal text-white mb-1" style={{ color }}>
+        {value}
       </div>
       <div className="text-xs text-zinc-500">{label}</div>
     </div>
@@ -41,7 +40,7 @@ function Gauge({ label, value, color, inverted }: { label: string; value: number
 
 export default function SuccessEngine() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
           <div className="flex items-center gap-2 mb-6">
@@ -50,11 +49,12 @@ export default function SuccessEngine() {
           </div>
 
           <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-4">
-            Five dimensions. One success score.
+            The full-stack Solana AI platform. Nothing else comes close.
           </h2>
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
-            Every operator is continuously scored across five independent dimensions.
-            No single metric can be gamed. The composite score updates after every invocation.
+            AegisX is the only browser-based IDE built for Solana. 57 tools, Bags.fm integration,
+            smart contract auditing across 15 vulnerability classes, and multi-agent swarms with 16 concurrent agents.
+            Cursor, Windsurf, and Copilot don't ship any of this.
           </p>
         </motion.div>
 

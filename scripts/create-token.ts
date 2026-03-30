@@ -1,5 +1,5 @@
 /**
- * create-token.ts — Creates the $AEGIS Token-2022 mint on Solana devnet.
+ * create-token.ts - Creates the $AEGIS Token-2022 mint on Solana devnet.
  *
  * Features:
  *   - Token-2022 program with Transfer Fee extension

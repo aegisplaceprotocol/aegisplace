@@ -12,13 +12,15 @@ pub fn handler(
     ctx: Context<RegisterOperator>,
     name: String,
     endpoint_url: String,
-    price_lamports: u64,
+    price_usdc_base: u64,
     category: u8,
 ) -> Result<()> {
     // Validate input lengths.
     require!(name.len() <= 64, AegisError::NameTooLong);
     require!(endpoint_url.len() <= 256, AegisError::EndpointUrlTooLong);
-    require!(price_lamports > 0, AegisError::ZeroPrice);
+    require!(price_usdc_base > 0, AegisError::ZeroPrice);
+    // Minimum price: 10,000 base units = $0.01 USDC (6 decimals).
+    require!(price_usdc_base >= 10_000, AegisError::PriceTooLow);
 
     let config = &mut ctx.accounts.config;
     let operator_id = config.total_operators;
@@ -28,7 +30,7 @@ pub fn handler(
     operator.operator_id = operator_id;
     operator.name = name.clone();
     operator.endpoint_url = endpoint_url.clone();
-    operator.price_lamports = price_lamports;
+    operator.price_usdc_base = price_usdc_base;
     operator.category = category;
     operator.trust_score = 5_000; // Start at 50% trust.
     operator.total_invocations = 0;
@@ -49,7 +51,7 @@ pub fn handler(
         creator: operator.creator,
         name,
         endpoint_url,
-        price_lamports,
+        price_usdc_base,
         category,
     });
 

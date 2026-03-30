@@ -8,8 +8,8 @@ export default function RequireWallet({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      toast("Wallet connect coming soon", {
-        description: "Full wallet integration launches with mainnet.",
+      toast("Please connect your wallet", {
+        description: "Connect a Solana wallet to access this feature.",
       });
     }
   }, [loading, isAuthenticated]);

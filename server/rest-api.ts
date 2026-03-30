@@ -4,6 +4,17 @@
  */
 import { Router, type Request, type Response } from "express";
 import * as db from "./db.js";
+import { logger } from "./logger.js";
+import {
+  x402PaymentGate,
+  mppCompatibility,
+  extractPaymentProof,
+  buildPaymentResponseHeader,
+} from "./middleware/x402.js";
+import { invokeLimiter } from "./middleware/rate-limit.js";
+import { executeInvocation, InvocationError } from "./invoke-engine.js";
+import { getGuardrailMetrics } from "./guardrails.js";
+import { getTrustBreakdown } from "./trust-engine.js";
 
 const router = Router();
 
@@ -22,6 +33,8 @@ function formatOperator(op: Record<string, unknown>) {
     invocations: op.totalInvocations || 0,
     revenue: op.totalEarnings || "0",
     healthStatus: op.healthStatus || "healthy",
+    endpointUrl: op.endpointUrl || null,
+    httpMethod: op.httpMethod || "POST",
     endpoint: op.endpoint,
     createdAt: op.createdAt,
   };
@@ -30,9 +43,9 @@ function formatOperator(op: Record<string, unknown>) {
 /* ── GET /api/v1/operators ────────────────────────────────────────────── */
 router.get("/operators", async (req: Request, res: Response) => {
   try {
-    const q = (req.query.q as string) || "";
-    const category = (req.query.category as string) || "";
-    const sortBy = (req.query.sortBy as string) || "trust";
+    const q = String(req.query.q || "").slice(0, 200);
+    const category = String(req.query.category || "").slice(0, 50);
+    const sortBy = String(req.query.sortBy || "trust");
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(100, Math.max(1, parseInt((req.query.pageSize || req.query.limit) as string) || 20));
 
@@ -78,16 +91,18 @@ router.get("/operators/:idOrSlug/trust", async (req: Request, res: Response) => 
       return;
     }
     const o = op as unknown as Record<string, unknown>;
+    const operatorId = (o.id ?? o._id) as number;
+    const breakdown = await getTrustBreakdown(operatorId);
     res.json({
       operatorId: o._id || o.id,
       name: o.name,
-      overallScore: o.trustScore || 85,
+      overallScore: breakdown.overall,
       dimensions: {
-        successRate: { score: 89, weight: 30, description: "Percentage of successful invocations" },
-        reviewScore: { score: 94, weight: 25, description: "Average peer review rating" },
-        responseTime: { score: 82, weight: 20, description: "Median response latency percentile" },
-        uptime: { score: 97, weight: 15, description: "Operator availability over 30 days" },
-        verification: { score: 90, weight: 10, description: "On-chain identity and bond verification" },
+        executionReliability: { score: Math.round(breakdown.executionReliability), weight: 30, description: "Percentage of successful invocations (time-weighted)" },
+        responseQuality: { score: Math.round(breakdown.responseQuality), weight: 25, description: "Average response quality score from validators" },
+        schemaCompliance: { score: Math.round(breakdown.schemaCompliance), weight: 20, description: "Percentage of responses matching declared schema" },
+        validatorConsensus: { score: Math.round(breakdown.validatorConsensus), weight: 15, description: "Agreement among validators on quality" },
+        historicalPerformance: { score: Math.round(breakdown.historicalPerformance), weight: 10, description: "Long-term consistency and reliability" },
       },
     });
   } catch {
@@ -96,101 +111,86 @@ router.get("/operators/:idOrSlug/trust", async (req: Request, res: Response) => 
 });
 
 /* ── POST /api/v1/operators/:idOrSlug/invoke  (x402 middleware) ────────── */
-router.post("/operators/:idOrSlug/invoke", async (req: Request, res: Response) => {
-  try {
-    const op = await db.getOperatorBySlug(req.params.idOrSlug);
-    if (!op) {
-      res.status(404).json({ error: "Operator not found" });
-      return;
-    }
-    const o = op as unknown as Record<string, unknown>;
-    const price = parseFloat((o.pricePerCall as string) || "0.05");
-    const payTo = (o.creatorWallet as string) || "AeGiS1111111111111111111111111111111111111";
-
-    // x402: If no payment header, return 402 with payment instructions
-    const paymentHeader = req.headers["x-payment"] as string | undefined;
-    if (!paymentHeader) {
-      res.status(402).json({
-        x402Version: 1,
-        accepts: [{
-          scheme: "exact",
-          network: "solana-mainnet",
-          maxAmountRequired: price.toFixed(6),
-          resource: req.originalUrl,
-          description: `Invoke ${o.name} operator`,
-          mimeType: "application/json",
-          payTo,
-          requiredDeadlineSeconds: 60,
-          outputSchema: null,
-        }],
-      });
-      return;
-    }
-
-    // x402: Payment header present, execute operator
-    const startMs = Date.now();
-    // In production this would forward to the operator endpoint and verify the tx on-chain
-    const endpointUrl = o.endpointUrl as string | undefined;
-    if (!endpointUrl) {
-      res.status(503).json({
-        error: "OPERATOR_NOT_DEPLOYED",
-        message: "This operator is not yet deployed.",
-      });
-      return;
-    }
-
-    let durationMs: number;
-    let resultOutput: unknown;
+router.post(
+  "/operators/:idOrSlug/invoke",
+  invokeLimiter,
+  mppCompatibility(),
+  x402PaymentGate(),
+  async (req: Request, res: Response) => {
     try {
-      const opRes = await fetch(endpointUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(req.body),
-        signal: AbortSignal.timeout(15_000),
-      });
-      durationMs = Date.now() - startMs;
-      resultOutput = await opRes.json().catch(() => ({ output: "non-JSON response" }));
-    } catch (err: any) {
-      durationMs = Date.now() - startMs;
-      res.status(502).json({
-        error: "OPERATOR_UNREACHABLE",
-        message: err?.message || "Failed to reach operator endpoint.",
-        durationMs,
-      });
-      return;
-    }
+      // Resolve operator - middleware may have attached it, otherwise look up by slug
+      let op = (req as any).operator;
+      if (!op) {
+        const fetched = await db.getOperatorBySlug(req.params.idOrSlug);
+        if (!fetched) {
+          res.status(404).json({ error: "Operator not found" });
+          return;
+        }
+        op = fetched;
+      }
 
-    res.json({
-      success: true,
-      operatorId: o._id || o.id,
-      operatorName: o.name,
-      result: resultOutput,
-      execution: {
-        durationMs,
-        trustScore: o.trustScore || 85,
-        guardrailsPass: true,
-        timestamp: new Date().toISOString(),
-      },
-      payment: {
-        amount: price.toFixed(6),
-        token: "USDC",
-        chain: "solana",
-        txSignature: paymentHeader,
-        settledAt: new Date().toISOString(),
-        feeSplit: {
-          creator: "60%",
-          validators: "15%",
-          stakers: "12%",
-          treasury: "8%",
-          insurance: "3%",
-          burned: "2%",
+      const o = op as Record<string, unknown>;
+      const operatorId = o._id || o.id;
+      const { txSignature, payerWallet } = extractPaymentProof(req);
+      const paymentHeader = (req as any).paymentProof || txSignature;
+
+      // Execute through unified invocation engine
+      const result = await executeInvocation({
+        operatorId: operatorId as number,
+        callerWallet: (payerWallet as string) || undefined,
+        payload: req.body,
+        txSignature: paymentHeader ? String(paymentHeader) : undefined,
+        paymentToken: undefined,
+        source: "rest",
+      });
+
+      // Set x402 v2 payment response header
+      if (paymentHeader) {
+        res.setHeader(
+          "PAYMENT-RESPONSE",
+          buildPaymentResponseHeader(String(paymentHeader), true),
+        );
+      }
+
+      res.json({
+        success: result.success,
+        operatorId,
+        operatorName: result.operatorName,
+        result: result.response,
+        execution: {
+          durationMs: result.responseMs,
+          trustScore: result.newTrustScore,
+          guardrailsPass: result.guardrails.inputPassed && result.guardrails.outputPassed,
+          timestamp: new Date().toISOString(),
         },
-      },
-    });
-  } catch {
-    res.status(500).json({ error: "Failed to invoke operator" });
-  }
-});
+        payment: {
+          amount: result.fees.total,
+          token: "USDC",
+          chain: "solana",
+          txSignature: paymentHeader || null,
+          settledAt: new Date().toISOString(),
+          feeSplit: {
+            creator: "60%",
+            validators: "15%",
+            stakers: "12%",
+            treasury: "8%",
+            insurance: "3%",
+            burned: "2%",
+          },
+        },
+        invocationId: result.invocationId,
+        guardrails: result.guardrails,
+      });
+    } catch (err: any) {
+      if (err instanceof InvocationError) {
+        res.status(err.statusCode).json({ error: err.code, message: err.message });
+      } else {
+        logger.error({ err }, "REST invoke failed");
+        res.status(500).json({ error: "Failed to invoke operator" });
+      }
+    }
+  },
+);
 
 /* ── GET /api/v1/categories ───────────────────────────────────────────── */
 router.get("/categories", async (_req: Request, res: Response) => {
@@ -216,16 +216,27 @@ router.get("/categories", async (_req: Request, res: Response) => {
 router.get("/stats", async (_req: Request, res: Response) => {
   try {
     const stats = await db.getProtocolStats();
+
     res.json({
-      operators: stats?.totalOperators || 452,
-      invocations: stats?.totalInvocations || 124070,
-      revenue: stats?.totalEarnings || "141899.00",
-      avgTrustScore: 91.5,
+      operators: stats?.totalOperators || 0,
+      realOperators: stats?.realOperators || 0,
+      invocations: stats?.totalInvocations || 0,
+      revenue: stats?.totalEarnings || "0",
+      avgTrustScore: stats?.avgTrustScore || 0,
       avgCostPerCall: "0.02",
       settlementChain: "solana",
       settlementTime: "~400ms",
       txCost: "$0.00025",
-      guardrails: "nvidia-nemo",
+      health: stats?.health || { healthy: 0, degraded: 0 },
+      guardrails: {
+        ...(stats?.guardrails || {
+          totalChecks: 0,
+          blocked: 0,
+          passRate: "100.0",
+          serverStatus: "standby",
+        }),
+        runtime: getGuardrailMetrics(),
+      },
       protocols: ["mcp", "x402", "a2a"],
     });
   } catch {

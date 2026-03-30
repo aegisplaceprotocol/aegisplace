@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/sections/Footer";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { fadeInView } from "@/lib/animations";
 
 // The dual MCP config
@@ -298,6 +299,8 @@ export default function WalletPage() {
         </div>
       </div>
       <Footer />
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

@@ -58,7 +58,7 @@ function trustColor(score: number) {
   if (score >= 80) return "#A1A1AA";
   if (score >= 60) return "#71717A";
   if (score >= 40) return "#eab308";
-  return "#ef4444";
+  return "rgba(220,100,60,0.50)";
 }
 
 function categoryLabel(cat: string) {
@@ -83,7 +83,7 @@ function _MyOperators() {
 
   // Aggregate stats
   const totalInvocations = operators?.reduce((sum, op) => sum + (op.totalInvocations || 0), 0) || 0;
-  const totalEarnings = operators?.reduce((sum, op) => sum + parseFloat(op.totalEarned || "0"), 0) || 0;
+  const totalEarnings = operators?.reduce((sum, op) => sum + parseFloat(op.totalEarned || "..."), 0) || 0;
   const avgTrust = operators?.length
     ? Math.round(operators.reduce((sum, op) => sum + op.trustScore, 0) / operators.length)
     : 0;
@@ -99,7 +99,7 @@ function _MyOperators() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-12 border-b border-white/[0.07]">
+      <section className="pt-28 pb-12 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
@@ -111,7 +111,7 @@ function _MyOperators() {
               </span>
             )}
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[0.95] mb-4">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight leading-[0.95] mb-4">
             <span className="text-white/90">MY</span>{" "}
             <span className="text-white/30">OPERATORS</span>
           </h1>
@@ -133,7 +133,7 @@ function _MyOperators() {
                   <circle cx="18" cy="12" r="1" fill="rgba(255,255,255,0.2)" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white/80 mb-4">Connect Your Wallet</h2>
+              <h2 className="text-2xl font-normal text-white/80 mb-4">Connect Your Wallet</h2>
               <p className="text-[14px] text-white/30 mb-8 leading-relaxed">
                 Connect your Phantom wallet to view operators you have registered.
                 Your wallet address is used to identify your creator account.
@@ -169,7 +169,7 @@ function _MyOperators() {
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white/80 mb-4">No Operators Yet</h2>
+              <h2 className="text-2xl font-normal text-white/80 mb-4">No Operators Yet</h2>
               <p className="text-[14px] text-white/30 mb-8 leading-relaxed">
                 You have not registered any operators with this wallet.
                 Upload your first operator to start earning from AI agent invocations.
@@ -188,29 +188,29 @@ function _MyOperators() {
       {connected && !isLoading && operators && operators.length > 0 && (
         <>
           {/* Stats overview */}
-          <section className="border-b border-white/[0.07] bg-white/[0.01]">
+          <section className="border-b border-white/[0.04] bg-white/[0.01]">
             <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.07]">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.04]">
                 <div className="bg-white/[0.02] p-6 md:p-8">
-                  <div className="text-[28px] md:text-[36px] font-bold text-white/90 leading-none mb-2">
+                  <div className="text-[28px] md:text-[36px] font-normal text-white/90 leading-none mb-2">
                     <AnimNum value={operators.length} />
                   </div>
                   <div className="text-[11px] text-white/30 tracking-wider">OPERATORS</div>
                 </div>
                 <div className="bg-white/[0.02] p-6 md:p-8">
-                  <div className="text-[28px] md:text-[36px] font-bold text-white/90 leading-none mb-2">
+                  <div className="text-[28px] md:text-[36px] font-normal text-white/90 leading-none mb-2">
                     <AnimNum value={totalInvocations} />
                   </div>
                   <div className="text-[11px] text-white/30 tracking-wider">TOTAL INVOCATIONS</div>
                 </div>
                 <div className="bg-white/[0.02] p-6 md:p-8">
-                  <div className="text-[28px] md:text-[36px] font-bold text-zinc-300 leading-none mb-2">
+                  <div className="text-[28px] md:text-[36px] font-normal text-zinc-300 leading-none mb-2">
                     $<AnimNum value={totalEarnings} decimals={2} />
                   </div>
                   <div className="text-[11px] text-zinc-300/40 tracking-wider">TOTAL EARNED (USDC)</div>
                 </div>
                 <div className="bg-white/[0.02] p-6 md:p-8">
-                  <div className="text-[28px] md:text-[36px] font-bold leading-none mb-2" style={{ color: trustColor(avgTrust) }}>
+                  <div className="text-[28px] md:text-[36px] font-normal leading-none mb-2" style={{ color: trustColor(avgTrust) }}>
                     <AnimNum value={avgTrust} />
                   </div>
                   <div className="text-[11px] text-white/30 tracking-wider">AVG TRUST SCORE</div>
@@ -229,7 +229,7 @@ function _MyOperators() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => refetch()}
-                    className="text-[11px] font-medium text-white/25 hover:text-white/50 border border-white/[0.07] rounded hover:border-white/[0.12] px-3 py-1.5 transition-all"
+                    className="text-[11px] font-medium text-white/25 hover:text-white/50 border border-white/[0.04] rounded hover:border-white/[0.12] px-3 py-1.5 transition-all"
                   >
                     REFRESH
                   </button>
@@ -246,17 +246,17 @@ function _MyOperators() {
                   const successRate = op.totalInvocations > 0
                     ? ((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1)
                     : "0.0";
-                  const earnings = parseFloat(op.totalEarned || "0");
+                  const earnings = parseFloat(op.totalEarned || "...");
 
                   return (
                     <Link key={op.id} href={`/marketplace/${op.slug}`}>
-                      <div className="group border border-white/[0.07] rounded hover:border-white/[0.12] bg-white/[0.01] hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
+                      <div className="group border border-white/[0.04] rounded hover:border-white/[0.12] bg-white/[0.01] hover:bg-white/[0.02] transition-all duration-300 cursor-pointer">
                         <div className="p-6">
                           {/* Top row: name, status, trust */}
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 border border-white/[0.08] bg-white/[0.02] flex items-center justify-center shrink-0">
-                                <span className="text-[14px] font-bold text-zinc-300/60">
+                                <span className="text-[14px] font-normal text-zinc-300/60">
                                   {op.name.charAt(0).toUpperCase()}
                                 </span>
                               </div>
@@ -275,7 +275,7 @@ function _MyOperators() {
                               <span className={`text-[10px] font-medium px-2 py-0.5 border ${
                                 op.isActive
                                   ? "text-emerald-400/70 border-emerald-400/20 bg-emerald-400/[0.04]"
-                                  : "text-white/25 border-white/[0.07] bg-white/[0.02]"
+                                  : "text-white/25 border-white/[0.04] bg-white/[0.02]"
                               }`}>
                                 {op.isActive ? "ACTIVE" : "INACTIVE"}
                               </span>
@@ -297,25 +297,25 @@ function _MyOperators() {
                             </div>
                             <div>
                               <div className="text-[10px] font-medium text-white/20 mb-1">INVOCATIONS</div>
-                              <div className="text-[16px] font-bold text-white/80 ">
+                              <div className="text-[16px] font-normal text-white/80 ">
                                 {op.totalInvocations.toLocaleString()}
                               </div>
                             </div>
                             <div>
                               <div className="text-[10px] font-medium text-white/20 mb-1">SUCCESS RATE</div>
-                              <div className="text-[16px] font-bold text-white/80 ">
+                              <div className="text-[16px] font-normal text-white/80 ">
                                 {successRate}%
                               </div>
                             </div>
                             <div>
                               <div className="text-[10px] font-medium text-white/20 mb-1">PRICE/CALL</div>
-                              <div className="text-[16px] font-bold text-white/80 ">
+                              <div className="text-[16px] font-normal text-white/80 ">
                                 ${parseFloat(op.pricePerCall).toFixed(4)}
                               </div>
                             </div>
                             <div>
                               <div className="text-[10px] font-medium text-zinc-300/30 mb-1">EARNED</div>
-                              <div className="text-[16px] font-bold text-zinc-300 ">
+                              <div className="text-[16px] font-normal text-zinc-300 ">
                                 ${earnings.toFixed(4)}
                               </div>
                             </div>
@@ -338,41 +338,55 @@ function _MyOperators() {
               </div>
 
               {/* Earnings breakdown */}
-              <div className="mt-12 border border-white/[0.07] bg-white/[0.01] p-8">
+              <div className="mt-12 border border-white/[0.04] bg-white/[0.01] p-8">
                 <h3 className="text-[13px] font-medium text-zinc-300/50 tracking-wider mb-6">EARNINGS BREAKDOWN</h3>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="border border-white/[0.07] bg-white/[0.02] p-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
                     <div className="text-[10px] font-medium text-white/25 mb-2">GROSS REVENUE</div>
-                    <div className="text-[22px] font-bold text-white/80 ">
-                      ${(totalEarnings / 0.7).toFixed(4)}
+                    <div className="text-[22px] font-normal text-white/80 ">
+                      ${(totalEarnings / 0.6).toFixed(4)}
                     </div>
                     <div className="text-[10px] font-medium text-white/15 mt-1">Total fees paid</div>
                   </div>
                   <div className="border border-white/15 bg-white/[0.03] p-5">
-                    <div className="text-[10px] font-medium text-zinc-300/40 mb-2">CREATOR (70%)</div>
-                    <div className="text-[22px] font-bold text-zinc-300 ">
+                    <div className="text-[10px] font-medium text-zinc-300/40 mb-2">CREATOR (60%)</div>
+                    <div className="text-[22px] font-normal text-zinc-300 ">
                       ${totalEarnings.toFixed(4)}
                     </div>
                     <div className="text-[10px] font-medium text-zinc-300/20 mt-1">Your wallet</div>
                   </div>
-                  <div className="border border-white/[0.07] bg-white/[0.02] p-5">
-                    <div className="text-[10px] font-medium text-white/25 mb-2">VALIDATORS (20%)</div>
-                    <div className="text-[22px] font-bold text-white/50 ">
-                      ${((totalEarnings / 0.7) * 0.2).toFixed(4)}
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
+                    <div className="text-[10px] font-medium text-white/25 mb-2">VALIDATORS (15%)</div>
+                    <div className="text-[22px] font-normal text-white/50 ">
+                      ${((totalEarnings / 0.6) * 0.15).toFixed(4)}
                     </div>
                     <div className="text-[10px] font-medium text-white/15 mt-1">Quality attestors</div>
                   </div>
-                  <div className="border border-white/[0.07] bg-white/[0.02] p-5">
-                    <div className="text-[10px] font-medium text-white/25 mb-2">TREASURY (9%)</div>
-                    <div className="text-[22px] font-bold text-white/50 ">
-                      ${((totalEarnings / 0.7) * 0.09).toFixed(4)}
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
+                    <div className="text-[10px] font-medium text-white/25 mb-2">STAKERS (12%)</div>
+                    <div className="text-[22px] font-normal text-white/50 ">
+                      ${((totalEarnings / 0.6) * 0.12).toFixed(4)}
+                    </div>
+                    <div className="text-[10px] font-medium text-white/15 mt-1">Delegated stakers</div>
+                  </div>
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
+                    <div className="text-[10px] font-medium text-white/25 mb-2">TREASURY (8%)</div>
+                    <div className="text-[22px] font-normal text-white/50 ">
+                      ${((totalEarnings / 0.6) * 0.08).toFixed(4)}
                     </div>
                     <div className="text-[10px] font-medium text-white/15 mt-1">Protocol fund</div>
                   </div>
-                  <div className="border border-white/[0.07] bg-white/[0.02] p-5">
-                    <div className="text-[10px] font-medium text-red-400/20 mb-2">BURN (1%)</div>
-                    <div className="text-[22px] font-bold text-red-400/60 ">
-                      ${((totalEarnings / 0.7) * 0.01).toFixed(4)}
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
+                    <div className="text-[10px] font-medium text-white/25 mb-2">INSURANCE (3%)</div>
+                    <div className="text-[22px] font-normal text-white/50 ">
+                      ${((totalEarnings / 0.6) * 0.03).toFixed(4)}
+                    </div>
+                    <div className="text-[10px] font-medium text-white/15 mt-1">Dispute coverage</div>
+                  </div>
+                  <div className="border border-white/[0.04] bg-white/[0.02] p-5">
+                    <div className="text-[10px] font-medium text-red-400/20 mb-2">BURNED (2%)</div>
+                    <div className="text-[22px] font-normal text-red-400/60 ">
+                      ${((totalEarnings / 0.6) * 0.02).toFixed(4)}
                     </div>
                     <div className="text-[10px] font-medium text-white/15 mt-1">Permanently removed</div>
                   </div>

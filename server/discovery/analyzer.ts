@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Candidate Analyzer — uses Claude Sonnet (via Anthropic API) to analyze
+// Candidate Analyzer - uses Claude Sonnet (via Anthropic API) to analyze
 // discovery candidates, with a local fallback when no API key is available.
 // ---------------------------------------------------------------------------
 
@@ -90,19 +90,19 @@ README (truncated):
 ${truncatedReadme}
 
 Produce a JSON object with these exact fields:
-- name: string — A clean, display-ready name for the tool
-- slug: string — URL-safe slug (lowercase, hyphens only, max 64 chars)
-- tagline: string — One-line description (max 120 chars)
-- description: string — 2-3 paragraph description of the tool, its purpose, and how it works
-- laymanSummary: string — A simple explanation a non-technical person could understand (1-2 sentences)
-- category: string — One of: ${validCategoryList}
-- tags: string[] — 3-6 relevant tags
-- suggestedPrice: string — Suggested price per API call in USD (e.g. "0.003")
-- riskLevel: "low" | "medium" | "high" — Based on what the tool accesses/modifies
-- capabilities: string[] — 3-5 things this tool can do
-- limitations: string[] — 2-3 known limitations
-- rejected: boolean — Set to true if this is NOT a useful AI tool/service (e.g., it's just a tutorial, template, or collection of links)
-- rejectionReason: string | null — Reason for rejection, if rejected
+- name: string - A clean, display-ready name for the tool
+- slug: string - URL-safe slug (lowercase, hyphens only, max 64 chars)
+- tagline: string - One-line description (max 120 chars)
+- description: string - 2-3 paragraph description of the tool, its purpose, and how it works
+- laymanSummary: string - A simple explanation a non-technical person could understand (1-2 sentences)
+- category: string - One of: ${validCategoryList}
+- tags: string[] - 3-6 relevant tags
+- suggestedPrice: string - Suggested price per API call in USD (e.g. "0.003")
+- riskLevel: "low" | "medium" | "high" - Based on what the tool accesses/modifies
+- capabilities: string[] - 3-5 things this tool can do
+- limitations: string[] - 2-3 known limitations
+- rejected: boolean - Set to true if this is NOT a useful AI tool/service (e.g., it's just a tutorial, template, or collection of links)
+- rejectionReason: string | null - Reason for rejection, if rejected
 
 IMPORTANT:
 - If the repository is not actually a usable AI tool or service, set rejected to true.
@@ -179,7 +179,7 @@ function generateLocalAnalysis(candidate: DiscoveryCandidate): AnalysisResult {
   return {
     name: cleanName(candidate.name),
     slug,
-    tagline: candidate.description.slice(0, 120) || `${candidate.name} — AI tool`,
+    tagline: candidate.description.slice(0, 120) || `${candidate.name} - AI tool`,
     description: candidate.description || `An open-source AI tool: ${candidate.name} by ${candidate.owner}.`,
     laymanSummary: generateLaymanSummary(candidate),
     category,
@@ -188,7 +188,7 @@ function generateLocalAnalysis(candidate: DiscoveryCandidate): AnalysisResult {
     riskLevel: inferRisk(candidate),
     capabilities: inferCapabilities(candidate),
     limitations: [
-      "Analysis generated automatically — manual review recommended",
+      "Analysis generated automatically - manual review recommended",
       "Pricing is estimated and may need adjustment",
     ],
     rejected: isRejected,

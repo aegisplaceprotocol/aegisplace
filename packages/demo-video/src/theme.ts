@@ -1,5 +1,5 @@
 /**
- * Aegis Design System — extracted from the actual site.
+ * Aegis Design System - extracted from the actual site.
  * oklch(0.10 0.004 260) = #18181B (the real background)
  * No color accents. White at varying opacities. That's it.
  */
@@ -7,7 +7,7 @@
 export const t = {
   bg: "#111113",
   fg: "#FFFFFF",
-  /** Text hierarchy — white at opacity levels */
+  /** Text hierarchy - white at opacity levels */
   t90: "rgba(255,255,255,0.90)",
   t70: "rgba(255,255,255,0.70)",
   t50: "rgba(255,255,255,0.50)",

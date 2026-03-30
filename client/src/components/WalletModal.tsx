@@ -33,7 +33,7 @@ const AEGIS_LOGO = "/assets/fullvectorwhite.svg";
 function DefaultWalletIcon({ name }: { name: string }) {
   const letter = name.charAt(0).toUpperCase();
   return (
-    <div className="w-11 h-11 rounded bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-zinc-400 font-bold text-sm">
+    <div className="w-11 h-11 rounded bg-white/[0.04] border border-white/[0.04] flex items-center justify-center text-white/30 font-normal text-sm">
       {letter}
     </div>
   );
@@ -64,11 +64,11 @@ function WalletRow({
         <DefaultWalletIcon name={wallet.adapter.name} />
       )}
       <div className="flex-1 text-left">
-        <div className="text-[14px] font-medium text-zinc-200 group-hover:text-white transition-colors">
+        <div className="text-[14px] font-normal text-white/40 group-hover:text-white/60 transition-colors">
           {wallet.adapter.name}
         </div>
         {detected && (
-          <div className="text-[11px] text-emerald-400/70 font-medium mt-0.5 flex items-center gap-1.5">
+          <div className="text-[11px] text-emerald-400/50 font-normal mt-0.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse-live" />
             Detected
           </div>
@@ -163,7 +163,7 @@ function WalletModalDialog() {
         style={{
           background: "linear-gradient(180deg, rgba(20,20,26,0.98) 0%, rgba(14,14,18,0.99) 100%)",
           border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: "1.25rem",
+          borderRadius: "4px",
           boxShadow: "0 25px 60px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.03) inset",
         }}
       >
@@ -213,7 +213,7 @@ function WalletModalDialog() {
           {/* Detected wallets */}
           {installed.length > 0 && (
             <div className="mb-2">
-              <div className="px-3 py-2 text-[10px] font-medium text-zinc-600 uppercase tracking-wider">
+              <div className="px-3 py-2 text-[10px] font-normal text-white/20 uppercase tracking-wider">
                 Available Wallets
               </div>
               {installed.map((wallet) => (
@@ -232,7 +232,7 @@ function WalletModalDialog() {
             <div>
               <button
                 onClick={() => setShowMore(!showMore)}
-                className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-medium text-zinc-600 hover:text-zinc-500 transition-colors cursor-pointer uppercase tracking-wider"
+                className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-normal text-white/20 hover:text-white/30 transition-colors cursor-pointer uppercase tracking-wider"
               >
                 <span>More Wallets ({notInstalled.length})</span>
                 <svg
@@ -267,7 +267,7 @@ function WalletModalDialog() {
                   <circle cx="17" cy="15" r="2" stroke="currentColor" strokeWidth="1.5" />
                 </svg>
               </div>
-              <p className="text-[14px] text-zinc-400 font-medium mb-1">No wallets found</p>
+              <p className="text-[14px] text-white/40 font-normal mb-1">No wallets found</p>
               <p className="text-[12px] text-zinc-600 leading-relaxed max-w-[260px] mx-auto">
                 Install a Solana wallet extension like Phantom or Solflare to connect
               </p>
@@ -285,7 +285,7 @@ function WalletModalDialog() {
               href="https://solana.com/ecosystem/explore?categories=wallet"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+              className="text-[10px] text-white/20 hover:text-white/40 transition-colors font-normal"
             >
               Get a wallet
             </a>

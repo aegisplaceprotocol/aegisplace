@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Discovery Engine — exports
+// Discovery Engine - exports
 // ---------------------------------------------------------------------------
 
 export { crawlGitHubTrending, crawlAwesomeLists, crawlHuggingFace } from "./crawlers";

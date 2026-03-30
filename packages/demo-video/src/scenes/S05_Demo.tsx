@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { t, text } from "../theme";
 
 /**
- * S05 — Live terminal demo. Full-screen terminal.
+ * S05 - Live terminal demo. Full-screen terminal.
  * Shows the actual demo-loop.ts running on devnet.
  * Each line appears with timing. Clean. No fake stuff.
  */
@@ -12,10 +12,10 @@ type LineType = "cmd" | "out" | "ok" | "dim" | "head" | "blank";
 const LINES: { t: number; type: LineType; text: string }[] = [
   { t: 0,   type: "cmd",   text: "$ npx tsx scripts/demo-loop.ts --network devnet" },
   { t: 20,  type: "blank",  text: "" },
-  { t: 25,  type: "head",  text: "AEGIS PROTOCOL — FULL LOOP DEMO" },
+  { t: 25,  type: "head",  text: "AEGIS PROTOCOL - FULL LOOP DEMO" },
   { t: 30,  type: "dim",   text: "────────────────────────────────────────" },
   { t: 40,  type: "out",   text: "Connecting to Solana devnet..." },
-  { t: 55,  type: "ok",    text: "[OK] Connected — slot #312,847,291" },
+  { t: 55,  type: "ok",    text: "[OK] Connected - slot #312,847,291" },
   { t: 75,  type: "out",   text: "Loading keypairs..." },
   { t: 85,  type: "ok",    text: "[OK] Admin    Fg4r...kP2q" },
   { t: 92,  type: "ok",    text: "[OK] Creator  8xNm...vJ3w" },
@@ -31,7 +31,7 @@ const LINES: { t: number; type: LineType; text: string }[] = [
   { t: 200, type: "head",  text: "2  INVOKE WITH PAYMENT" },
   { t: 210, type: "out",   text: "Transferring 0.02 USDC..." },
   { t: 230, type: "out",   text: "Forwarding to operator endpoint..." },
-  { t: 250, type: "ok",    text: "[OK] Response received — 247ms" },
+  { t: 250, type: "ok",    text: "[OK] Response received - 247ms" },
   { t: 260, type: "dim",   text: '     Quality score  92/100' },
   { t: 268, type: "dim",   text: "     Trust delta  +3" },
   { t: 280, type: "blank",  text: "" },
@@ -97,7 +97,7 @@ export const S05_Demo: React.FC = () => {
           borderBottom: `1px solid ${t.border}`,
         }}
       >
-        <span style={text.label}>Live demo — Devnet</span>
+        <span style={text.label}>Live demo - Devnet</span>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: t.t30 }} />
           <span style={{ ...text.label, color: t.t15 }}>aegis-protocol</span>

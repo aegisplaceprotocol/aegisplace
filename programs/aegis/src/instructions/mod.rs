@@ -3,9 +3,17 @@ pub mod register_operator;
 pub mod invoke_skill;
 pub mod update_trust;
 pub mod deactivate_operator;
+pub mod reactivate_operator;
+pub mod rotate_admin;
+pub mod accept_admin;
+pub mod update_config;
 
 pub use initialize::*;
 pub use register_operator::*;
 pub use invoke_skill::*;
 pub use update_trust::*;
 pub use deactivate_operator::*;
+pub use reactivate_operator::*;
+pub use rotate_admin::*;
+pub use accept_admin::*;
+pub use update_config::*;

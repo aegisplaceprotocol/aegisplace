@@ -1,0 +1,352 @@
+openapi: "3.1.0"
+info:
+  title: Aegis Protocol API
+  version: "1.0.0"
+  description: |
+    REST API for Aegis Protocol - the trust infrastructure for autonomous agent commerce on Solana.
+
+    Every AI skill invocation is safety-checked by NVIDIA NeMo Guardrails, quality-scored by validators,
+    settled in USDC on Solana, and backed by slashable bonds.
+  contact:
+    name: Aegis Protocol
+    url: https://aegisplace.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://mcp.aegisplace.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /api/v1/operators:
+    get:
+      operationId: listOperators
+      summary: List operators
+      description: List all registered skill operators with filtering, sorting, and pagination.
+      tags: [Operators]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: sortBy
+          in: query
+          schema: { type: string, enum: [trust, invocations, earnings, newest], default: trust }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: q
+          in: query
+          description: Search term
+          schema: { type: string }
+      responses:
+        "200":
+          description: Operator list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operators:
+                    type: array
+                    items: { $ref: "#/components/schemas/Operator" }
+                  total: { type: integer }
+
+  /api/v1/operators/{idOrSlug}:
+    get:
+      operationId: getOperator
+      summary: Get operator by ID or slug
+      tags: [Operators]
+      parameters:
+        - name: idOrSlug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Operator details
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Operator" }
+        "404":
+          description: Operator not found
+
+  /api/v1/operators/{idOrSlug}/invoke:
+    post:
+      operationId: invokeOperator
+      summary: Invoke a skill operator
+      description: Execute a skill operator with optional x402 payment. Returns the result, fees, and guardrail status.
+      tags: [Invocations]
+      parameters:
+        - name: idOrSlug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payload: { type: object, description: "Input data for the skill" }
+                callerWallet: { type: string, description: "Solana wallet address" }
+                paymentToken: { type: string }
+                txSignature: { type: string }
+      responses:
+        "200":
+          description: Invocation result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InvocationResult" }
+        "402":
+          description: Payment required (x402)
+
+  /api/v1/operators/{idOrSlug}/trust:
+    get:
+      operationId: getTrustScore
+      summary: Get trust score breakdown
+      tags: [Trust]
+      parameters:
+        - name: idOrSlug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: 5-dimensional trust score
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrustScore" }
+
+  /api/v1/stats:
+    get:
+      operationId: getStats
+      summary: Protocol statistics
+      tags: [Stats]
+      responses:
+        "200":
+          description: Protocol-wide stats
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProtocolStats" }
+
+  /api/v1/categories:
+    get:
+      operationId: getCategories
+      summary: List categories
+      tags: [Operators]
+      responses:
+        "200":
+          description: Categories with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name: { type: string }
+                    count: { type: integer }
+
+  /api/royalties/earnings/{wallet}:
+    get:
+      operationId: getRoyaltyEarnings
+      summary: Get royalty earnings
+      tags: [Royalties]
+      parameters:
+        - name: wallet
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Royalty earnings breakdown
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RoyaltyEarnings" }
+
+  /api/royalties/leaderboard:
+    get:
+      operationId: getRoyaltyLeaderboard
+      summary: Top skills by royalties
+      tags: [Royalties]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object }
+
+  /api/royalties/stats:
+    get:
+      operationId: getRoyaltyStats
+      summary: Protocol royalty statistics
+      tags: [Royalties]
+      responses:
+        "200":
+          description: Royalty stats
+
+  /api/a2a:
+    post:
+      operationId: a2aRpc
+      summary: A2A JSON-RPC endpoint
+      description: Agent-to-Agent protocol endpoint. Supports methods: agent/discover, skills/list, skills/invoke, trust/score, protocol/stats.
+      tags: [A2A]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method, id]
+              properties:
+                jsonrpc: { type: string, enum: ["2.0"] }
+                method: { type: string, enum: ["agent/discover", "skills/list", "skills/invoke", "trust/score", "protocol/stats"] }
+                params: { type: object }
+                id: { type: integer }
+      responses:
+        "200":
+          description: JSON-RPC response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jsonrpc: { type: string }
+                  result: { type: object }
+                  id: { type: integer }
+
+  /api/health:
+    get:
+      operationId: health
+      summary: Health check
+      tags: [System]
+      responses:
+        "200":
+          description: Health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string }
+                  uptime: { type: number }
+                  operators: { type: integer }
+                  version: { type: string }
+
+  /api/feed:
+    get:
+      operationId: liveFeed
+      summary: Live invocation feed (SSE)
+      description: Server-sent events stream of real-time invocations.
+      tags: [System]
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+components:
+  schemas:
+    Operator:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        category: { type: string }
+        tagline: { type: string }
+        description: { type: string }
+        trustScore: { type: number }
+        totalInvocations: { type: integer }
+        pricePerCall: { type: string }
+        creatorWallet: { type: string }
+        isActive: { type: boolean }
+        isVerified: { type: boolean }
+        tags: { type: array, items: { type: string } }
+        successRate: { type: number }
+
+    InvocationResult:
+      type: object
+      properties:
+        success: { type: boolean }
+        invocationId: { type: integer }
+        operatorName: { type: string }
+        responseMs: { type: integer }
+        response: { type: object }
+        fees:
+          type: object
+          properties:
+            total: { type: string }
+            creator: { type: string }
+            validator: { type: string }
+            treasury: { type: string }
+        guardrails:
+          type: object
+          properties:
+            inputPassed: { type: boolean }
+            outputPassed: { type: boolean }
+
+    TrustScore:
+      type: object
+      properties:
+        overall: { type: number }
+        executionReliability: { type: number }
+        responseQuality: { type: number }
+        schemaCompliance: { type: number }
+        validatorConsensus: { type: number }
+        historicalPerformance: { type: number }
+
+    ProtocolStats:
+      type: object
+      properties:
+        operators: { type: integer }
+        invocations: { type: integer }
+        revenue: { type: string }
+        avgTrustScore: { type: number }
+        avgCostPerCall: { type: string }
+        settlementChain: { type: string }
+        settlementTime: { type: string }
+        guardrails: { type: string }
+        protocols: { type: array, items: { type: string } }
+
+    RoyaltyEarnings:
+      type: object
+      properties:
+        unclaimed: { type: string }
+        totalEarned: { type: string }
+        totalClaimed: { type: string }
+        recentPayments: { type: array, items: { type: object } }
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key from aegisplace.com/dashboard
+
+tags:
+  - name: Operators
+    description: Skill operator management
+  - name: Invocations
+    description: Skill invocation and execution
+  - name: Trust
+    description: Trust score and verification
+  - name: Royalties
+    description: Composable skill royalties
+  - name: Stats
+    description: Protocol statistics
+  - name: A2A
+    description: Agent-to-Agent protocol
+  - name: System
+    description: Health and monitoring

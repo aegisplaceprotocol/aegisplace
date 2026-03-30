@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { fadeInView, staggerContainer, staggerItem } from "@/lib/animations";
 import { trpc } from "@/lib/trpc";
 
@@ -146,7 +147,7 @@ const FEE_DISTRIBUTION = [
   { label: "Stakers (12%)", pct: 12, color: "#8B5CF6" },
   { label: "Treasury (8%)", pct: 8, color: "#4A7A82" },
   { label: "Insurance (3%)", pct: 3, color: "#06B6D4" },
-  { label: "Burned (2%)", pct: 2, color: "#ef4444" },
+  { label: "Burned (2%)", pct: 2, color: "rgba(220,100,60,0.50)" },
 ];
 
 /* -- Page --------------------------------------------------------------- */
@@ -190,8 +191,8 @@ export default function Analytics() {
 
   const totalOperators = stats?.totalOperators ?? 452;
   const totalInvocations = stats?.totalInvocations ?? 124350;
-  const totalRevenue = stats?.totalEarned ?? "18420";
-  const avgTrust = stats?.avgTrustScore ?? 91.4;
+  const totalRevenue = (stats as any)?.totalEarned ?? "18420";
+  const avgTrust = (stats as any)?.avgTrustScore ?? 91.4;
   const successRate = stats?.totalInvocations
     ? Math.min(100, ((stats.totalInvocations - (stats.totalDisputes ?? 0)) / stats.totalInvocations) * 100).toFixed(1)
     : "97.8";
@@ -232,21 +233,21 @@ export default function Analytics() {
                 <StatCard
                   label="Total Operators"
                   value={fmt(totalOperators)}
-                  sub={`${fmt(stats?.activeOperators ?? 398)} active`}
+                  sub={`${fmt((stats as any)?.activeOperators ?? 398)} active`}
                 />
               </motion.div>
               <motion.div {...staggerItem}>
                 <StatCard
                   label="Total Invocations"
                   value={fmt(totalInvocations)}
-                  sub={`${fmt(stats?.invocationsLast24h ?? 4820)} last 24h`}
+                  sub={`${fmt((stats as any)?.invocationsLast24h ?? 4820)} last 24h`}
                 />
               </motion.div>
               <motion.div {...staggerItem}>
                 <StatCard
                   label="Total Revenue"
                   value={usd(totalRevenue)}
-                  sub={`${usd(stats?.earningsLast24h ?? "1060")} last 24h`}
+                  sub={`${usd((stats as any)?.earningsLast24h ?? "1060")} last 24h`}
                 />
               </motion.div>
               <motion.div {...staggerItem}>
@@ -520,6 +521,8 @@ export default function Analytics() {
           </>
         )}
       </div>
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

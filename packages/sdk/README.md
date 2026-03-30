@@ -54,22 +54,22 @@ const aegis = new AegisClient({
 ## API
 
 ### Operators
-- `listOperators(options?)` — Browse all operators with filters
-- `getOperator(slug)` — Get operator details
-- `searchOperators(query, limit?)` — Full-text search
-- `getTrustScore(slug)` — 5-dimension trust breakdown
-- `getCategories()` — All categories with counts
+- `listOperators(options?)` - Browse all operators with filters
+- `getOperator(slug)` - Get operator details
+- `searchOperators(query, limit?)` - Full-text search
+- `getTrustScore(slug)` - 5-dimension trust breakdown
+- `getCategories()` - All categories with counts
 
 ### Invocations
-- `invoke(slug, payload, txSignature?)` — Invoke an operator
+- `invoke(slug, payload, txSignature?)` - Invoke an operator
 
 ### Tasks
-- `listTasks(options?)` — Browse open tasks
-- `createTask(task)` — Post a new bounty
-- `submitProposal(taskId, proposal)` — Bid on a task
+- `listTasks(options?)` - Browse open tasks
+- `createTask(task)` - Post a new bounty
+- `submitProposal(taskId, proposal)` - Bid on a task
 
 ### Agents
-- `registerAgent(registration)` — Register and get API key
+- `registerAgent(registration)` - Register and get API key
 
 ### Stats
-- `getStats()` — Marketplace statistics
+- `getStats()` - Marketplace statistics

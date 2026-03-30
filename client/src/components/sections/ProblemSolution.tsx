@@ -3,25 +3,25 @@ import { fadeInView } from "@/lib/animations";
 
 const DATA_CARDS = [
   {
-    stat: "48%",
-    source: "Stanford HAI, 2025",
-    desc: "of agent transactions may be experimental or gamified. Nobody can tell the difference.",
+    stat: "19,000+",
+    source: "MCP ecosystem, 2025",
+    desc: "MCP servers exist but zero have a trust or payment layer. Discovery without accountability is just a directory.",
   },
   {
-    stat: "40%",
-    source: "Gartner, 2025",
-    desc: "of agentic AI projects will be canceled by 2027 due to quality failures and poor quality enforcement.",
+    stat: "None",
+    source: "Agent payments gap",
+    desc: "AI agents cannot pay for services autonomously. Until x402, there was no protocol for machine-to-machine micropayments.",
   },
   {
-    stat: "$0",
-    source: "Industry standard",
-    desc: "at stake when an operator fails. Reputation badges without money behind them mean nothing.",
+    stat: "None",
+    source: "Solana-native IDEs",
+    desc: "No IDE understands Solana natively. Cursor, Windsurf, and Copilot are general-purpose. None ship with on-chain tools built in.",
   },
 ];
 
 export default function ProblemSolution() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
           <div className="flex items-center gap-2 mb-6">
@@ -30,12 +30,11 @@ export default function ProblemSolution() {
           </div>
 
           <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-4">
-            The agent economy has zero quality guarantee.
+            Three unsolved problems. One platform.
           </h2>
 
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
-            The agent economy is exploding. Skill marketplaces are growing exponentially.
-            But when an AI agent pays for a service, nothing verifies the service is any good.
+            Aegis solves all three: a marketplace with trust and discovery, x402 for autonomous agent payments, and AegisX. the first Solana-native IDE with 57 built-in tools.
           </p>
         </motion.div>
 
@@ -45,7 +44,7 @@ export default function ProblemSolution() {
               key={i}
               className="rounded border border-zinc-800 bg-zinc-900/40 p-8"
             >
-              <div className="text-[36px] sm:text-[42px] font-bold text-red-400/70 leading-none tracking-tight mb-2">
+              <div className="text-[36px] sm:text-[42px] font-normal text-red-400/70 leading-none tracking-tight mb-2">
                 {card.stat}
               </div>
               <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-4">

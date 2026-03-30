@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { NvidiaBadge } from "@/components/NvidiaLogo";
 import { LogoBar } from "@/components/BrandLogos";
+import { trpc } from "@/lib/trpc";
 
 /* Operator callsigns orbiting the mesh */
 const AGENT_NAMES = [
@@ -200,6 +201,7 @@ function WireframeMesh() {
 
 /* Hero Section */
 export default function Hero() {
+  const { data: stats } = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -208,7 +210,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="about" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section id="about" aria-label="Aegis hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       <WireframeMesh />
 
       {/* Gradient overlays */}
@@ -225,9 +227,9 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="mb-8"
         >
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-[0.95] tracking-tight">
-            Every agent call.<br />
-            <span className="text-zinc-500">Verified. Paid. Receipted.</span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium text-white leading-[0.95] tracking-tight">
+            Build an AI skill once.<br />
+            <span className="text-zinc-500">Get paid every time anyone uses it.</span>
           </h1>
         </motion.div>
 
@@ -238,9 +240,12 @@ export default function Hero() {
           transition={{ duration: 0.5, delay: 0.45 }}
           className="text-sm md:text-base text-zinc-400 max-w-xl mx-auto mb-12 leading-relaxed"
         >
-          Operators bond real money. Validators stake their reputation.
-          Bad work gets slashed. 432 skills. Sub-second settlement on Solana.
-          No middlemen. No permission.
+          The app store for AI skills, with a built-in code editor, automatic royalties,
+          and safety checks on every call. Creators publish skills, AI agents pay a few
+          cents each time they use one, and if your skill builds on someone else's work,
+          they get paid too. Every payment is instant, automatic, and verified on Solana.
+          No invoices, no middlemen. {stats?.totalOperators?.toLocaleString() ?? '...'} skills
+          live and counting.
         </motion.p>
 
         {/* Dual CTA */}
@@ -258,7 +263,7 @@ export default function Hero() {
           </a>
           <a
             href="/marketplace"
-            className="inline-flex items-center gap-2 text-[14px] sm:text-[15px] font-medium text-zinc-400 hover:text-zinc-200 border border-white/[0.10] hover:border-white/[0.20] px-7 py-3.5 rounded transition-all duration-300 hover:bg-white/[0.04]"
+            className="inline-flex items-center gap-2 text-[14px] sm:text-[15px] font-medium text-zinc-400 hover:text-zinc-200 border border-white/[0.04] hover:border-white/[0.08] px-7 py-3.5 rounded transition-all duration-300 hover:bg-white/[0.04]"
           >
             Explore Marketplace
           </a>
@@ -274,7 +279,7 @@ export default function Hero() {
       >
         <LogoBar
           variant="hero"
-          label="Skills on Aegis leverage the entire AI and blockchain stack"
+          label="Powered by the tools builders already use"
           className="max-w-7xl mx-auto"
         />
       </motion.div>

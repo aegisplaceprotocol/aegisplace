@@ -32,11 +32,11 @@ Withdraw withheld authority: treasury wallet
 ### `scripts/seed-operators.ts`
 Registers 5 demo operators into the on-chain registry:
 
-1. **code-review-v3** — Code review AI, $0.02/call, category: Development
-2. **security-audit** — Security scanner, $0.05/call, category: Security
-3. **data-extract-pro** — Data extraction, $0.01/call, category: Data
-4. **sentiment-v4** — Sentiment analysis, $0.008/call, category: AI/ML
-5. **defi-monitor** — DeFi monitoring, $0.03/call, category: DeFi
+1. **code-review-v3** - Code review AI, $0.02/call, category: Development
+2. **security-audit** - Security scanner, $0.05/call, category: Security
+3. **data-extract-pro** - Data extraction, $0.01/call, category: Data
+4. **sentiment-v4** - Sentiment analysis, $0.008/call, category: AI/ML
+5. **defi-monitor** - DeFi monitoring, $0.03/call, category: DeFi
 
 Each operator:
 - Has a real endpoint URL (can point to the gateway's mock responders)

@@ -3,7 +3,6 @@
  * Generates a clean mission spec card with economic preview.
  * Rebranded from AGIJobManager's job builder into Aegis military language.
  */
-import ComingSoon from "@/components/ComingSoon";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
@@ -18,7 +17,7 @@ const MISSION_CATEGORIES = [
   { id: "defi-execution", label: "DeFi Execution", icon: "$>", color: "#A78BFA" },
   { id: "content-gen", label: "Content Generation", icon: "Aa", color: "#F472B6" },
   { id: "research", label: "Research", icon: "?!", color: "#60A5FA" },
-  { id: "infrastructure", label: "Infrastructure", icon: "[]", color: "#34D399" },
+  { id: "infrastructure", label: "Infrastructure", icon: "[]", color: "rgba(52,211,153,0.55)" },
 ];
 
 const PRIORITY_LEVELS = [
@@ -46,7 +45,7 @@ function TagPill({ tag, active, onClick }: { tag: string; active: boolean; onCli
       className={`px-2.5 py-1 text-[10px] font-medium tracking-wider border transition-all ${
         active
           ? "border-white/30 bg-white/10 text-zinc-300"
-          : "border-white/[0.07] text-white/20 hover:text-white/40 hover:border-white/[0.1]"
+          : "border-white/[0.04] text-white/20 hover:text-white/40 hover:border-white/[0.1]"
       }`}
     >
       {tag}
@@ -66,7 +65,7 @@ function DeliverableRow({ value, onChange, onRemove, index }: {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Describe deliverable..."
-        className="flex-1 bg-white/[0.02] border border-white/[0.07] px-3 py-2 text-xs text-white/60 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors"
+        className="flex-1 bg-white/[0.02] border border-white/[0.04] px-3 py-2 text-xs text-white/60 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors"
       />
       <button onClick={onRemove} className="text-white/10 hover:text-red-400/60 transition-colors text-xs opacity-0 group-hover:opacity-100">
         x
@@ -77,7 +76,7 @@ function DeliverableRow({ value, onChange, onRemove, index }: {
 
 /* ── Main Component ──────────────────────────────────────────────────── */
 export default function MissionBuilder() {
-  return <ComingSoon title="Mission Builder" description="Compose multi-operator workflows with structured task briefings." />;
+  return <_MissionBuilder />;
 }
 
 function _MissionBuilder() {
@@ -131,7 +130,7 @@ function _MissionBuilder() {
               <span className="text-white/10">/</span>
               <span className="text-[10px] font-medium text-zinc-300/40">NEW MISSION</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white/90 tracking-tight mb-2">
+            <h1 className="text-3xl sm:text-4xl font-normal text-white/90 tracking-tight mb-2">
               Mission Briefing<span className="text-zinc-300">.</span>
             </h1>
             <p className="text-white/25 text-sm max-w-lg">
@@ -143,7 +142,7 @@ function _MissionBuilder() {
             {/* ── Left: Builder Form ─────────────────────────────────── */}
             <div className="lg:col-span-2 space-y-6">
               {/* Title + Category */}
-              <div className="border border-white/[0.07] bg-white/[0.015] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-6">
                 <div className="text-[10px] font-medium text-white/25 tracking-wider mb-4">MISSION PARAMETERS</div>
 
                 {/* Title */}
@@ -154,7 +153,7 @@ function _MissionBuilder() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g., Audit Solana token swap contract for reentrancy vulnerabilities"
-                    className="w-full bg-white/[0.02] border border-white/[0.07] px-4 py-3 text-sm text-white/70 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors "
+                    className="w-full bg-white/[0.02] border border-white/[0.04] px-4 py-3 text-sm text-white/70 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors "
                   />
                 </div>
 
@@ -184,7 +183,7 @@ function _MissionBuilder() {
                 {/* Priority */}
                 <div className="mb-5">
                   <label className="text-[10px] font-medium text-white/20 tracking-wider block mb-2">PRIORITY LEVEL</label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {PRIORITY_LEVELS.map((p) => (
                       <button
                         key={p.id}
@@ -215,14 +214,14 @@ function _MissionBuilder() {
               </div>
 
               {/* Summary */}
-              <div className="border border-white/[0.07] bg-white/[0.015] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-6">
                 <div className="text-[10px] font-medium text-white/25 tracking-wider mb-4">MISSION BRIEF</div>
                 <textarea
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   placeholder="Describe the task in detail. What needs to be done, why, and any context the operator needs..."
                   rows={4}
-                  className="w-full bg-white/[0.02] border border-white/[0.07] px-4 py-3 text-xs text-white/60 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors resize-none leading-relaxed"
+                  className="w-full bg-white/[0.02] border border-white/[0.04] px-4 py-3 text-xs text-white/60 placeholder:text-white/10 focus:outline-none focus:border-white/20 transition-colors resize-none leading-relaxed"
                 />
                 <div className="text-right mt-1">
                   <span className="text-[9px] font-medium text-white/10">{summary.length} chars</span>
@@ -230,7 +229,7 @@ function _MissionBuilder() {
               </div>
 
               {/* Deliverables */}
-              <div className="border border-white/[0.07] bg-white/[0.015] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-[10px] font-medium text-white/25 tracking-wider">DELIVERABLES</div>
                   <button
@@ -258,7 +257,7 @@ function _MissionBuilder() {
               </div>
 
               {/* Acceptance Criteria */}
-              <div className="border border-white/[0.07] bg-white/[0.015] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-[10px] font-medium text-white/25 tracking-wider">ACCEPTANCE CRITERIA</div>
                   <button
@@ -286,7 +285,7 @@ function _MissionBuilder() {
               </div>
 
               {/* Constraints */}
-              <div className="border border-white/[0.07] bg-white/[0.015] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-6">
                 <div className="text-[10px] font-medium text-white/25 tracking-wider mb-4">CONSTRAINTS</div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   <div>
@@ -301,7 +300,7 @@ function _MissionBuilder() {
                       className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
                     />
                     <div className="text-center mt-1">
-                      <span className="text-sm font-bold text-zinc-300">{budget.toLocaleString()}</span>
+                      <span className="text-sm font-normal text-zinc-300">{budget.toLocaleString()}</span>
                     </div>
                   </div>
                   <div>
@@ -316,7 +315,7 @@ function _MissionBuilder() {
                       className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
                     />
                     <div className="text-center mt-1">
-                      <span className="text-sm font-bold text-white/60">{maxDuration >= 60 ? `${Math.floor(maxDuration / 60)}m` : `${maxDuration}s`}</span>
+                      <span className="text-sm font-normal text-white/60">{maxDuration >= 60 ? `${Math.floor(maxDuration / 60)}m` : `${maxDuration}s`}</span>
                     </div>
                   </div>
                   <div>
@@ -331,7 +330,7 @@ function _MissionBuilder() {
                       className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
                     />
                     <div className="text-center mt-1">
-                      <span className="text-sm font-bold text-white/60">{minTrustScore}</span>
+                      <span className="text-sm font-normal text-white/60">{minTrustScore}</span>
                     </div>
                   </div>
                 </div>
@@ -341,7 +340,7 @@ function _MissionBuilder() {
             {/* ── Right: Preview + Economics ─────────────────────────── */}
             <div className="lg:col-span-1 space-y-6">
               {/* Mission Spec Card Preview */}
-              <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded sticky top-24">
+              <div className="border border-white/[0.04] bg-white/[0.02] p-5 rounded sticky top-24">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-[10px] font-medium text-white/25 tracking-wider">MISSION SPEC</div>
                   <div className="text-[9px] font-medium text-white/10">{missionId}</div>
@@ -357,7 +356,7 @@ function _MissionBuilder() {
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-white/70 mb-2 leading-snug min-h-[2.5rem]">
+                  <h3 className="text-sm font-normal text-white/70 mb-2 leading-snug min-h-[2.5rem]">
                     {title || "Untitled Mission"}
                   </h3>
 
@@ -373,17 +372,17 @@ function _MissionBuilder() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-white/[0.04]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-3 border-t border-white/[0.04]">
                     <div>
-                      <div className="text-xs font-bold text-zinc-300">{economics.adjustedBudget.toLocaleString()}</div>
+                      <div className="text-xs font-normal text-zinc-300">{economics.adjustedBudget.toLocaleString()}</div>
                       <div className="text-[7px] text-white/15">$AEGIS</div>
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white/50">{maxDuration >= 60 ? `${Math.floor(maxDuration / 60)}m` : `${maxDuration}s`}</div>
+                      <div className="text-xs font-normal text-white/50">{maxDuration >= 60 ? `${Math.floor(maxDuration / 60)}m` : `${maxDuration}s`}</div>
                       <div className="text-[7px] text-white/15">MAX DUR</div>
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white/50">{minTrustScore}</div>
+                      <div className="text-xs font-normal text-white/50">{minTrustScore}</div>
                       <div className="text-[7px] text-white/15">MIN TRUST</div>
                     </div>
                   </div>
@@ -412,12 +411,12 @@ function _MissionBuilder() {
                 {/* Deliverables count */}
                 <div className="flex items-center gap-3 py-3 border-t border-white/[0.04] mb-4">
                   <div className="text-center flex-1">
-                    <div className="text-sm font-bold text-white/50">{deliverables.filter(d => d.length > 0).length}</div>
+                    <div className="text-sm font-normal text-white/50">{deliverables.filter(d => d.length > 0).length}</div>
                     <div className="text-[7px] text-white/15">DELIVERABLES</div>
                   </div>
                   <div className="w-px h-6 bg-white/[0.04]" />
                   <div className="text-center flex-1">
-                    <div className="text-sm font-bold text-white/50">{acceptanceCriteria.filter(c => c.length > 0).length}</div>
+                    <div className="text-sm font-normal text-white/50">{acceptanceCriteria.filter(c => c.length > 0).length}</div>
                     <div className="text-[7px] text-white/15">CRITERIA</div>
                   </div>
                 </div>
@@ -465,25 +464,25 @@ function _MissionBuilder() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
               </div>
               <div>
-                <div className="text-sm font-bold text-white/80">Mission Deployed</div>
+                <div className="text-sm font-normal text-white/80">Mission Deployed</div>
                 <div className="text-[10px] font-medium text-white/25">{missionId}</div>
               </div>
             </div>
 
-            <div className="border border-white/[0.07] bg-white/[0.02] p-4 mb-6">
-              <div className="text-xs font-bold text-white/60 mb-1">{title || "Untitled Mission"}</div>
+            <div className="border border-white/[0.04] bg-white/[0.02] p-4 mb-6">
+              <div className="text-xs font-normal text-white/60 mb-1">{title || "Untitled Mission"}</div>
               <div className="text-[10px] font-medium text-white/20">{selectedCategory.label} / {selectedPriority.label}</div>
-              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/[0.04]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/[0.04]">
                 <div className="text-center">
-                  <div className="text-sm font-bold text-zinc-300">{economics.adjustedBudget.toLocaleString()}</div>
+                  <div className="text-sm font-normal text-zinc-300">{economics.adjustedBudget.toLocaleString()}</div>
                   <div className="text-[7px] text-white/15">ESCROWED</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm font-bold text-white/50">{deliverables.filter(d => d.length > 0).length}</div>
+                  <div className="text-sm font-normal text-white/50">{deliverables.filter(d => d.length > 0).length}</div>
                   <div className="text-[7px] text-white/15">DELIVERABLES</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm font-bold text-white/50">{minTrustScore}+</div>
+                  <div className="text-sm font-normal text-white/50">{minTrustScore}+</div>
                   <div className="text-[7px] text-white/15">TRUST REQ</div>
                 </div>
               </div>
@@ -494,7 +493,7 @@ function _MissionBuilder() {
             </p>
 
             <div className="flex gap-3">
-              <button onClick={() => setShowPreview(false)} className="flex-1 py-2.5 text-[10px] font-medium text-white/30 border border-white/[0.07] rounded hover:text-white/50 transition-colors">
+              <button onClick={() => setShowPreview(false)} className="flex-1 py-2.5 text-[10px] font-medium text-white/30 border border-white/[0.04] rounded hover:text-white/50 transition-colors">
                 CLOSE
               </button>
               <Link href="/dashboard" className="flex-1 py-2.5 text-[10px] font-medium text-zinc-300 border border-white/20 bg-white/5 hover:bg-white/10 transition-colors text-center">

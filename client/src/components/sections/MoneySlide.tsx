@@ -4,10 +4,12 @@ import { fadeInView } from "@/lib/animations";
 import GlowCard from "@/components/GlowCard";
 
 const SPLITS = [
-  { label: "Operator Creator", pct: 70, color: "#A1A1AA" },
-  { label: "Validator", pct: 20, color: "#71717A" },
-  { label: "Treasury", pct: 9, color: "#4A7A82" },
-  { label: "Burned Forever", pct: 1, color: "#FF4444" },
+  { label: "Operator Creator", pct: 60, color: "#A1A1AA" },
+  { label: "Validators", pct: 15, color: "#71717A" },
+  { label: "Stakers", pct: 12, color: "#6B7280" },
+  { label: "Treasury", pct: 8, color: "#4A7A82" },
+  { label: "Insurance", pct: 3, color: "#3B82F6" },
+  { label: "Burned Forever", pct: 2, color: "#FF4444" },
 ];
 
 const FLYWHEEL = [
@@ -24,7 +26,7 @@ export default function MoneySlide() {
   const [hoveredSplit, setHoveredSplit] = useState<number | null>(null);
 
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="container">
         {/* Section label */}
         <motion.div {...fadeInView} className="flex items-center gap-2 mb-6">
@@ -35,7 +37,7 @@ export default function MoneySlide() {
         </motion.div>
 
         {/* App Store comparison headline */}
-        <motion.h2 {...fadeInView} className="text-[clamp(1.75rem,4.5vw,3rem)] font-bold text-white leading-[1.05] tracking-tight mb-4">
+        <motion.h2 {...fadeInView} className="text-[clamp(1.75rem,4.5vw,3rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
           The App Store does $85B/year.
           <br />
           <span className="text-zinc-300">This market is $110B.</span>
@@ -47,7 +49,7 @@ export default function MoneySlide() {
         </motion.p>
 
         {/* The key insight */}
-        <div className="border border-white/20 bg-white/[0.03] p-5 sm:p-6 mb-14 sm:mb-20 max-w-2xl">
+        <div className="border border-white/[0.04] bg-white/[0.015] p-5 sm:p-6 mb-14 sm:mb-20 max-w-2xl">
           <p className="text-[14px] sm:text-[15px] text-white/60 leading-relaxed">
             Every agent that uses an operator is buying <span className="text-zinc-300 font-normal">$AEGIS</span>.
             Every transaction makes the next one more valuable.
@@ -57,7 +59,7 @@ export default function MoneySlide() {
 
         {/* Revenue split visual */}
         <motion.div {...fadeInView} className="mb-12 sm:mb-16">
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+          <h3 className="text-lg sm:text-xl font-normal text-white mb-2">
             Everyone gets paid. Every single time.
           </h3>
           <p className="text-[13px] text-white/25 mb-6">
@@ -81,18 +83,18 @@ export default function MoneySlide() {
           </div>
 
           {/* Split cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.07]">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-px bg-white/[0.04] border border-white/[0.04]">
             {SPLITS.map((s, i) => (
               <div
                 key={s.label}
-                className={`bg-white/[0.02] p-4 sm:p-6 lg:p-8 transition-all duration-300 cursor-default ${
-                  hoveredSplit === i ? "bg-white/[0.025]" : ""
+                className={`bg-white/[0.015] p-4 sm:p-6 lg:p-8 transition-all duration-300 cursor-default ${
+                  hoveredSplit === i ? "bg-white/[0.015]" : ""
                 }`}
                 onMouseEnter={() => setHoveredSplit(i)}
                 onMouseLeave={() => setHoveredSplit(null)}
               >
                 <div
-                  className="text-[28px] sm:text-[36px] lg:text-[44px] font-bold tracking-tight leading-none mb-1 sm:mb-2"
+                  className="text-[28px] sm:text-[36px] lg:text-[44px] font-normal tracking-tight leading-none mb-1 sm:mb-2"
                   style={{ color: s.color }}
                 >
                   {s.pct}%
@@ -109,7 +111,7 @@ export default function MoneySlide() {
         <motion.div {...fadeInView} className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
           {/* Left: flywheel steps */}
           <div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            <h3 className="text-xl sm:text-2xl font-normal text-white mb-2">
               The buy pressure flywheel.
             </h3>
             <p className="text-[13px] text-white/25 mb-8">
@@ -117,16 +119,16 @@ export default function MoneySlide() {
             </p>
 
             <div className="relative">
-              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-white/[0.06]" />
+              <div className="absolute left-[11px] top-3 bottom-3 w-px bg-white/[0.04]" />
               <div className="space-y-0">
                 {FLYWHEEL.map((step, i) => (
                   <div key={i} className="relative flex items-center gap-4 py-2.5">
                     <div className={`w-[23px] h-[23px] flex items-center justify-center border shrink-0 relative z-10 ${
                       i === 2 || i === 6
-                        ? "bg-white/15 border-white/30"
-                        : "bg-white/[0.02] border-white/[0.08]"
+                        ? "bg-white/[0.04] border-white/[0.08]"
+                        : "bg-white/[0.015] border-white/[0.04]"
                     }`}>
-                      <span className={`text-[10px] font-medium font-bold ${
+                      <span className={`text-[10px] font-normal ${
                         i === 2 || i === 6 ? "text-zinc-300" : "text-white/30"
                       }`}>
                         {i + 1}
@@ -161,7 +163,7 @@ export default function MoneySlide() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="p-5 sm:p-6 border border-white/[0.07] bg-white/[0.015] hover:border-white/[0.1] hover:bg-white/[0.025] transition-all duration-300"
+                className="p-5 sm:p-6 border border-white/[0.04] bg-white/[0.015] hover:border-white/[0.08] hover:bg-white/[0.015] transition-all duration-300"
               >
                 <div className="text-[14px] sm:text-[15px] font-normal text-white/80 mb-2">
                   {item.title}
@@ -181,7 +183,7 @@ export default function MoneySlide() {
                 Start earning
               </a>
               <a
-                href="/tokenomics"
+                href="/protocol#economics"
                 className="inline-flex items-center gap-2 text-[13px] font-medium text-white/30 hover:text-white/60 transition-colors"
               >
                 Full tokenomics

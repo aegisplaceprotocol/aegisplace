@@ -61,12 +61,12 @@ export default function Tokenomics() {
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
 
   return (
-    <section id="tokenomics" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="tokenomics" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="TOKENOMICS" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-20">
-          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
             $AEGIS on Solana.
             <br />
             <span className="text-white/35 font-normal">Every agent that pays is buying.</span>
@@ -79,15 +79,15 @@ export default function Tokenomics() {
         </div>
 
         {/* Token-2022 stats row */}
-        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.07] mb-12 sm:mb-20`}>
+        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04] border border-white/[0.04] mb-12 sm:mb-20`}>
           {[
             { label: "Transfer Fee", value: "1%" },
             { label: "Burn Rate", value: "0.5%" },
             { label: "Total Supply", value: "1B" },
             { label: "Chain", value: "Solana" },
           ].map((item) => (
-            <div key={item.label} className="bg-white/[0.02] p-4 sm:p-6 lg:p-8">
-              <div className="text-[22px] sm:text-[28px] lg:text-[36px] font-bold text-zinc-300 tracking-tight leading-none mb-1 sm:mb-2">
+            <div key={item.label} className="bg-white/[0.015] p-4 sm:p-6 lg:p-8">
+              <div className="text-[22px] sm:text-[28px] lg:text-[36px] font-normal text-zinc-300 tracking-tight leading-none mb-1 sm:mb-2">
                 {item.value}
               </div>
               <div className="text-[11px] sm:text-[13px] text-white/30 font-medium">{item.label}</div>
@@ -99,7 +99,7 @@ export default function Tokenomics() {
 
         {/* Buy Pressure Flywheel  -  replaces vesting schedule */}
         <div className={`mb-12 sm:mb-24`}>
-          <h3 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-white leading-tight tracking-tight mb-3">
+          <h3 className="text-[clamp(1.5rem,3vw,2.25rem)] font-normal text-white leading-tight tracking-tight mb-3">
             The buy pressure flywheel.
             <span className="text-white/35 font-normal"> Self-reinforcing.</span>
           </h3>
@@ -110,7 +110,7 @@ export default function Tokenomics() {
 
           <div className="relative">
             {/* Connecting line */}
-            <div className="absolute left-6 top-0 bottom-0 w-px bg-white/[0.06] hidden lg:block" />
+            <div className="absolute left-6 top-0 bottom-0 w-px bg-white/[0.04] hidden lg:block" />
 
             <div className="space-y-1">
               {FLYWHEEL_STEPS.map((step, i) => (
@@ -118,7 +118,7 @@ export default function Tokenomics() {
                   key={i}
                   className={`relative flex items-center gap-3 sm:gap-6 p-3 sm:p-5 lg:pl-16 border transition-all duration-300 cursor-default ${
                     hoveredStep === i
-                      ? "border-white/[0.1] bg-white/[0.025]"
+                      ? "border-white/[0.04] bg-white/[0.015]"
                       : "border-white/[0.04] bg-white/[0.01]"
                   }`}
                   onMouseEnter={() => setHoveredStep(i)}
@@ -127,21 +127,21 @@ export default function Tokenomics() {
                   {/* Step indicator */}
                   <div className={`hidden lg:flex absolute left-3 w-7 h-7 items-center justify-center border transition-all duration-300 ${
                     step.accent
-                      ? "bg-white/15 border-white/30"
+                      ? "bg-white/[0.04] border-white/[0.08]"
                       : hoveredStep === i
-                        ? "bg-white/[0.06] border-white/[0.15]"
-                        : "bg-white/[0.02] border-white/[0.08]"
+                        ? "bg-white/[0.04] border-white/[0.08]"
+                        : "bg-white/[0.015] border-white/[0.04]"
                   }`}>
-                    <span className={`text-[11px] font-medium font-bold ${step.accent ? "text-zinc-300" : "text-white/30"}`}>
+                    <span className={`text-[11px] font-normal ${step.accent ? "text-zinc-300" : "text-white/30"}`}>
                       {i + 1}
                     </span>
                   </div>
 
                   {/* Mobile step number */}
                   <div className={`lg:hidden w-7 h-7 flex items-center justify-center border shrink-0 ${
-                    step.accent ? "bg-white/15 border-white/30" : "bg-white/[0.02] border-white/[0.08]"
+                    step.accent ? "bg-white/[0.04] border-white/[0.08]" : "bg-white/[0.015] border-white/[0.04]"
                   }`}>
-                    <span className={`text-[11px] font-medium font-bold ${step.accent ? "text-zinc-300" : "text-white/30"}`}>
+                    <span className={`text-[11px] font-normal ${step.accent ? "text-zinc-300" : "text-white/30"}`}>
                       {i + 1}
                     </span>
                   </div>
@@ -172,13 +172,13 @@ export default function Tokenomics() {
         </div>
 
         {/* Value capture callout */}
-        <div className={`grid md:grid-cols-3 gap-px bg-white/[0.06] border border-white/[0.07] mb-12 sm:mb-24`}>
+        <div className={`grid md:grid-cols-3 gap-px bg-white/[0.04] border border-white/[0.04] mb-12 sm:mb-24`}>
           {[
             { title: "Organic Demand", desc: "Every operator registration, validator bond, and dispute requires $AEGIS. Protocol usage creates buy pressure." },
             { title: "Deflationary", desc: "2% of every invocation fee is burned permanently. Supply decreases over time. More usage, more burns." },
             { title: "Protocol Revenue", desc: "12% treasury fee on every invocation. x402 USDC payments are swapped to $AEGIS via Jupiter. Every agent invocation across the ecosystem drives buy pressure." },
           ].map((item) => (
-            <div key={item.title} className="bg-white/[0.02] p-4 sm:p-8 lg:p-10">
+            <div key={item.title} className="bg-white/[0.015] p-4 sm:p-8 lg:p-10">
               <div className="text-[15px] font-normal text-white/70 mb-3">{item.title}</div>
               <div className="text-[13px] text-white/30 leading-relaxed">{item.desc}</div>
             </div>
@@ -187,7 +187,7 @@ export default function Tokenomics() {
 
         {/* Utility mechanisms */}
         <div className="mb-12">
-          <h3 className="text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-white leading-tight tracking-tight mb-3">
+          <h3 className="text-[clamp(1.5rem,3vw,2.25rem)] font-normal text-white leading-tight tracking-tight mb-3">
             Seven utility mechanisms.
             <span className="text-white/35 font-normal"> Built into the protocol.</span>
           </h3>
@@ -196,11 +196,11 @@ export default function Tokenomics() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.07]">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-white/[0.04] border border-white/[0.04]">
           {UTILITIES.map((u, i) => (
             <div
               key={u.title}
-              className={`bg-white/[0.02] p-4 sm:p-8 lg:p-10 ${hoveredUtil === i ? "bg-white/[0.025]" : ""}`}
+              className={`bg-white/[0.015] p-4 sm:p-8 lg:p-10 ${hoveredUtil === i ? "bg-white/[0.015]" : ""}`}
               style={{ transitionDelay: `${i * 80}ms` }}
               onMouseEnter={() => setHoveredUtil(i)}
               onMouseLeave={() => setHoveredUtil(null)}

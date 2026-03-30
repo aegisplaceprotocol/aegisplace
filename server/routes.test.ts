@@ -128,8 +128,10 @@ describe("Invocation flow logic", () => {
     const { calculateFees } = await import("./validator");
     const fees = calculateFees(0.025);
     expect(fees).toHaveProperty("creator");
-    expect(fees).toHaveProperty("validator");
+    expect(fees).toHaveProperty("validators");
+    expect(fees).toHaveProperty("stakers");
     expect(fees).toHaveProperty("treasury");
+    expect(fees).toHaveProperty("insurance");
     expect(fees).toHaveProperty("burn");
   });
 

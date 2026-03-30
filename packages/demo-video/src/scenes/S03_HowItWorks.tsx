@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } fr
 import { t, text } from "../theme";
 
 /**
- * S03 — How it works. Four-column grid. Numbers + text.
+ * S03 - How it works. Four-column grid. Numbers + text.
  * Pure Swiss layout. No diagrams. The grid IS the diagram.
  */
 const STEPS = [
@@ -129,7 +129,7 @@ export const S03_HowItWorks: React.FC = () => {
         {[
           { val: "~400ms", label: "Settlement" },
           { val: "$0.00025", label: "Transaction fee" },
-          { val: "70%", label: "To creators" },
+          { val: "60%", label: "To creators" },
           { val: "452", label: "Operators live" },
         ].map((s) => (
           <div key={s.label}>

@@ -1,11 +1,11 @@
 /**
- * Aegis Protocol — MCP Streamable HTTP Server
+ * Aegis Protocol - MCP Streamable HTTP Server
  *
  * Implements the Model Context Protocol over JSON-RPC 2.0 / HTTP,
  * allowing any MCP-compatible agent (Claude, Cursor, Windsurf) to
  * interact with the Aegis marketplace.
  *
- * No SDK dependency — pure JSON-RPC 2.0 over POST.
+ * No SDK dependency - pure JSON-RPC 2.0 over POST.
  */
 
 import type { Request, Response } from "express";
@@ -34,6 +34,27 @@ import { validateInvocation, calculateFees } from "./validator";
 import { broadcastEvent } from "./sse";
 import { bags, BagsApiError } from "./bags";
 import { OperatorTokenModel } from "../drizzle/schema";
+
+// ────────────────────────────────────────────────────────────
+// SSRF Protection
+// ────────────────────────────────────────────────────────────
+
+function isPrivateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    // Block private IPs, localhost, cloud metadata
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
+    if (host === '169.254.169.254') return true; // AWS/GCP metadata
+    if (host === '100.100.100.200') return true; // Alibaba metadata
+    if (host.startsWith('10.')) return true;
+    if (host.startsWith('192.168.')) return true;
+    if (host.startsWith('172.') && parseInt(host.split('.')[1]) >= 16 && parseInt(host.split('.')[1]) <= 31) return true;
+    if (host.endsWith('.internal') || host.endsWith('.local')) return true;
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return true;
+    return false;
+  } catch { return true; }
+}
 
 // ────────────────────────────────────────────────────────────
 // MCP Protocol Constants
@@ -190,7 +211,7 @@ const TOOLS = [
   {
     name: "aegis_discovery_stats",
     description:
-      "Get statistics about the Aegis Discovery Engine — how many operators were auto-discovered vs manually registered, security scan results, and growth metrics.",
+      "Get statistics about the Aegis Discovery Engine - how many operators were auto-discovered vs manually registered, security scan results, and growth metrics.",
     inputSchema: {
       type: "object" as const,
       properties: {},
@@ -553,6 +574,9 @@ async function executeTool(
         let success = true;
 
         if (operator.endpointUrl) {
+          if (isPrivateUrl(operator.endpointUrl)) {
+            throw new Error('Operator endpoint URL is not allowed (private/internal address)');
+          }
           const start = Date.now();
           try {
             const controller = new AbortController();
@@ -642,6 +666,7 @@ async function executeTool(
           success,
           statusCode,
           trustDelta,
+          paymentVerified: false,
           guardrailInputPassed: guardrailInputResult.passed,
           guardrailOutputPassed: guardrailOutputResult.passed,
           guardrailViolations: allViolations.length > 0 ? allViolations : undefined,
@@ -729,7 +754,7 @@ async function executeTool(
             isError: true,
           };
         }
-        const breakdown = await getTrustBreakdown(operatorId);
+        const breakdown = await getTrustBreakdown(Number(operatorId));
         return {
           content: [
             {
@@ -847,7 +872,7 @@ async function executeTool(
       // ── Discover Tools ──
       case "aegis_discover_tools": {
         try {
-          // @ts-ignore — discovery module may not exist yet
+          // @ts-ignore - discovery module may not exist yet
           const { runDiscoveryPipeline } = await import("./discovery/pipeline");
           const run = await runDiscoveryPipeline();
           return { content: [{ type: "text", text: JSON.stringify(run, null, 2) }] };
@@ -858,7 +883,7 @@ async function executeTool(
 
       // ── Discovery Stats ──
       case "aegis_discovery_stats": {
-        // @ts-ignore — import path resolved at runtime
+        // @ts-ignore - import path resolved at runtime
         const { OperatorModel } = await import("../drizzle/schema");
         const discovered = await OperatorModel.countDocuments({ source: "discovery-engine" });
         const manual = await OperatorModel.countDocuments({ source: { $ne: "discovery-engine" } });
@@ -1037,7 +1062,7 @@ async function executeTool(
           agentId: agent._id,
           name: agent.name,
           apiKey: rawKey,
-          warning: "Store this API key securely — it cannot be retrieved again.",
+          warning: "Store this API key securely - it cannot be retrieved again.",
         };
         if (wallet) {
           response.wallet = {
@@ -1234,7 +1259,7 @@ async function executeTool(
           });
 
           if (!quote) {
-            return { content: [{ type: "text", text: "Could not get quote — Bags API key may not be configured" }], isError: true };
+            return { content: [{ type: "text", text: "Could not get quote - Bags API key may not be configured" }], isError: true };
           }
 
           return {
@@ -1284,6 +1309,15 @@ export async function handleMCP(req: Request, res: Response) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
 
+  // MCP API key authentication (when MCP_API_KEY env var is set)
+  const mcpKey = process.env.MCP_API_KEY;
+  if (mcpKey) {
+    const providedKey = (req.headers["x-api-key"] as string) || (req.headers["authorization"] as string || "").replace("Bearer ", "");
+    if (providedKey !== mcpKey) {
+      return res.status(401).json(jsonrpcError(null, -32000, "Unauthorized"));
+    }
+  }
+
   // Validate content type
   const contentType = req.headers["content-type"];
   if (!contentType || !contentType.includes("application/json")) {
@@ -1326,7 +1360,7 @@ export async function handleMCP(req: Request, res: Response) {
 
       // ── Notifications (no response expected) ──
       case "notifications/initialized": {
-        // Client acknowledgment — respond with 204 No Content
+        // Client acknowledgment - respond with 204 No Content
         res.status(204).end();
         return;
       }
@@ -1394,7 +1428,7 @@ export function handleMCPDiscovery(_req: Request, res: Response) {
     name: SERVER_NAME,
     version: SERVER_VERSION,
     description:
-      "AI Agent Skills Marketplace on Solana — 400+ operators, 16 MCP tools, trust scoring, NeMo guardrails, task marketplace, Bags token trading, and USDC payments",
+      "AI Agent Skills Marketplace on Solana - 400+ operators, 16 MCP tools, trust scoring, NeMo guardrails, task marketplace, Bags token trading, and USDC payments",
     protocolVersion: MCP_VERSION,
     tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
     endpoint: "/api/mcp",

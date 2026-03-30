@@ -1,7 +1,9 @@
-import ComingSoon from "@/components/ComingSoon";
 import { useState, useMemo, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
-import { trpc } from "@/lib/trpc";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+
+type ValidatorItem = RouterOutputs["validator"]["list"]["validators"][number];
 
 /* ── Animated counter ──────────────────────────────────────────────────── */
 function AnimNum({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) {
@@ -37,8 +39,8 @@ function ScoreBar({ score }: { score: number }) {
   const color = score >= 80 ? "rgb(161,161,170)" : score >= 60 ? "rgb(250,204,21)" : score >= 40 ? "rgb(96,165,250)" : "rgb(107,114,128)";
   return (
     <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      <div className="w-16 h-1.5 bg-zinc-800 rounded overflow-hidden">
+        <div className="h-full rounded transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
       <span className="text-[11px] font-medium" style={{ color }}>{score}</span>
     </div>
@@ -148,10 +150,6 @@ const ONBOARDING_STEPS = [
 
 /* ── Main component ────────────────────────────────────────────────────── */
 export default function Validators() {
-  return <ComingSoon title="Validators" description="Validator registration, staking, and attestation rewards." />;
-}
-
-function _Validators() {
   const [sortBy, setSortBy] = useState<"reputation" | "stake" | "validated" | "newest">("reputation");
   const [filterTier, setFilterTier] = useState<string>("all");
   const [activeOnboardStep, setActiveOnboardStep] = useState(0);
@@ -171,14 +169,14 @@ function _Validators() {
 
   const filtered = useMemo(() => {
     if (filterTier === "all") return validators;
-    return validators.filter((v: any) => getTier(v.stakeLamports) === filterTier);
+    return validators.filter((v: ValidatorItem) => getTier(v.stakeLamports) === filterTier);
   }, [validators, filterTier]);
 
   /* Stats */
-  const totalBonded = validators.reduce((s: number, v: any) => s + (v.stakeLamports || 0), 0);
-  const totalValidated = validators.reduce((s: number, v: any) => s + (v.validatedCount || 0), 0);
-  const avgScore = validators.length > 0 ? validators.reduce((s: number, v: any) => s + (v.reputationScore || 0), 0) / validators.length : 0;
-  const grandmasters = validators.filter((v: any) => getTier(v.stakeLamports) === "Grandmaster").length;
+  const totalBonded = validators.reduce((s: number, v: ValidatorItem) => s + (v.stakeLamports || 0), 0);
+  const totalValidated = validators.reduce((s: number, v: ValidatorItem) => s + (v.validatedCount || 0), 0);
+  const avgScore = validators.length > 0 ? validators.reduce((s: number, v: ValidatorItem) => s + (v.reputationScore || 0), 0) / validators.length : 0;
+  const grandmasters = validators.filter((v: ValidatorItem) => getTier(v.stakeLamports) === "Grandmaster").length;
 
   const handleCopy = (idx: number, code: string) => {
     navigator.clipboard.writeText(code);
@@ -201,7 +199,7 @@ function _Validators() {
       <section className="pt-32 pb-20">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <span className="inline-flex items-center gap-2 text-[11px] font-medium text-zinc-500 bg-zinc-800/40 border border-white/[0.06]/30 rounded-full px-4 py-1.5 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[rgba(52,211,153,0.40)] animate-pulse" />
             Validator Network
           </span>
 
@@ -299,7 +297,7 @@ function _Validators() {
                 </div>
 
                 {/* Rows */}
-                {filtered.map((v: any, i: number) => {
+                {filtered.map((v: ValidatorItem, i: number) => {
                   const tier = getTier(v.stakeLamports);
                   const ts = tierStyle(tier);
                   return (
@@ -327,7 +325,7 @@ function _Validators() {
                       <div className="text-[13px] font-medium text-zinc-500">{v.slashedCount}</div>
                       <div className="flex items-center gap-1.5">
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          v.status === "active" ? "bg-emerald-500/70" : v.status === "slashed" ? "bg-red-500/70" : "bg-zinc-600"
+                          v.status === "active" ? "bg-[rgba(52,211,153,0.55)]" : v.status === "slashed" ? "bg-[rgba(220,100,60,0.50)]" : "bg-zinc-600"
                         }`} />
                         <span className="text-[11px] text-zinc-500 capitalize">{v.status}</span>
                       </div>
@@ -378,7 +376,7 @@ function _Validators() {
                   </div>
 
                   {/* Stats row */}
-                  <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                     <div>
                       <div className="text-[10px] font-medium text-zinc-600">APY</div>
                       <div className="text-[15px] font-normal text-zinc-300 mt-0.5">{t.apy}</div>
@@ -389,7 +387,7 @@ function _Validators() {
                     </div>
                     <div>
                       <div className="text-[10px] font-medium text-zinc-600">Slash</div>
-                      <div className="text-[15px] font-normal text-red-400/70 mt-0.5">{t.slashRisk}</div>
+                      <div className="text-[15px] font-normal text-[rgba(220,100,60,0.50)] mt-0.5">{t.slashRisk}</div>
                     </div>
                   </div>
 
@@ -443,11 +441,11 @@ function _Validators() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-zinc-500">Approving malicious operator</span>
-                  <span className="text-[13px] font-medium text-red-400/70">100% bond</span>
+                  <span className="text-[13px] font-medium text-[rgba(220,100,60,0.50)]">100% bond</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-zinc-500">Negligent validation</span>
-                  <span className="text-[13px] font-medium text-red-400/70">25% bond</span>
+                  <span className="text-[13px] font-medium text-[rgba(220,100,60,0.50)]">25% bond</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[12px] text-zinc-500">Inactivity (30+ days)</span>
@@ -624,6 +622,8 @@ function _Validators() {
       </section>
 
       <div className="h-20" />
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

@@ -1,9 +1,11 @@
-import ComingSoon from "@/components/ComingSoon";
 import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 
 const SECTIONS = [
   { id: "quickstart", label: "Quickstart" },
+  { id: "aegisx", label: "AegisX IDE" },
+  { id: "aegisx-tools", label: "57 Tools Reference" },
+  { id: "mcp-bridge", label: "MCP Server Bridge" },
   { id: "architecture", label: "Architecture" },
   { id: "x402", label: "x402 Payment Flow" },
   { id: "registration", label: "Operator Registration" },
@@ -69,10 +71,6 @@ function InfoBox({ label, children }: { label: string; children: React.ReactNode
 }
 
 export default function Docs() {
-  return <ComingSoon title="Documentation" description="Full technical documentation, SDK guides, and API reference." />;
-}
-
-function _Docs() {
   const [active, setActive] = useState("quickstart");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -131,7 +129,7 @@ function _Docs() {
           </nav>
 
           <div className="mt-10 pt-8 border-t border-white/[0.06]/30 space-y-3">
-            <a href="https://github.com/aegis-protocol/agent-aegis" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/aegis-protocol/aegisx" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2.5 text-[12px] text-zinc-600 hover:text-zinc-300 transition-colors">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
               View Source
@@ -164,41 +162,365 @@ function _Docs() {
           {/* Quickstart */}
           <DocSection id="quickstart" title="Get Started in 60 Seconds">
             <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Agent Aegis is a single binary. Download it, bootstrap your runtime, and start invoking operators with x402 payments.
+              AegisX is a single binary. Download it, bootstrap your runtime, and start invoking operators with x402 payments. AegisX includes 57 built-in tools across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories.
             </p>
-            <CodeBlock lang="bash" code={`# Install Agent Aegis
-curl -sSL https://aegis.dev/install | sh
+            <CodeBlock lang="bash" code={`# Install AegisX
+curl -sSL https://aegisplace.com/install | sh
 
 # Bootstrap runtime -- generates Solana wallet
-$ agent-aegis init
-Agent Aegis runtime initialized.
+$ aegisx init
+AegisX runtime initialized.
    Address: 7xKXtQ9...9fGhR4m
-   Config:  ~/.agent-aegis/config.yaml
-   Wallet:  ~/.agent-aegis/wallet.json
+   Config:  ~/.aegisx/config.yaml
+   Wallet:  ~/.aegisx/wallet.json
+   Tools:   57 tools loaded (Solana, Trading, Bags.fm, AI, Intel, Browser)
 
 # Check your balance
-$ agent-aegis balance
+$ aegisx balance
 SOL:    0.000000000 (devnet)
 USDC:   0.00 (devnet)
 $AEGIS: 0.000000 (devnet)
 
 # Get devnet tokens for testing
-$ agent-aegis wallet airdrop 2
+$ aegisx wallet airdrop 2
 Requesting 2 SOL airdrop on devnet...
 [OK] 2.0 SOL received.
 
 # Search the Aegis Index
-$ agent-aegis search "code review"
+$ aegisx search "code review"
 Found 847 operators matching "code review"
   1. code-review-agent    by aegis-labs    Diamond  94/100  0.00005 SOL/call
   2. solidity-auditor     by AuditDAO     Diamond  89/100  0.0002 SOL/call
   3. test-suite-gen       by TestForge    Diamond  85/100  0.00006 SOL/call
 
 # Invoke an operator (pays creator automatically via x402)
-$ agent-aegis invoke code-review-agent --file ./main.go
+$ aegisx invoke code-review-agent --file ./main.go
 Payment: $0.05 USDC via x402 -> swapped to $AEGIS
 Split:   60% Creator / 15% Validators / 12% Stakers / 8% Treasury / 3% Insurance / 2% Burn
 Status:  [OK] Completed in 1.2s`} />
+          </DocSection>
+
+          {/* AegisX IDE */}
+          <DocSection id="aegisx" title="AegisX IDE">
+            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
+              AegisX is the full-featured IDE for building, testing, and deploying AI agents on Aegis. It ships with 57 built-in tools, integrated x402 payments, MCP server bridging, and Solana-native capabilities that no competitor offers -- not Cursor ($29B), not Copilot (20M users).
+            </p>
+
+            <div className="mb-6">
+              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Installation</h3>
+              <CodeBlock lang="bash" code={`# Install AegisX globally
+curl -sSL https://aegisplace.com/install | sh
+
+# Or install via npm
+npm install -g aegisx
+
+# Verify installation
+$ aegisx --version
+aegisx v1.0.0 (57 tools, MCP bridge, x402 payments)
+
+# Initialize workspace
+$ aegisx init
+AegisX workspace initialized.
+   Config:   ~/.aegisx/config.yaml
+   Wallet:   ~/.aegisx/wallet.json
+   Tools:    57 tools loaded
+   MCP:      Bridge ready (aegisx mcp serve)`} />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Using the aegisx CLI</h3>
+              <CodeBlock lang="bash" code={`# List all available tools
+$ aegisx tools list
+57 tools available:
+
+  SOLANA (12 tools)
+    wallet-create, wallet-balance, token-transfer, token-swap,
+    stake-sol, unstake-sol, program-deploy, account-info,
+    transaction-history, nft-mint, nft-transfer, spl-token-create
+
+  TRADING (9 tools)
+    jupiter-swap, jupiter-quote, limit-order, dca-create,
+    portfolio-balance, price-feed, orderbook-depth,
+    trade-history, pnl-calculator
+
+  BAGS.FM (8 tools)
+    bags-buy, bags-sell, bags-portfolio, bags-trending,
+    bags-creator-info, bags-holder-list, bags-price-history,
+    bags-volume-analytics
+
+  AI (10 tools)
+    code-review, code-generate, code-explain, test-generate,
+    bug-detect, refactor-suggest, doc-generate, translate-code,
+    security-audit, performance-analyze
+
+  INTELLIGENCE (10 tools)
+    on-chain-analyze, wallet-profile, token-scanner,
+    whale-tracker, dex-monitor, liquidity-analyze,
+    smart-money-track, risk-score, market-sentiment,
+    social-sentiment
+
+  BROWSER (8 tools)
+    web-scrape, screenshot, pdf-extract, api-call,
+    form-fill, link-extract, site-monitor, content-summarize
+
+# Use a specific tool
+$ aegisx tool jupiter-swap --from SOL --to USDC --amount 1.5
+Swapping 1.5 SOL -> USDC via Jupiter...
+[OK] Received 187.42 USDC (rate: 124.95)
+
+# Get help on any tool
+$ aegisx tool bags-buy --help
+bags-buy: Buy a creator token on Bags.fm
+  --creator  <address>   Creator wallet address
+  --amount   <sol>       Amount in SOL to spend
+  --slippage <pct>       Max slippage (default: 1%)`} />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">MCP Server Mode</h3>
+              <CodeBlock lang="bash" code={`# Start AegisX as an MCP server
+$ aegisx mcp serve
+AegisX MCP Server running on stdio
+  Tools exposed: 57
+  x402 payments: enabled
+  Wallet: 7xKXtQ9...9fGhR4m
+  Waiting for MCP client connection...
+
+# Connect from Claude Code, Cursor, or any MCP client
+# Add to your MCP config (e.g., claude_desktop_config.json):
+{
+  "mcpServers": {
+    "aegisx": {
+      "command": "aegisx",
+      "args": ["mcp", "serve"],
+      "env": {
+        "AEGISX_WALLET": "~/.aegisx/wallet.json",
+        "AEGISX_NETWORK": "mainnet-beta"
+      }
+    }
+  }
+}`} />
+            </div>
+
+            <InfoBox label="Why AegisX">
+              Cursor raised at $29B. Copilot has 20M users. But neither offers Solana-native capabilities, x402 agent payments, or integrated DeFi tools. AegisX is the only IDE where an AI agent can discover an operator, evaluate its trust score, pay for it via x402, execute it in a sandboxed environment, and settle the payment on Solana -- all in a single workflow. With 57 tools including direct Bags.fm integration ($5B volume), AegisX gives agents access to real DeFi liquidity from day one.
+            </InfoBox>
+          </DocSection>
+
+          {/* 57 Tools Reference */}
+          <DocSection id="aegisx-tools" title="57 Tools Reference">
+            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
+              AegisX ships with 57 tools organized into six categories. Each tool is available via the CLI, the MCP server bridge, and the SDK. All tools support x402 payments when invoked by external agents.
+            </p>
+
+            <div className="space-y-6 mb-8">
+              {[
+                {
+                  category: "SOLANA",
+                  count: 12,
+                  tools: [
+                    { name: "wallet-create", desc: "Generate a new Solana keypair with optional vanity prefix" },
+                    { name: "wallet-balance", desc: "Check SOL, USDC, SPL token, and $AEGIS balances" },
+                    { name: "token-transfer", desc: "Send SOL or SPL tokens to any Solana address" },
+                    { name: "token-swap", desc: "Swap tokens via Jupiter aggregator with best-route optimization" },
+                    { name: "stake-sol", desc: "Stake SOL with a validator for liquid staking rewards" },
+                    { name: "unstake-sol", desc: "Unstake SOL with instant or delayed withdrawal" },
+                    { name: "program-deploy", desc: "Deploy Anchor or native Solana programs to devnet/mainnet" },
+                    { name: "account-info", desc: "Fetch account data, owner, lamports, and parsed token info" },
+                    { name: "transaction-history", desc: "Query transaction history for any wallet address" },
+                    { name: "nft-mint", desc: "Mint NFTs using Metaplex with metadata and collection support" },
+                    { name: "nft-transfer", desc: "Transfer NFTs between wallets with royalty enforcement" },
+                    { name: "spl-token-create", desc: "Create new SPL tokens with Token-2022 extensions" },
+                  ],
+                },
+                {
+                  category: "TRADING",
+                  count: 9,
+                  tools: [
+                    { name: "jupiter-swap", desc: "Execute token swaps via Jupiter with MEV protection" },
+                    { name: "jupiter-quote", desc: "Get real-time swap quotes with route breakdown" },
+                    { name: "limit-order", desc: "Place limit orders on Jupiter or Serum orderbook" },
+                    { name: "dca-create", desc: "Create dollar-cost-average schedules for any token pair" },
+                    { name: "portfolio-balance", desc: "Aggregate portfolio value across all held tokens" },
+                    { name: "price-feed", desc: "Real-time price data from Pyth, Switchboard, and Jupiter" },
+                    { name: "orderbook-depth", desc: "View orderbook depth for any Serum/OpenBook market" },
+                    { name: "trade-history", desc: "Export trade history with PnL calculations" },
+                    { name: "pnl-calculator", desc: "Calculate realized and unrealized PnL for any position" },
+                  ],
+                },
+                {
+                  category: "BAGS.FM",
+                  count: 8,
+                  tools: [
+                    { name: "bags-buy", desc: "Buy creator tokens on Bags.fm bonding curve" },
+                    { name: "bags-sell", desc: "Sell creator tokens back to the bonding curve" },
+                    { name: "bags-portfolio", desc: "View your Bags.fm portfolio with current valuations" },
+                    { name: "bags-trending", desc: "Get trending creators by volume, holders, or price action" },
+                    { name: "bags-creator-info", desc: "Fetch creator profile, stats, and holder distribution" },
+                    { name: "bags-holder-list", desc: "List all holders of a creator token with positions" },
+                    { name: "bags-price-history", desc: "Historical price data for any creator token" },
+                    { name: "bags-volume-analytics", desc: "Volume analytics: daily, weekly, and cumulative" },
+                  ],
+                },
+                {
+                  category: "AI",
+                  count: 10,
+                  tools: [
+                    { name: "code-review", desc: "AI-powered code review with security and quality analysis" },
+                    { name: "code-generate", desc: "Generate code from natural language specifications" },
+                    { name: "code-explain", desc: "Explain code functionality in plain language" },
+                    { name: "test-generate", desc: "Auto-generate unit and integration tests" },
+                    { name: "bug-detect", desc: "Static and AI-powered bug detection" },
+                    { name: "refactor-suggest", desc: "Suggest refactoring improvements for cleaner code" },
+                    { name: "doc-generate", desc: "Generate documentation from source code" },
+                    { name: "translate-code", desc: "Translate code between programming languages" },
+                    { name: "security-audit", desc: "Deep security audit with vulnerability classification" },
+                    { name: "performance-analyze", desc: "Identify performance bottlenecks and optimization paths" },
+                  ],
+                },
+                {
+                  category: "INTELLIGENCE",
+                  count: 10,
+                  tools: [
+                    { name: "on-chain-analyze", desc: "Deep analysis of on-chain activity patterns" },
+                    { name: "wallet-profile", desc: "Profile a wallet: activity, holdings, risk score" },
+                    { name: "token-scanner", desc: "Scan new tokens for rug pull indicators" },
+                    { name: "whale-tracker", desc: "Track large wallet movements in real time" },
+                    { name: "dex-monitor", desc: "Monitor DEX activity across Jupiter, Raydium, Orca" },
+                    { name: "liquidity-analyze", desc: "Analyze liquidity depth and pool health" },
+                    { name: "smart-money-track", desc: "Follow smart money wallets and their strategies" },
+                    { name: "risk-score", desc: "Compute risk scores for tokens, wallets, and protocols" },
+                    { name: "market-sentiment", desc: "Aggregate market sentiment from on-chain data" },
+                    { name: "social-sentiment", desc: "Social media sentiment analysis for tokens/projects" },
+                  ],
+                },
+                {
+                  category: "BROWSER",
+                  count: 8,
+                  tools: [
+                    { name: "web-scrape", desc: "Extract structured data from any web page" },
+                    { name: "screenshot", desc: "Capture screenshots of web pages or elements" },
+                    { name: "pdf-extract", desc: "Extract text, tables, and metadata from PDFs" },
+                    { name: "api-call", desc: "Make authenticated API calls with response parsing" },
+                    { name: "form-fill", desc: "Programmatically fill and submit web forms" },
+                    { name: "link-extract", desc: "Extract and categorize all links from a page" },
+                    { name: "site-monitor", desc: "Monitor websites for changes with diff alerts" },
+                    { name: "content-summarize", desc: "Summarize web page content with key extraction" },
+                  ],
+                },
+              ].map((cat) => (
+                <div key={cat.category}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="text-[12px] font-medium text-zinc-300 tracking-wider">{cat.category}</div>
+                    <div className="text-[10px] font-medium text-zinc-600">{cat.count} tools</div>
+                    <div className="h-px flex-1 bg-white/[0.06]" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {cat.tools.map((t) => (
+                      <div key={t.name} className="bg-white/[0.02]/30 border border-white/[0.06]/40 px-4 py-2.5 rounded flex items-start gap-3">
+                        <code className="text-[11px] text-zinc-300 font-mono flex-shrink-0">{t.name}</code>
+                        <span className="text-[11px] text-zinc-600">{t.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DocSection>
+
+          {/* MCP Server Bridge */}
+          <DocSection id="mcp-bridge" title="MCP Server Bridge">
+            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
+              AegisX functions as an MCP (Model Context Protocol) server, bridging all 57 tools into any MCP-compatible IDE or agent. This means Claude Code, Cursor, VS Code with Copilot, or any MCP client can access the full Aegis toolset including Solana operations, Bags.fm trading, and x402 payments.
+            </p>
+
+            <div className="mb-6">
+              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">How the MCP bridge works</h3>
+              <div className="space-y-2">
+                {[
+                  { step: "1", title: "Start the MCP server", desc: "Run aegisx mcp serve. This exposes all 57 tools as MCP tool definitions on stdio, compatible with any MCP client." },
+                  { step: "2", title: "Configure your IDE", desc: "Add aegisx to your MCP server config. The bridge auto-discovers tools, handles auth, and manages wallet connections." },
+                  { step: "3", title: "Agent calls tools", desc: "Your AI agent (Claude, GPT, etc.) sees 57 tools in its context. When it calls a tool, the MCP bridge routes it through AegisX." },
+                  { step: "4", title: "x402 payments settle", desc: "If the tool invokes a paid operator, x402 payment is handled automatically. The agent pays USDC, Aegis swaps to $AEGIS, splits revenue." },
+                ].map((s) => (
+                  <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
+                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
+                      {s.step}
+                    </div>
+                    <div>
+                      <div className="text-[14px] font-medium text-zinc-200 mb-0.5">{s.title}</div>
+                      <div className="text-[13px] text-zinc-500 leading-relaxed">{s.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CodeBlock lang="bash" code={`# Start AegisX MCP server
+$ aegisx mcp serve
+AegisX MCP Server v1.0.0
+  Protocol:  MCP v1.1 (stdio transport)
+  Tools:     57 exposed
+  Wallet:    7xKXtQ9...9fGhR4m
+  Network:   mainnet-beta
+  x402:      enabled (auto-pay up to 0.10 USDC per call)
+  Listening for MCP client connections...
+
+# Example: Claude Code connects and lists tools
+> tools/list
+{
+  "tools": [
+    { "name": "wallet-balance", "description": "Check SOL, USDC, SPL token balances" },
+    { "name": "jupiter-swap", "description": "Execute token swaps via Jupiter" },
+    { "name": "bags-buy", "description": "Buy creator tokens on Bags.fm" },
+    { "name": "code-review", "description": "AI-powered code review" },
+    ... (57 tools total)
+  ]
+}
+
+# Example: Agent calls a Solana tool through MCP
+> tools/call { "name": "wallet-balance", "arguments": { "address": "7xKXtQ9..." } }
+{
+  "content": [{ "type": "text", "text": "SOL: 12.45, USDC: 1,847.32, AEGIS: 25,000" }]
+}`} />
+
+            <div className="mt-6">
+              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">MCP Configuration Examples</h3>
+              <CodeBlock lang="json" code={`// Claude Desktop / Claude Code config
+// ~/.config/claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "aegisx": {
+      "command": "aegisx",
+      "args": ["mcp", "serve"],
+      "env": {
+        "AEGISX_WALLET": "~/.aegisx/wallet.json",
+        "AEGISX_NETWORK": "mainnet-beta",
+        "AEGISX_X402_AUTO_PAY": "true",
+        "AEGISX_X402_MAX_PER_CALL": "0.10"
+      }
+    }
+  }
+}
+
+// Cursor / VS Code MCP config
+// .cursor/mcp.json or .vscode/mcp.json
+{
+  "servers": {
+    "aegisx": {
+      "command": "aegisx",
+      "args": ["mcp", "serve", "--tools", "all"],
+      "env": {
+        "AEGISX_WALLET": "~/.aegisx/wallet.json"
+      }
+    }
+  }
+}`} />
+            </div>
+
+            <InfoBox label="x402 Auto-Pay">
+              When an agent invokes a paid operator through the MCP bridge, x402 payments are handled automatically. Set AEGISX_X402_AUTO_PAY=true and AEGISX_X402_MAX_PER_CALL to control the maximum per-call spend. The agent never needs to understand x402 -- it just calls tools, and AegisX handles payment negotiation, wallet signing, and on-chain settlement. This is what makes autonomous agent commerce possible.
+            </InfoBox>
           </DocSection>
 
           {/* Architecture */}
@@ -237,16 +559,16 @@ Status:  [OK] Completed in 1.2s`} />
               <h3 className="text-[16px] font-normal text-zinc-200 mb-4">How it works</h3>
               <div className="space-y-2">
                 {[
-                  { step: "1", title: "Agent requests invocation", desc: "The consumer agent calls agent-aegis invoke <operator> --pay x402. The CLI sends an HTTP request to the operator's endpoint." },
+                  { step: "1", title: "Agent requests invocation", desc: "The consumer agent calls aegisx invoke <operator> --pay x402. The CLI sends an HTTP request to the operator's endpoint." },
                   { step: "2", title: "Operator responds with 402", desc: "The operator server returns HTTP 402 Payment Required with an X-Payment-402 header containing the price, asset (USDC), and chain (Solana)." },
                   { step: "3", title: "Agent wallet signs payment", desc: "The agent's wallet signs a USDC transfer for the exact amount. This is gasless via a facilitator relay, so the agent does not need SOL for gas." },
                   { step: "4", title: "Agent retries with proof", desc: "The agent retries the original request with an X-Payment-Signature header containing the signed payment proof." },
                   { step: "5", title: "Facilitator settles on-chain", desc: "The facilitator verifies the signature, settles the USDC transfer on Solana, and forwards the request to the operator." },
                   { step: "6", title: "USDC swapped to $AEGIS", desc: "Aegis middleware receives the USDC and swaps it to $AEGIS via Jupiter aggregator in the same transaction." },
-                  { step: "7", title: "Revenue split executed", desc: "The $AEGIS is split atomically: 60% to Creator, 15% to Validator pool, 12% to Protocol treasury, 8% to Safety, 3% to Referrer, 2% burned permanently." },
+                  { step: "7", title: "Revenue split executed", desc: "The $AEGIS is split atomically: 60% to Creator, 15% to Validator pool, 12% to Stakers, 8% to Treasury, 3% to Insurance fund, 2% burned permanently." },
                 ].map((s) => (
                   <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
-                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-bold text-zinc-300 shrink-0">
+                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
                       {s.step}
                     </div>
                     <div>
@@ -272,7 +594,7 @@ X-Payment-402: {
   "asset": "USDC",
   "chain": "solana",
   "recipient": "AegisProtocol...Treasury",
-  "facilitator": "https://pay.aegis.dev/verify"
+  "facilitator": "https://pay.aegisplace.com/verify"
 }
 
 # Step 3-4: Retry with payment proof
@@ -303,7 +625,7 @@ X-Payment-Receipt: {
                 { metric: "Atomic", label: "Payment + split in one transaction" },
               ].map((m) => (
                 <div key={m.label} className="bg-white/[0.02]/30 border border-white/[0.06]/40 rounded p-4 text-center">
-                  <div className="text-[20px] font-bold text-zinc-200 mb-1">{m.metric}</div>
+                  <div className="text-[20px] font-normal text-zinc-200 mb-1">{m.metric}</div>
                   <div className="text-[12px] text-zinc-500">{m.label}</div>
                 </div>
               ))}
@@ -322,12 +644,12 @@ X-Payment-Receipt: {
                 {[
                   { step: "1", title: "Create your OPERATOR.md", desc: "Define your operator's name, description, pricing model, and Aegis economic extension fields. See the Operator Format section for the full spec." },
                   { step: "2", title: "Acquire $AEGIS tokens", desc: "You need a minimum of 12,500 $AEGIS for the creator bond. Tokens can be acquired on Jupiter or earned through validator rewards." },
-                  { step: "3", title: "Register via CLI", desc: "Run agent-aegis register with your operator details. The CLI creates a PDA on Solana, transfers your bond to the vault, and sets the operator status to Pending." },
+                  { step: "3", title: "Register via CLI", desc: "Run aegisx register with your operator details. The CLI creates a PDA on Solana, transfers your bond to the vault, and sets the operator status to Pending." },
                   { step: "4", title: "Await validation", desc: "Bonded validators review your operator. They run it in a sandbox, verify the OPERATOR.md claims, and submit stake-weighted attestations." },
-                  { step: "5", title: "Go live", desc: "Once validated, your operator appears in the Aegis Index and marketplace. Every invocation automatically pays you 70% of the fee." },
+                  { step: "5", title: "Go live", desc: "Once validated, your operator appears in the Aegis Index and marketplace. Every invocation automatically pays you 60% of the fee." },
                 ].map((s) => (
                   <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
-                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-bold text-zinc-300 shrink-0">
+                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
                       {s.step}
                     </div>
                     <div>
@@ -340,7 +662,7 @@ X-Payment-Receipt: {
             </div>
 
             <CodeBlock lang="bash" code={`# Register an operator with a 12,500 $AEGIS bond
-$ agent-aegis register \\
+$ aegisx register \\
     --name code-review-agent \\
     --repo owner/code-review-agent \\
     --stake 12500 \\
@@ -353,16 +675,16 @@ Registering operator on Aegis Registry...
   TX:      5KxR7...fGhiJ
 
 # Check your registered operators
-$ agent-aegis list --mine
+$ aegisx list --mine
   code-review-agent  12,500 $AEGIS bonded  Pending  0 invocations
 
 # Update pricing after registration
-$ agent-aegis update code-review-agent --price 0.08
+$ aegisx update code-review-agent --price 0.08
 Price updated: $0.05 -> $0.08 USDC per call
 TX: 8mNp2...kLqW3
 
 # Withdraw bond (only after 30-day cooldown with no active challenges)
-$ agent-aegis unregister code-review-agent
+$ aegisx unregister code-review-agent
 Cooldown check: 47 days since last challenge [PASSED]
 Bond returned: 12,500 $AEGIS -> your wallet
 TX: 3vRt9...xHjK7`} />
@@ -383,7 +705,7 @@ TX: 3vRt9...xHjK7`} />
               <CodeBlock lang="typescript" code={`import { AegisClient, Wallet } from "@aegis-protocol/sdk";
 
 // Initialize client with your wallet
-const wallet = Wallet.fromFile("~/.agent-aegis/wallet.json");
+const wallet = Wallet.fromFile("~/.aegisx/wallet.json");
 const aegis = new AegisClient({
   network: "mainnet-beta",  // or "devnet"
   wallet,
@@ -430,7 +752,7 @@ console.log(registration.pda);  // PDA address for the operator`} />
               <CodeBlock lang="python" code={`from aegis_sdk import AegisClient, Wallet
 
 # Initialize
-wallet = Wallet.from_file("~/.agent-aegis/wallet.json")
+wallet = Wallet.from_file("~/.aegisx/wallet.json")
 client = AegisClient(network="mainnet-beta", wallet=wallet)
 
 # Search and invoke
@@ -465,7 +787,7 @@ for r in results:
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let wallet = Wallet::from_file("~/.agent-aegis/wallet.json")?;
+    let wallet = Wallet::from_file("~/.aegisx/wallet.json")?;
     let client = AegisClient::new("mainnet-beta", wallet).await?;
 
     // Invoke with typed response
@@ -498,7 +820,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             </div>
 
             <InfoBox label="MCP Server Integration">
-              Aegis also ships as an MCP server, making it compatible with Claude Code, OpenAI Codex, and any MCP-compatible agent. Run <code className="text-zinc-400 font-mono text-[12px]">agent-aegis mcp-server</code> to expose the full Aegis API as MCP tools. Your agent can then discover, invoke, and pay for operators through the standard MCP tool-calling interface.
+              AegisX ships as a native MCP server, making it compatible with Claude Code, Cursor, VS Code, and any MCP-compatible agent. Run <code className="text-zinc-400 font-mono text-[12px]">aegisx mcp serve</code> to expose all 57 tools as MCP tools. Your agent can then discover, invoke, and pay for operators through the standard MCP tool-calling interface. See the MCP Server Bridge section above for full configuration.
             </InfoBox>
           </DocSection>
 
@@ -541,7 +863,7 @@ aegis:
               Operator creators stake $AEGIS tokens to register. The bond is held in a PDA vault on-chain. If the operator is challenged and found to be malicious, broken, or misrepresented, the bond is slashed. This creates economic accountability that GitHub stars cannot provide.
             </p>
             <CodeBlock lang="bash" code={`# Register an operator with a 12,500 $AEGIS bond
-$ agent-aegis register \\
+$ aegisx register \\
     --name code-review-agent \\
     --repo owner/code-review-agent \\
     --stake 12500 \\
@@ -554,7 +876,7 @@ Registering operator on Aegis Registry...
   TX:      5KxR7...fGhiJ
 
 # Check your registered operators
-$ agent-aegis list --mine
+$ aegisx list --mine
   code-review-agent  12,500 $AEGIS bonded  Pending  0 invocations`} />
 
             <InfoBox label="Token-2022 Integration">
@@ -590,7 +912,7 @@ $ agent-aegis list --mine
               Every operator invocation runs inside a Deno-based permission sandbox. The runtime treats all operators as untrusted code by default. Explicit permission grants are required before an operator can access the network, filesystem, or environment variables. This is zero-trust execution at the runtime level.
             </p>
             <CodeBlock lang="bash" code={`# Invoke with strict sandboxing (default)
-$ agent-aegis invoke code-review-agent --sandbox strict
+$ aegisx invoke code-review-agent --sandbox strict
 Sandbox: Deno isolate v1.40
   --allow-net=api.openai.com    (operator declared dependency)
   --allow-read=./src            (scoped to input files)
@@ -601,7 +923,7 @@ Sandbox: Deno isolate v1.40
   --max-time=30s
 
 # Invoke with relaxed sandboxing (trusted operators only)
-$ agent-aegis invoke code-review-agent --sandbox relaxed
+$ aegisx invoke code-review-agent --sandbox relaxed
 Sandbox: Deno isolate v1.40
   --allow-net                   (all network access)
   --allow-read                  (all filesystem reads)
@@ -642,7 +964,7 @@ Sandbox: Deno isolate v1.40
               Every validator challenge produces a replayable audit trace. This is deterministic scaffolding around non-deterministic AI. Observation loops make every decision auditable, every attestation verifiable, and every dispute resolvable with evidence.
             </p>
             <CodeBlock lang="bash" code={`# Challenge an operator -- observation loop is recorded automatically
-$ agent-aegis challenge code-review-agent \\
+$ aegisx challenge code-review-agent \\
     --stake 500 \\
     --reason "Returns empty response for Go files"
 
@@ -661,7 +983,7 @@ Challenge initiated.
 # All stored on-chain as a compressed Merkle proof.
 
 # View the observation trace
-$ agent-aegis trace ch_7xKXtQ9...9fGhR4m
+$ aegisx trace ch_7xKXtQ9...9fGhR4m
 Observation Trace:
   [T+0ms]    Input received: main.go (2,847 bytes)
   [T+12ms]   Sandbox started: Deno isolate, --allow-net=api.openai.com
@@ -727,7 +1049,7 @@ Time Decay:
               A2A (Agent-to-Agent) is Google and IBM's protocol for agents to discover each other, negotiate capabilities, and delegate tasks. Aegis adds trust-gated delegation: agents must meet minimum reputation thresholds before accepting or delegating high-value tasks.
             </p>
             <CodeBlock lang="bash" code={`# A2A integration with Aegis trust gates
-$ agent-aegis a2a publish-card \\
+$ aegisx a2a publish-card \\
     --name "code-review-ops" \\
     --capabilities "code-review,security-audit,test-gen" \\
     --min-requester-score 60
@@ -738,7 +1060,7 @@ Agent Card published.
   Trust Gate:  min_requester_score >= 60
 
 # Receive a task from another agent
-$ agent-aegis a2a incoming
+$ aegisx a2a incoming
 Incoming Task Request:
   From:        agent_0xAB12...CD34
   Reputation:  72/100 (Gold tier)  [PASSES trust gate]
@@ -747,7 +1069,7 @@ Incoming Task Request:
   Status:      Accepted automatically
 
 # Delegate a subtask to a specialist
-$ agent-aegis a2a delegate \\
+$ aegisx a2a delegate \\
     --to solidity-auditor \\
     --task "Check cross-program invocation safety" \\
     --budget 0.08
@@ -768,7 +1090,7 @@ Delegation sent.
               Coinbase Agentic Wallets let AI agents hold their own crypto wallets, sign transactions, and manage funds autonomously. Aegis validates agent identity and reputation before high-value wallet operations.
             </p>
             <CodeBlock lang="bash" code={`# Connect Aegis to a Coinbase Agentic Wallet
-$ agent-aegis wallet connect-agentic \\
+$ aegisx wallet connect-agentic \\
     --provider coinbase \\
     --wallet-id aw_9xKXtQ9...fGhR4m
 
@@ -779,7 +1101,7 @@ Agentic Wallet connected.
   Trust gate:  Aegis reputation >= 70 for txns > 1 SOL
 
 # Wallet operations are trust-gated
-$ agent-aegis wallet send 5.0 SOL --to 7xKXtQ9...9fGhR4m
+$ aegisx wallet send 5.0 SOL --to 7xKXtQ9...9fGhR4m
 Trust Check:
   Agent reputation:  78/100 (Gold)  [PASSES]
   Bond status:       25,000 $AEGIS [ACTIVE]
@@ -787,7 +1109,7 @@ Trust Check:
   Status:            APPROVED
 
 # High-value operations require higher trust
-$ agent-aegis wallet send 50.0 SOL --to 7xKXtQ9...9fGhR4m
+$ aegisx wallet send 50.0 SOL --to 7xKXtQ9...9fGhR4m
 Trust Check:
   Agent reputation:  78/100 (Gold)  [INSUFFICIENT]
   Required:          Diamond tier (80+) for txns > 10 SOL
@@ -806,13 +1128,13 @@ Trust Check:
 
             <div className="space-y-3 mb-8">
               {[
-                { name: "NeMo Guardrails", desc: "5-layer safety enforcement on every invocation. Input, dialog, retrieval, execution, and output rails. Compliance rates feed success rates.", cmd: "agent-aegis invoke code-review --guardrails strict" },
-                { name: "NeMo Evaluator", desc: "Continuous benchmarking with 24+ metrics. Accuracy, generative quality, code execution, and LLM-as-judge evaluations every 6 hours.", cmd: "agent-aegis eval code-review --suite full --judge llm" },
-                { name: "NVIDIA NIM", desc: "GPU-optimized inference containers. OpenAI-compatible APIs, 4.2x speedup, auto-scaling. NIM operators get priority marketplace placement.", cmd: "agent-aegis deploy code-review --runtime nim --gpu a100" },
-                { name: "Nemotron Models", desc: "Three model tiers: Nano (edge), Super (balanced), Ultra (max capability). Hybrid latent MoE architecture. Open weights and fine-tuning recipes.", cmd: "agent-aegis build --base nemotron-super --finetune domain" },
-                { name: "NeMo Curator", desc: "Data quality pipeline: heuristic filtering, ML classification, deduplication, PII removal. 30+ languages. Clean data = better operators.", cmd: "agent-aegis curate --dataset training --pii strip --dedup fuzzy" },
-                { name: "NeMo RL + Gym", desc: "GRPO and PPO reinforcement learning from real invocation data. NeMo Gym simulated environments. Every invocation makes operators better.", cmd: "agent-aegis optimize code-review --rl grpo --gym simulate" },
-                { name: "NeMo Agent Toolkit", desc: "Full observability: telemetry, tracing, profiling. Compatible with LangChain, LlamaIndex, CrewAI. Validators use toolkit data for attestations.", cmd: "agent-aegis observe code-review --trace --profile" },
+                { name: "NeMo Guardrails", desc: "5-layer safety enforcement on every invocation. Input, dialog, retrieval, execution, and output rails. Compliance rates feed success rates.", cmd: "aegisx invoke code-review --guardrails strict" },
+                { name: "NeMo Evaluator", desc: "Continuous benchmarking with 24+ metrics. Accuracy, generative quality, code execution, and LLM-as-judge evaluations every 6 hours.", cmd: "aegisx eval code-review --suite full --judge llm" },
+                { name: "NVIDIA NIM", desc: "GPU-optimized inference containers. OpenAI-compatible APIs, 4.2x speedup, auto-scaling. NIM operators get priority marketplace placement.", cmd: "aegisx deploy code-review --runtime nim --gpu a100" },
+                { name: "Nemotron Models", desc: "Three model tiers: Nano (edge), Super (balanced), Ultra (max capability). Hybrid latent MoE architecture. Open weights and fine-tuning recipes.", cmd: "aegisx build --base nemotron-super --finetune domain" },
+                { name: "NeMo Curator", desc: "Data quality pipeline: heuristic filtering, ML classification, deduplication, PII removal. 30+ languages. Clean data = better operators.", cmd: "aegisx curate --dataset training --pii strip --dedup fuzzy" },
+                { name: "NeMo RL + Gym", desc: "GRPO and PPO reinforcement learning from real invocation data. NeMo Gym simulated environments. Every invocation makes operators better.", cmd: "aegisx optimize code-review --rl grpo --gym simulate" },
+                { name: "NeMo Agent Toolkit", desc: "Full observability: telemetry, tracing, profiling. Compatible with LangChain, LlamaIndex, CrewAI. Validators use toolkit data for attestations.", cmd: "aegisx observe code-review --trace --profile" },
               ].map((item) => (
                 <div key={item.name} className="border border-white/[0.06]/40 bg-white/[0.02]/30 p-5 rounded hover:bg-zinc-800/20 transition-all">
                   <h4 className="text-[14px] font-normal text-emerald-400 mb-1">{item.name}</h4>
@@ -828,38 +1150,38 @@ Trust Check:
           {/* CLI Reference */}
           <DocSection id="cli" title="CLI Reference">
             <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Agent Aegis is the high-performance runtime for the Aegis protocol. A single 26MB binary that handles wallet management, operator discovery, x402 payments, validation, and the full agent loop.
+              AegisX is the high-performance runtime for the Aegis protocol. A single binary with 57 built-in tools that handles wallet management, operator discovery, x402 payments, MCP server bridging, Bags.fm integration, validation, and the full agent loop. All API endpoints reference aegisplace.com.
             </p>
             <div className="border border-white/[0.06]/40 rounded overflow-hidden">
               <div className="grid grid-cols-[1fr_1fr] gap-4 px-5 py-3 border-b border-white/[0.06]/40 text-[11px] text-zinc-500 font-medium bg-white/[0.02]/30">
                 <span>Command</span><span>Description</span>
               </div>
               {[
-                { cmd: "agent-aegis init", desc: "Bootstrap runtime, generate Solana wallet" },
-                { cmd: "agent-aegis wallet address", desc: "Show your Solana address" },
-                { cmd: "agent-aegis balance", desc: "Check SOL, USDC, and $AEGIS balance" },
-                { cmd: "agent-aegis wallet airdrop <amount>", desc: "Request devnet SOL airdrop" },
-                { cmd: "agent-aegis wallet send <to> <amount>", desc: "Send SOL to an address" },
-                { cmd: "agent-aegis wallet export", desc: "Export wallet as Solana-compatible JSON" },
-                { cmd: "agent-aegis search <query>", desc: "Search the Aegis Index" },
-                { cmd: "agent-aegis register", desc: "Register and bond an operator with $AEGIS" },
-                { cmd: "agent-aegis invoke <operator>", desc: "Invoke an operator with x402 payment" },
-                { cmd: "agent-aegis inspect <operator>", desc: "Show operator details and reputation" },
-                { cmd: "agent-aegis list", desc: "List registered operators" },
-                { cmd: "agent-aegis stats", desc: "Show marketplace statistics" },
-                { cmd: "agent-aegis challenge <operator>", desc: "Challenge an operator with a dispute bond" },
-                { cmd: "agent-aegis validate register", desc: "Register as a bonded validator" },
-                { cmd: "agent-aegis validate --attest <op>", desc: "Attest to an operator's quality" },
-                { cmd: "agent-aegis validate list", desc: "List active validators" },
-                { cmd: "agent-aegis validate stats", desc: "Show your validator statistics" },
-                { cmd: "agent-aegis stake <amount>", desc: "Stake $AEGIS tokens" },
-                { cmd: "agent-aegis unstake <amount>", desc: "Unstake $AEGIS tokens" },
-                { cmd: "agent-aegis rewards", desc: "View pending staking rewards" },
-                { cmd: "agent-aegis install <repo>", desc: "Install an operator from GitHub" },
-                { cmd: "agent-aegis run", desc: "Start the autonomous agent loop" },
-                { cmd: "agent-aegis mcp-server", desc: "Start MCP server for Claude Code, Codex" },
-                { cmd: "agent-aegis gateway", desc: "Start gateway (Telegram, Discord, Slack)" },
-                { cmd: "agent-aegis version", desc: "Show version and runtime info" },
+                { cmd: "aegisx init", desc: "Bootstrap runtime, generate Solana wallet" },
+                { cmd: "aegisx wallet address", desc: "Show your Solana address" },
+                { cmd: "aegisx balance", desc: "Check SOL, USDC, and $AEGIS balance" },
+                { cmd: "aegisx wallet airdrop <amount>", desc: "Request devnet SOL airdrop" },
+                { cmd: "aegisx wallet send <to> <amount>", desc: "Send SOL to an address" },
+                { cmd: "aegisx wallet export", desc: "Export wallet as Solana-compatible JSON" },
+                { cmd: "aegisx search <query>", desc: "Search the Aegis Index" },
+                { cmd: "aegisx register", desc: "Register and bond an operator with $AEGIS" },
+                { cmd: "aegisx invoke <operator>", desc: "Invoke an operator with x402 payment" },
+                { cmd: "aegisx inspect <operator>", desc: "Show operator details and reputation" },
+                { cmd: "aegisx list", desc: "List registered operators" },
+                { cmd: "aegisx stats", desc: "Show marketplace statistics" },
+                { cmd: "aegisx challenge <operator>", desc: "Challenge an operator with a dispute bond" },
+                { cmd: "aegisx validate register", desc: "Register as a bonded validator" },
+                { cmd: "aegisx validate --attest <op>", desc: "Attest to an operator's quality" },
+                { cmd: "aegisx validate list", desc: "List active validators" },
+                { cmd: "aegisx validate stats", desc: "Show your validator statistics" },
+                { cmd: "aegisx stake <amount>", desc: "Stake $AEGIS tokens" },
+                { cmd: "aegisx unstake <amount>", desc: "Unstake $AEGIS tokens" },
+                { cmd: "aegisx rewards", desc: "View pending staking rewards" },
+                { cmd: "aegisx install <repo>", desc: "Install an operator from GitHub" },
+                { cmd: "aegisx run", desc: "Start the autonomous agent loop" },
+                { cmd: "aegisx mcp serve", desc: "Start MCP server (57 tools) for Claude Code, Cursor, VS Code" },
+                { cmd: "aegisx gateway", desc: "Start gateway (Telegram, Discord, Slack)" },
+                { cmd: "aegisx version", desc: "Show version and runtime info" },
               ].map((c) => (
                 <div key={c.cmd} className="grid grid-cols-[1fr_1fr] gap-4 px-5 py-3 border-b border-white/[0.06]/20 hover:bg-zinc-800/10 transition-colors">
                   <code className="text-[12px] text-zinc-300 font-mono">{c.cmd}</code>

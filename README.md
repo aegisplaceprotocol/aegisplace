@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="client/public/icon-192.png" width="80" />
+  <img src="client/public/fullvectorwhite.svg" width="80" />
 </p>
 
-<h1 align="center">Aegis Protocol</h1>
+<h1 align="center">Aegis Place</h1>
 
 <p align="center">
   <strong>The trust and settlement layer for the AI agent economy.</strong><br/>

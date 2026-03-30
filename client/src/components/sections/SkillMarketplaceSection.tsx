@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 /* ── Live Earnings Feed (simulated) ─────────────────────────────────────── */
 
@@ -49,6 +50,8 @@ export default function SkillMarketplaceSection() {
   const counterRef = useRef(6);
   const sectionRef = useRef<HTMLElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
+  const stats = statsQuery.data as any;
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -72,7 +75,7 @@ export default function SkillMarketplaceSection() {
       <div className="container py-24 md:py-32">
         {/* Section Header */}
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/15 px-3 py-1 tracking-wider">
+          <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.04] px-3 py-1 tracking-wider">
             SKILL MARKETPLACE
           </span>
           <div className="h-px flex-1 bg-white/[0.04]" />
@@ -81,7 +84,7 @@ export default function SkillMarketplaceSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           {/* Left: The Pitch */}
           <div>
-            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-bold tracking-tight leading-[1.1] mb-6">
+            <h2 className="text-3xl md:text-4xl lg:text-[44px] font-normal tracking-tight leading-[1.1] mb-6">
               <span className="text-white/90">Build a skill once.</span><br />
               <span className="text-zinc-300">Get paid forever.</span>
             </h2>
@@ -110,7 +113,7 @@ export default function SkillMarketplaceSection() {
                 },
               ].map((item) => (
                 <div key={item.step} className="flex gap-4">
-                  <div className="w-8 h-8 border border-white/20 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 border border-white/[0.04] flex items-center justify-center shrink-0">
                     <span className="text-[11px] font-medium text-zinc-300/60">{item.step}</span>
                   </div>
                   <div>
@@ -123,16 +126,16 @@ export default function SkillMarketplaceSection() {
 
             {/* Key Numbers */}
             <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="border border-white/[0.07] p-4">
-                <div className="text-xl font-bold text-zinc-300 ">70%</div>
+              <div className="border border-white/[0.04] p-4">
+                <div className="text-xl font-normal text-zinc-300 ">60%</div>
                 <div className="text-[10px] text-white/25 mt-1">goes to you</div>
               </div>
-              <div className="border border-white/[0.07] p-4">
-                <div className="text-xl font-bold text-white/80 ">$1.9M</div>
+              <div className="border border-white/[0.04] p-4">
+                <div className="text-xl font-normal text-white/80 ">{stats?.totalEarnings ? `$${Math.floor(parseFloat(String(stats.totalEarnings)) * 0.6).toLocaleString()}` : "--"}</div>
                 <div className="text-[10px] text-white/25 mt-1">paid to creators</div>
               </div>
-              <div className="border border-white/[0.07] p-4">
-                <div className="text-xl font-bold text-white/80 ">97M+</div>
+              <div className="border border-white/[0.04] p-4">
+                <div className="text-xl font-normal text-white/80 ">{stats?.totalInvocations ? `${(stats.totalInvocations).toLocaleString()}` : "--"}</div>
                 <div className="text-[10px] text-white/25 mt-1">skill calls</div>
               </div>
             </div>
@@ -141,7 +144,7 @@ export default function SkillMarketplaceSection() {
               <Link href="/skill-marketplace" className="text-sm font-normal bg-white text-zinc-900 px-7 py-3 hover:bg-zinc-200 transition-colors rounded">
                 Explore Skills
               </Link>
-              <Link href="/skill-marketplace?tab=upload" className="text-sm font-medium border border-white/20 text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-7 py-3 transition-all">
+              <Link href="/skill-marketplace?tab=upload" className="text-sm font-medium border border-white/[0.04] text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-7 py-3 transition-all">
                 Start Earning
               </Link>
             </div>
@@ -149,9 +152,9 @@ export default function SkillMarketplaceSection() {
 
           {/* Right: Live Earnings Feed */}
           <div>
-            <div className="border border-white/[0.07] bg-white/[0.015]">
+            <div className="border border-white/[0.04] bg-white/[0.015]">
               {/* Feed Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.07]">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.04]">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                   <span className="text-[10px] font-medium text-white/30">LIVE CREATOR EARNINGS</span>
@@ -181,7 +184,7 @@ export default function SkillMarketplaceSection() {
               </div>
 
               {/* Feed Footer */}
-              <div className="px-5 py-3 border-t border-white/[0.07] flex items-center justify-between">
+              <div className="px-5 py-3 border-t border-white/[0.04] flex items-center justify-between">
                 <span className="text-[9px] font-medium text-white/15">Payments settle instantly via x402</span>
                 <Link href="/skill-marketplace" className="text-[10px] font-medium text-zinc-300/50 hover:text-zinc-300 transition-colors">
                   View all activity
@@ -190,7 +193,7 @@ export default function SkillMarketplaceSection() {
             </div>
 
             {/* Composability Teaser */}
-            <div className="mt-4 border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="mt-4 border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <div className="text-[9px] font-medium text-white/20 tracking-wider mb-3">SKILLS CHAIN TOGETHER</div>
               <p className="text-xs text-white/30 leading-relaxed mb-4">
                 The real power is composability. Skills can call other skills. A "Portfolio Rebalancer" might use the "50-DEX Router" which uses the "Gas Oracle." Every skill in the chain earns. One workflow, multiple creators paid.
@@ -198,7 +201,7 @@ export default function SkillMarketplaceSection() {
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
                 {["Whale Alert", "Signal Generator", "Swap Router", "Gas Oracle"].map((s, i) => (
                   <div key={s} className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] font-medium text-white/40 border border-white/[0.08] px-2.5 py-1 whitespace-nowrap">{s}</span>
+                    <span className="text-[10px] font-medium text-white/40 border border-white/[0.04] px-2.5 py-1 whitespace-nowrap">{s}</span>
                     {i < 3 && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" strokeWidth="1.5" className="shrink-0 opacity-30">
                         <path d="M5 12h14M12 5l7 7-7 7" />

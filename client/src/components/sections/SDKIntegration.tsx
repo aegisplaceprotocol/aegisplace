@@ -200,9 +200,9 @@ const FIRST_REQUESTS = [
 function EndpointPill({ method, path }: { method: string; path: string }) {
   const methodColor =
     method === "POST" ? "text-amber-400/70 bg-amber-400/[0.06] border-amber-400/15" :
-    method === "GET" ? "text-zinc-300/60 bg-white/[0.04] border-white/12" :
-    method === "MCP" ? "text-zinc-300/50 bg-white/[0.04] border-white/10" :
-    "text-white/40 bg-white/[0.03] border-white/8";
+    method === "GET" ? "text-zinc-300/60 bg-white/[0.04] border-white/[0.04]" :
+    method === "MCP" ? "text-zinc-300/50 bg-white/[0.04] border-white/[0.04]" :
+    "text-white/40 bg-white/[0.015] border-white/[0.04]";
 
   return (
     <button
@@ -230,13 +230,13 @@ export default function SDKIntegration() {
   }, []);
 
   return (
-    <section id="integrate" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="integrate" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="INTEGRATE" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div>
-            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Five minutes.<br />
               <span className="text-zinc-300">Ten lines.</span>
             </h2>
@@ -250,21 +250,21 @@ export default function SDKIntegration() {
             {INSTALL_STEPS.map((step, i) => (
               <div key={i} className="flex items-center gap-3">
                 <span className="text-[10px] font-medium text-white/15 hidden sm:inline">{step.desc}</span>
-                <code className="text-[11px] font-medium text-zinc-300/50 bg-white/[0.03] px-2 py-0.5 rounded">{step.cmd}</code>
+                <code className="text-[11px] font-medium text-zinc-300/50 bg-white/[0.015] px-2 py-0.5 rounded">{step.cmd}</code>
               </div>
             ))}
           </div>
         </div>
 
         {/* Code tabs */}
-        <div className={`border border-white/[0.07] rounded overflow-hidden`}>
+        <div className={`border border-white/[0.04] rounded overflow-hidden`}>
           {/* Tab bar */}
-          <div className="flex border-b border-white/[0.07] bg-white/[0.02] overflow-x-auto">
+          <div className="flex border-b border-white/[0.04] bg-white/[0.015] overflow-x-auto">
             {TABS.map((tab, i) => (
               <button
                 key={i}
                 onClick={() => setActiveTab(i)}
-                className={`px-3 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-medium tracking-wider whitespace-nowrap transition-all border-b-2 ${activeTab === i ? "text-zinc-300 border-white bg-white/[0.02]" : "text-white/30 border-transparent hover:text-white/50"}`}
+                className={`px-3 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-[12px] font-medium tracking-wider whitespace-nowrap transition-all border-b-2 ${activeTab === i ? "text-zinc-300 border-white bg-white/[0.015]" : "text-white/30 border-transparent hover:text-white/50"}`}
               >
                 {tab.label}
               </button>
@@ -283,7 +283,7 @@ export default function SDKIntegration() {
           </div>
 
           {/* Code block */}
-          <div className="p-3 sm:p-5 bg-white/[0.03] overflow-x-auto">
+          <div className="p-3 sm:p-5 bg-white/[0.015] overflow-x-auto">
             <pre className="text-[11px] sm:text-[13px] font-medium leading-[1.7]">
               {TABS[activeTab].code.split("\n").map((line, i) => (
                 <div key={i} className="flex">
@@ -311,20 +311,20 @@ export default function SDKIntegration() {
 
         {/* Bottom stats */}
         <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 border border-white/[0.07] bg-white/[0.015] text-center">
-            <div className="text-[24px] font-bold text-zinc-300 ">4</div>
+          <div className="p-4 border border-white/[0.04] bg-white/[0.015] text-center">
+            <div className="text-[24px] font-normal text-zinc-300 ">4</div>
             <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">COMMANDS TO LAUNCH</div>
           </div>
-          <div className="p-4 border border-white/[0.07] bg-white/[0.015] text-center">
-            <div className="text-[24px] font-bold text-white/60 ">12</div>
+          <div className="p-4 border border-white/[0.04] bg-white/[0.015] text-center">
+            <div className="text-[24px] font-normal text-white/60 ">12</div>
             <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">LINES TO REGISTER</div>
           </div>
-          <div className="p-4 border border-white/[0.07] bg-white/[0.015] text-center">
-            <div className="text-[24px] font-bold text-white/60 ">MIT</div>
+          <div className="p-4 border border-white/[0.04] bg-white/[0.015] text-center">
+            <div className="text-[24px] font-normal text-white/60 ">MIT</div>
             <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">LICENSE</div>
           </div>
-          <div className="p-4 border border-white/[0.07] bg-white/[0.015] text-center">
-            <div className="text-[24px] font-bold text-white/60 ">0</div>
+          <div className="p-4 border border-white/[0.04] bg-white/[0.015] text-center">
+            <div className="text-[24px] font-normal text-white/60 ">0</div>
             <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">VENDOR LOCK-IN</div>
           </div>
         </div>
@@ -333,7 +333,7 @@ export default function SDKIntegration() {
         <div className={`mt-16`}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-[18px] sm:text-[22px] font-bold text-white/80 tracking-tight">First requests</h3>
+              <h3 className="text-[18px] sm:text-[22px] font-normal text-white/80 tracking-tight">First requests</h3>
               <p className="text-[13px] text-white/25 mt-1">Copy, paste, run. Every endpoint is live today.</p>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -342,9 +342,9 @@ export default function SDKIntegration() {
             </div>
           </div>
 
-          <div className="border border-white/[0.07] rounded overflow-hidden" style={{ boxShadow: "0 0 60px rgba(161,161,170,0.02)" }}>
+          <div className="border border-white/[0.04] rounded overflow-hidden" style={{ boxShadow: "0 0 60px rgba(161,161,170,0.02)" }}>
             {/* Terminal header */}
-            <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 border-b border-white/[0.07] bg-white/[0.02]">
+            <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 border-b border-white/[0.04] bg-white/[0.015]">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/50" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/50" />
@@ -355,11 +355,11 @@ export default function SDKIntegration() {
             </div>
 
             {/* Curl commands */}
-            <div className="bg-white/[0.02]">
+            <div className="bg-white/[0.015]">
               {FIRST_REQUESTS.map((req, i) => (
                 <div
                   key={i}
-                  className={`group flex items-start gap-3 px-4 sm:px-5 py-3.5 transition-colors hover:bg-white/[0.02] ${i < FIRST_REQUESTS.length - 1 ? "border-b border-white/[0.03]" : ""}`}
+                  className={`group flex items-start gap-3 px-4 sm:px-5 py-3.5 transition-colors hover:bg-white/[0.015] ${i < FIRST_REQUESTS.length - 1 ? "border-b border-white/[0.03]" : ""}`}
                 >
                   {/* Label */}
                   <span className="text-[10px] font-medium text-white/15 tracking-wider uppercase w-28 sm:w-36 shrink-0 pt-0.5 hidden sm:block">
@@ -394,7 +394,7 @@ export default function SDKIntegration() {
             </div>
 
             {/* Bottom bar with endpoint pills */}
-            <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-3 border-t border-white/[0.07] bg-white/[0.015]">
+            <div className="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-3 border-t border-white/[0.04] bg-white/[0.015]">
               <span className="text-[9px] font-medium text-white/12 tracking-wider uppercase mr-1">Base URL:</span>
               <code className="text-[11px] font-medium text-zinc-300/40">https://aegisplace.com/api</code>
               <span className="text-white/8 mx-1">|</span>

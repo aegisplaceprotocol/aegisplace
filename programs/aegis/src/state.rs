@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-/// Global protocol configuration — singleton PDA seeded by ["config"].
+/// Global protocol configuration - singleton PDA seeded by ["config"].
 /// Stores admin authority, treasury addresses, fee schedule, and aggregate counters.
 #[account]
 #[derive(InitSpace)]
@@ -41,6 +41,9 @@ pub struct ProtocolConfig {
     /// Default: [6000, 1500, 1200, 800, 300, 200]
     pub fee_bps: [u16; 6],
 
+    /// Pending admin for 2-step admin transfer. Default (zero) means no pending transfer.
+    pub pending_admin: Pubkey,
+
     /// PDA bump seed for deterministic address derivation.
     pub bump: u8,
 }
@@ -65,7 +68,7 @@ pub struct Operator {
     pub endpoint_url: String,
 
     /// Price per invocation in USDC base units (6 decimals).
-    pub price_lamports: u64,
+    pub price_usdc_base: u64,
 
     /// Category enum index (0-255). Used for marketplace filtering.
     pub category: u8,

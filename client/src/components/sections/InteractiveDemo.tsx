@@ -107,7 +107,7 @@ function LiveTerminal() {
   const getLineColor = (type: TermLine["type"]) => {
     switch (type) {
       case "command": return "text-zinc-200";
-      case "success": return "text-emerald-400";
+      case "success": return "text-white/70";
       case "payment": return "text-amber-400/80";
       case "header": return "text-zinc-500";
       case "divider": return "text-zinc-800";
@@ -117,22 +117,22 @@ function LiveTerminal() {
   };
 
   return (
-    <GlowCard className="rounded border border-white/[0.06] overflow-hidden" glowColor="rgba(52, 211, 153, 0.05)">
+    <GlowCard className="rounded border border-white/[0.04] overflow-hidden" glowColor="rgba(52, 211, 153, 0.05)">
       {/* Terminal header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.04] bg-white/[0.01]">
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.06]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.06]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.06]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.04]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.04]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white/[0.04]" />
           </div>
           <span className="text-[11px] font-mono text-zinc-600 ml-2">aegis-cli</span>
         </div>
         <div className="flex items-center gap-3">
           {playing && (
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-live" />
-              <span className="text-[10px] font-medium text-emerald-500/70">LIVE</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-white/40 animate-pulse-live" />
+              <span className="text-[10px] font-medium text-white/40">LIVE</span>
             </span>
           )}
           {done && (
@@ -155,7 +155,7 @@ function LiveTerminal() {
               onClick={play}
               className="group flex items-center gap-3 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
             >
-              <div className="w-10 h-10 rounded border border-white/[0.08] flex items-center justify-center group-hover:border-white/[0.15] transition-colors">
+              <div className="w-10 h-10 rounded border border-white/[0.04] flex items-center justify-center group-hover:border-white/[0.08] transition-colors">
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                   <polygon points="6,3 13,8 6,13" fill="currentColor" />
                 </svg>
@@ -186,7 +186,7 @@ function LiveTerminal() {
 /* ---- Money flow visualization ---- */
 function MoneyFlow() {
   return (
-    <GlowCard className="rounded border border-white/[0.06] bg-white/[0.01] p-5 sm:p-6">
+    <GlowCard className="rounded border border-white/[0.04] bg-white/[0.01] p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
         <span className="text-[12px] font-normal text-zinc-300">Revenue Split Per Invocation</span>
@@ -195,9 +195,9 @@ function MoneyFlow() {
       {/* Visual bar breakdown */}
       <div className="mb-5">
         <div className="flex h-3 overflow-hidden gap-0.5 rounded">
-          <div className="bg-emerald-500/80 flex-[60] rounded-l-sm" title="Creator: 60%" />
-          <div className="bg-blue-500/60 flex-[15]" title="Validators: 15%" />
-          <div className="bg-emerald-500/50 flex-[12]" title="Stakers: 12%" />
+          <div className="bg-white/30 flex-[60] rounded-l-sm" title="Creator: 60%" />
+          <div className="bg-white/20 flex-[15]" title="Validators: 15%" />
+          <div className="bg-white/[0.04] flex-[12]" title="Stakers: 12%" />
           <div className="bg-zinc-500/40 flex-[8]" title="Treasury: 8%" />
           <div className="bg-amber-500/40 flex-[3]" title="Insurance: 3%" />
           <div className="bg-red-500/40 flex-[2] rounded-r-sm" title="Burned: 2%" />
@@ -206,9 +206,9 @@ function MoneyFlow() {
 
       <div className="space-y-2.5">
         {[
-          { label: "You (the creator)", pct: "60%", color: "bg-emerald-500/80", amount: "$0.0018" },
-          { label: "Validator network", pct: "15%", color: "bg-blue-500/60", amount: "$0.00045" },
-          { label: "Stakers", pct: "12%", color: "bg-emerald-500/50", amount: "$0.00036" },
+          { label: "You (the creator)", pct: "60%", color: "bg-white/30", amount: "$0.0018" },
+          { label: "Validator network", pct: "15%", color: "bg-white/20", amount: "$0.00045" },
+          { label: "Stakers", pct: "12%", color: "bg-white/[0.04]", amount: "$0.00036" },
           { label: "Protocol treasury", pct: "8%", color: "bg-zinc-500/40", amount: "$0.00024" },
           { label: "Insurance fund", pct: "3%", color: "bg-amber-500/40", amount: "$0.00009" },
           { label: "Burned forever", pct: "2%", color: "bg-red-500/40", amount: "$0.00006" },
@@ -229,7 +229,7 @@ function MoneyFlow() {
       <div className="mt-5 pt-4 border-t border-white/[0.04]">
         <div className="text-[11px] text-zinc-600 leading-relaxed">
           On a $0.003 invocation, the creator earns $0.0018 instantly.
-          At 10,000 calls per day, that is <span className="text-emerald-400/70 font-medium">$18/day</span> or <span className="text-emerald-400/70 font-medium">$540/month</span> from a single skill.
+          At 10,000 calls per day, that is <span className="text-white/70/70 font-medium">$18/day</span> or <span className="text-white/70/70 font-medium">$540/month</span> from a single skill.
         </div>
       </div>
     </GlowCard>
@@ -247,9 +247,9 @@ function EarningsCalc() {
   const yearly = monthly * 12;
 
   return (
-    <GlowCard className="rounded border border-white/[0.06] bg-white/[0.01] p-5 sm:p-6" glowColor="rgba(52, 211, 153, 0.06)">
+    <GlowCard className="rounded border border-white/[0.04] bg-white/[0.01] p-5 sm:p-6" glowColor="rgba(52, 211, 153, 0.06)">
       <div className="flex items-center gap-2 mb-5">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
+        <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
         <span className="text-[12px] font-normal text-zinc-300">Earnings Calculator</span>
       </div>
 
@@ -266,7 +266,7 @@ function EarningsCalc() {
             step="100"
             value={calls}
             onChange={(e) => setCalls(Number(e.target.value))}
-            className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            className="w-full h-1 bg-white/[0.04] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
           />
         </div>
 
@@ -282,7 +282,7 @@ function EarningsCalc() {
             step="0.001"
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            className="w-full h-1 bg-white/[0.04] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
           />
         </div>
 
@@ -298,23 +298,23 @@ function EarningsCalc() {
             step="1"
             value={skills}
             onChange={(e) => setSkills(Number(e.target.value))}
-            className="w-full h-1 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+            className="w-full h-1 bg-white/[0.04] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
           />
         </div>
       </div>
 
       {/* Results */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="text-center p-3 rounded bg-white/[0.02] border border-white/[0.04]">
-          <div className="text-[16px] sm:text-[18px] font-bold text-emerald-400 font-mono">${daily.toFixed(2)}</div>
+        <div className="text-center p-3 rounded bg-white/[0.015] border border-white/[0.04]">
+          <div className="text-[16px] sm:text-[18px] font-normal text-white/70 font-mono">${daily.toFixed(2)}</div>
           <div className="text-[10px] text-zinc-600 mt-0.5">per day</div>
         </div>
-        <div className="text-center p-3 rounded bg-white/[0.02] border border-white/[0.04]">
-          <div className="text-[16px] sm:text-[18px] font-bold text-emerald-400 font-mono">${monthly.toFixed(0)}</div>
+        <div className="text-center p-3 rounded bg-white/[0.015] border border-white/[0.04]">
+          <div className="text-[16px] sm:text-[18px] font-normal text-white/70 font-mono">${monthly.toFixed(0)}</div>
           <div className="text-[10px] text-zinc-600 mt-0.5">per month</div>
         </div>
-        <div className="text-center p-3 rounded bg-white/[0.02] border border-white/[0.04]">
-          <div className="text-[16px] sm:text-[18px] font-bold text-emerald-400 font-mono">${yearly.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</div>
+        <div className="text-center p-3 rounded bg-white/[0.015] border border-white/[0.04]">
+          <div className="text-[16px] sm:text-[18px] font-normal text-white/70 font-mono">${yearly.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</div>
           <div className="text-[10px] text-zinc-600 mt-0.5">per year</div>
         </div>
       </div>
@@ -339,7 +339,7 @@ function ComparisonTable() {
   ];
 
   return (
-    <GlowCard className="rounded border border-white/[0.06] bg-white/[0.01] p-5 sm:p-6">
+    <GlowCard className="rounded border border-white/[0.04] bg-white/[0.01] p-5 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <span className="w-1.5 h-1.5 rounded-full bg-blue-400/60" />
         <span className="text-[12px] font-normal text-zinc-300">Why Aegis Wins</span>
@@ -349,7 +349,7 @@ function ComparisonTable() {
         {/* Header */}
         <div className="grid grid-cols-3 gap-2 pb-2 border-b border-white/[0.04] mb-2">
           <span className="text-[10px] text-zinc-600 uppercase tracking-wider" />
-          <span className="text-[10px] text-emerald-400/70 uppercase tracking-wider font-normal text-center">Aegis</span>
+          <span className="text-[10px] text-white/70/70 uppercase tracking-wider font-normal text-center">Aegis</span>
           <span className="text-[10px] text-zinc-600 uppercase tracking-wider text-center">Others</span>
         </div>
         {rows.map((row) => (
@@ -407,7 +407,7 @@ export default function InteractiveDemo() {
 
           <div className="lg:col-span-2 space-y-5">
             {/* Protocol badges */}
-            <GlowCard className="rounded border border-white/[0.06] bg-white/[0.01] p-5 sm:p-6">
+            <GlowCard className="rounded border border-white/[0.04] bg-white/[0.01] p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-400/60" />
                 <span className="text-[12px] font-normal text-zinc-300">Protocol Stack</span>
@@ -415,7 +415,7 @@ export default function InteractiveDemo() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <NvidiaBadge text="NeMo Validated" size="sm" variant="minimal" />
                 {["x402", "MCP", "A2A", "Solana", "Jupiter"].map((p) => (
-                  <span key={p} className="text-[11px] font-medium font-mono px-2.5 py-1 rounded border border-white/[0.06] text-zinc-500 bg-white/[0.02]">
+                  <span key={p} className="text-[11px] font-medium font-mono px-2.5 py-1 rounded border border-white/[0.04] text-zinc-500 bg-white/[0.015]">
                     {p}
                   </span>
                 ))}
@@ -433,7 +433,7 @@ export default function InteractiveDemo() {
                 { label: "Success Rate", value: "99.7%" },
                 { label: "Validators", value: "8/8" },
               ].map((s) => (
-                <GlowCard key={s.label} className="rounded border border-white/[0.06] bg-white/[0.01] p-3 text-center">
+                <GlowCard key={s.label} className="rounded border border-white/[0.04] bg-white/[0.01] p-3 text-center">
                   <div className="font-normal text-sm sm:text-base text-zinc-200">{s.value}</div>
                   <div className="text-[10px] font-medium text-zinc-600 mt-0.5">{s.label}</div>
                 </GlowCard>

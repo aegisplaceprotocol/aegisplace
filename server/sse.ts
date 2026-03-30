@@ -9,6 +9,10 @@ export interface SSEEvent {
   data: Record<string, unknown>;
 }
 
+// ── Connection limits ────────────────────────────────────────────────────
+const MAX_SSE_CONNECTIONS = 100;
+let activeConnections = 0;
+
 // ── State ────────────────────────────────────────────────────────────────
 const clients = new Set<Response>();
 const replayBuffer: SSEEvent[] = [];
@@ -56,6 +60,12 @@ function formatSSE(event: SSEEvent): string {
 // ── SSE endpoint handler ─────────────────────────────────────────────────
 
 export function handleSSE(req: Request, res: Response): void {
+  if (activeConnections >= MAX_SSE_CONNECTIONS) {
+    res.status(503).json({ error: 'Too many connections' });
+    return;
+  }
+  activeConnections++;
+
   // Set SSE headers
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -89,6 +99,7 @@ export function handleSSE(req: Request, res: Response): void {
   req.on("close", () => {
     clearInterval(heartbeat);
     clients.delete(res);
+    activeConnections--;
   });
 }
 

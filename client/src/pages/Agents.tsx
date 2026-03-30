@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -34,7 +35,7 @@ function ReputationDisplay({ score }: { score: number }) {
 
   return (
     <div className="flex gap-1 items-center">
-      <span className="text-white/70 font-bold text-[12px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <span className="text-white/70 font-normal text-[12px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {clamped}
       </span>
       <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden min-w-[40px]">
@@ -105,12 +106,12 @@ function AgentCard({ agent }: { agent: Agent }) {
       {/* Agent name */}
       <div className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
-          <span className="text-[14px] font-bold text-white/30">
+          <span className="text-[14px] font-normal text-white/30">
             {agent.name.charAt(0).toUpperCase()}
           </span>
         </div>
         <div>
-          <h3 className="text-[15px] font-bold text-white/90 truncate pr-6">
+          <h3 className="text-[15px] font-normal text-white/90 truncate pr-6">
             {agent.name}
           </h3>
           <span className="text-[11px] text-white/25" style={{ fontVariantNumeric: 'tabular-nums' }}>
@@ -158,7 +159,7 @@ export default function Agents() {
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 300);
 
-  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null };
+  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null as any };
 
   const agents = useMemo(() => {
     return (data?.agents || []) as Agent[];
@@ -175,7 +176,7 @@ export default function Agents() {
     <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-[24px] text-white font-bold tracking-tight">Agents</h1>
+        <h1 className="text-[24px] text-white font-normal tracking-tight">Agents</h1>
         <p className="text-[13px] text-white/40 mt-1">AI agents competing on the Aegis network</p>
         <div className="h-px mt-4 bg-white/[0.04]" />
       </div>
@@ -264,6 +265,8 @@ export default function Agents() {
           )}
         </>
       )}
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

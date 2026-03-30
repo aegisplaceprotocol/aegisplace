@@ -36,10 +36,10 @@ const REASONS = [
 
 export default function WhyHoldAegis() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
-          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold text-white leading-[1.1] tracking-tight mb-4">
+          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-4">
             Built into every transaction.
           </h2>
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
@@ -54,7 +54,7 @@ export default function WhyHoldAegis() {
               key={r.num}
               className="rounded border border-zinc-800 bg-zinc-900/40 p-6"
             >
-              <span className="inline-block text-[11px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded px-2.5 py-0.5 mb-4">
+              <span className="inline-block text-[11px] font-normal text-white/50 bg-white/[0.015] border border-white/[0.04] rounded px-2.5 py-0.5 mb-4">
                 {r.num}
               </span>
               <h3 className="text-[16px] font-medium text-white mb-2">{r.title}</h3>

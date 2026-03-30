@@ -9,7 +9,7 @@ use instructions::*;
 
 declare_id!("7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR");
 
-/// Aegis Operator Registry — the on-chain backbone of the Aegis AI Agent Marketplace.
+/// Aegis Operator Registry - the on-chain backbone of the Aegis AI Agent Marketplace.
 ///
 /// This program manages:
 /// - Protocol-wide configuration and fee schedules
@@ -39,10 +39,10 @@ pub mod aegis {
         ctx: Context<RegisterOperator>,
         name: String,
         endpoint_url: String,
-        price_lamports: u64,
+        price_usdc_base: u64,
         category: u8,
     ) -> Result<()> {
-        instructions::register_operator::handler(ctx, name, endpoint_url, price_lamports, category)
+        instructions::register_operator::handler(ctx, name, endpoint_url, price_usdc_base, category)
     }
 
     /// Invokes an operator's skill, paying in USDC.
@@ -73,5 +73,42 @@ pub mod aegis {
     /// the on-chain account is preserved for historical queries.
     pub fn deactivate_operator(ctx: Context<DeactivateOperator>) -> Result<()> {
         instructions::deactivate_operator::handler(ctx)
+    }
+
+    /// Reactivates a previously deactivated operator.
+    ///
+    /// Only callable by the operator's creator. The operator must be inactive.
+    pub fn reactivate_operator(ctx: Context<ReactivateOperator>) -> Result<()> {
+        instructions::reactivate_operator::handler(ctx)
+    }
+
+    /// Initiates admin rotation by setting a pending admin.
+    ///
+    /// Only callable by the current admin. The new admin must call
+    /// `accept_admin` to complete the 2-step transfer.
+    pub fn rotate_admin(ctx: Context<RotateAdmin>, new_admin: Pubkey) -> Result<()> {
+        instructions::rotate_admin::handler(ctx, new_admin)
+    }
+
+    /// Accepts a pending admin transfer, completing the 2-step rotation.
+    ///
+    /// Only callable by the pending admin set via `rotate_admin`.
+    pub fn accept_admin(ctx: Context<AcceptAdmin>) -> Result<()> {
+        instructions::accept_admin::handler(ctx)
+    }
+
+    /// Updates protocol configuration parameters.
+    ///
+    /// Only callable by the current admin. All parameters are optional;
+    /// only provided values are updated.
+    pub fn update_config(
+        ctx: Context<UpdateConfig>,
+        new_fee_bps: Option<[u16; 6]>,
+        new_treasury: Option<Pubkey>,
+        new_validator_pool: Option<Pubkey>,
+        new_staker_pool: Option<Pubkey>,
+        new_insurance_fund: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::update_config::handler(ctx, new_fee_bps, new_treasury, new_validator_pool, new_staker_pool, new_insurance_fund)
     }
 }

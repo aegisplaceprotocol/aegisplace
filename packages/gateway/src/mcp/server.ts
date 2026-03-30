@@ -1,5 +1,5 @@
 /**
- * Aegis MCP Server — SSE Transport
+ * Aegis MCP Server - SSE Transport
  *
  * Exposes 5 tools for AI agent interaction:
  *   - list_skills: search/filter operators
@@ -132,7 +132,7 @@ function createMcpServer(): McpServer {
         };
       }
 
-      // Payment provided — instruct the agent to use the HTTP endpoint
+      // Payment provided - instruct the agent to use the HTTP endpoint
       return {
         content: [
           {
@@ -313,7 +313,7 @@ const activeSessions = new Map<string, SSEServerTransport>();
 
 export async function mountMcpRoutes(app: FastifyInstance): Promise<void> {
   /**
-   * GET /mcp/sse — SSE connection endpoint.
+   * GET /mcp/sse - SSE connection endpoint.
    * Creates a new MCP server instance per connection.
    */
   app.get("/mcp/sse", async (request: FastifyRequest, reply: FastifyReply) => {
@@ -331,7 +331,7 @@ export async function mountMcpRoutes(app: FastifyInstance): Promise<void> {
   });
 
   /**
-   * POST /mcp/messages — Message endpoint for SSE transport.
+   * POST /mcp/messages - Message endpoint for SSE transport.
    * Routes messages to the correct session.
    */
   app.post("/mcp/messages", async (request: FastifyRequest, reply: FastifyReply) => {

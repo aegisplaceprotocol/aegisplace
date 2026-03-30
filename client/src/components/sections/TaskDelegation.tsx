@@ -49,9 +49,9 @@ const WORKFLOWS: { name: string; description: string; steps: WorkflowStep[] }[] 
 
 function StepNode({ step, index }: { step: WorkflowStep; index: number }) {
   const statusColors = {
-    complete: { border: "border-white/30", bg: "bg-white/[0.04]", text: "text-zinc-300/70" },
+    complete: { border: "border-white/[0.08]", bg: "bg-white/[0.04]", text: "text-zinc-300/70" },
     active: { border: "border-amber-400/30", bg: "bg-amber-400/[0.04]", text: "text-amber-400/70" },
-    pending: { border: "border-white/[0.08]", bg: "bg-white/[0.02]", text: "text-white/30" },
+    pending: { border: "border-white/[0.04]", bg: "bg-white/[0.015]", text: "text-white/30" },
   };
   const c = statusColors[step.status];
 
@@ -59,8 +59,8 @@ function StepNode({ step, index }: { step: WorkflowStep; index: number }) {
     <div className={`p-4 border ${c.border} ${c.bg} rounded transition-all duration-300`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[10px] font-medium text-white/20 bg-white/[0.06] px-1.5 py-0.5 rounded shrink-0">STEP {index + 1}</span>
-            <span className={`text-[12px] sm:text-[13px] font-medium font-normal ${c.text} truncate`}>{step.operator}</span>
+            <span className="text-[10px] font-medium text-white/20 bg-white/[0.04] px-1.5 py-0.5 rounded shrink-0">STEP {index + 1}</span>
+            <span className={`text-[12px] sm:text-[13px] font-normal ${c.text} truncate`}>{step.operator}</span>
           </div>
           <span className={`text-[10px] font-medium ${c.text} shrink-0 ml-2`}>{step.status.toUpperCase()}</span>
         </div>
@@ -100,13 +100,13 @@ export default function TaskDelegation() {
   }, [inView, activeWorkflow, workflow.steps.length]);
 
   return (
-    <section id="delegation" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="delegation" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="DELEGATION" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div>
-            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Agents chain operators.<br />
               <span className="text-white/30">Workflows emerge.</span>
             </h2>
@@ -118,7 +118,7 @@ export default function TaskDelegation() {
           </div>
           <div className="text-right">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">PIPELINE COST</div>
-            <div className="text-[28px] font-bold text-zinc-300 ">${totalCost.toFixed(4)}</div>
+            <div className="text-[28px] font-normal text-zinc-300 ">${totalCost.toFixed(4)}</div>
             <div className="text-[10px] font-medium text-white/15">{workflow.steps.length} operators chained</div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function TaskDelegation() {
             <button
               key={i}
               onClick={() => setActiveWorkflow(i)}
-              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-medium tracking-wider rounded transition-all ${activeWorkflow === i ? "bg-white/10 text-zinc-300 border border-white/20" : "bg-white/[0.03] text-white/30 border border-white/[0.07] hover:text-white/50"}`}
+              className={`px-3 sm:px-4 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-medium tracking-wider rounded transition-all ${activeWorkflow === i ? "bg-white/[0.04] text-zinc-300 border border-white/[0.08]" : "bg-white/[0.015] text-white/30 border border-white/[0.04] hover:text-white/50"}`}
             >
               {w.name}
             </button>
@@ -137,7 +137,7 @@ export default function TaskDelegation() {
         </div>
 
         {/* Workflow description */}
-        <div className={`mb-8 p-4 border border-white/[0.07] bg-white/[0.015] rounded`}>
+        <div className={`mb-8 p-4 border border-white/[0.04] bg-white/[0.015] rounded`}>
           <p className="text-[13px] text-white/40 leading-relaxed">{workflow.description}</p>
         </div>
 
@@ -157,21 +157,21 @@ export default function TaskDelegation() {
 
         {/* Bottom callout */}
         <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div className="p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">ATOMIC SETTLEMENT</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Each step settles independently. If step 3 fails, steps 1-2 are already paid.
               The caller's bond covers the failed step's cost.
             </p>
           </div>
-          <div className="p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">AUTOMATIC ROUTING</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               The protocol selects the highest-reputation operator for each step.
               If an operator is degraded, the next-best alternative is routed automatically.
             </p>
           </div>
-          <div className="p-5 border border-white/[0.07] bg-white/[0.015]">
+          <div className="p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">RECEIPT CHAIN</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Every step mints a cNFT receipt. The full pipeline produces a linked chain

@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate } from "remotion";
 import { t, text } from "../theme";
 
 /**
- * S02 — The problem. Three lines. No decoration.
+ * S02 - The problem. Three lines. No decoration.
  * Each line types in, one after another. Cold, factual.
  */
 const LINES = [

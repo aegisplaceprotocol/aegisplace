@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME } from "../shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -21,6 +21,8 @@ import {
   logAudit, getAuditLog, getAdminStats,
   getProtocolStats, updateUserWallet,
   getGuardrailStats,
+  getGuardrailViolationTypes,
+  getRecentGuardrailViolations,
 } from "./db";
 import { validateInvocation, calculateFees } from "./validator";
 import { checkInput, checkOutput } from "./guardrails";
@@ -28,8 +30,31 @@ import { verifyPayment } from "./solana";
 import { validateEndpoint } from "./operator-health";
 import { ENV } from "./_core/env";
 import { broadcastEvent } from "./sse";
+
+function isPrivateUrl(urlStr: string): boolean {
+  try {
+    const u = new URL(urlStr);
+    const host = u.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1") return true;
+    if (host === "169.254.169.254") return true; // AWS/GCP metadata
+    if (host === "100.100.100.200") return true; // Alibaba metadata
+    if (host.startsWith("10.")) return true;
+    if (host.startsWith("192.168.")) return true;
+    if (host.startsWith("172.") && parseInt(host.split(".")[1]) >= 16 && parseInt(host.split(".")[1]) <= 31) return true;
+    if (host.endsWith(".internal") || host.endsWith(".local")) return true;
+    if (u.protocol !== "http:" && u.protocol !== "https:") return true;
+    return false;
+  } catch { return true; }
+}
 import { getTrustBreakdown } from "./trust-engine";
 import { getCreatorEarnings, getCreatorAnalytics, getCreatorOperators } from "./earnings";
+import {
+  getDependencyTree,
+  getCreatorEarnings as getRoyaltyEarnings,
+  getRoyaltyLeaderboard,
+  getRoyaltyStats,
+  registerDependency,
+} from "./royalties";
 
 // ── Admin guard middleware ──
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -263,6 +288,26 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return getGuardrailStats(input?.operatorId);
       }),
+
+    /** Top guardrail violation types aggregated from invocations */
+    guardrailViolationTypes: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(20).default(5) }).optional())
+      .query(async ({ input }) => {
+        return getGuardrailViolationTypes(input?.limit ?? 5);
+      }),
+
+    /** Recent invocations that failed guardrail checks */
+    guardrailViolations: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).default(10) }).optional())
+      .query(async ({ input }) => {
+        return getRecentGuardrailViolations(input?.limit ?? 10);
+      }),
+
+    /** Adaptive guardrails engine stats (self-improving safety) */
+    adaptiveGuardrails: publicProcedure.query(async () => {
+      const { getAdaptiveStats } = await import("./guardrails");
+      return getAdaptiveStats();
+    }),
   }),
 
   // ────────────────────────────────────────────────────────
@@ -380,7 +425,7 @@ export const appRouter = router({
           }
           paymentVerified = true;
         } else if (operator.endpointUrl && price > 0) {
-          // Real operator with a price requires payment — demo operators (no endpoint) are free
+          // Real operator with a price requires payment - demo operators (no endpoint) are free
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
             message: "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the treasury wallet.",
@@ -394,6 +439,9 @@ export const appRouter = router({
 
         // Call the real endpoint if it exists
         if (operator.endpointUrl) {
+          if (isPrivateUrl(operator.endpointUrl)) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid operator endpoint" });
+          }
           const start = Date.now();
           try {
             const controller = new AbortController();
@@ -428,7 +476,7 @@ export const appRouter = router({
             responseBody = { error: err.message || "Request failed" };
           }
         } else {
-          // No endpoint deployed — operator must configure an endpoint URL
+          // No endpoint deployed - operator must configure an endpoint URL
           responseMs = 0;
           statusCode = 503;
           success = false;
@@ -1083,6 +1131,163 @@ export const appRouter = router({
       }
       return getCreatorOperators(wallet);
     }),
+  }),
+
+  // ────────────────────────────────────────────────────────
+  // Royalty System
+  // ────────────────────────────────────────────────────────
+  royalties: router({
+    /** Get full upstream dependency tree for a skill */
+    tree: publicProcedure
+      .input(z.object({ skillSlug: z.string().min(1) }))
+      .query(async ({ input }) => {
+        const tree = await getDependencyTree(input.skillSlug);
+        if (!tree) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Skill not found" });
+        }
+        return tree;
+      }),
+
+    /** Get royalty earnings for a creator wallet */
+    earnings: publicProcedure
+      .input(z.object({ wallet: z.string().min(32).max(64) }))
+      .query(async ({ input }) => getRoyaltyEarnings(input.wallet)),
+
+    /** Top skills by total royalties earned */
+    leaderboard: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).optional() }))
+      .query(async ({ input }) => getRoyaltyLeaderboard(input.limit ?? 20)),
+
+    /** Protocol-wide royalty statistics */
+    stats: publicProcedure.query(async () => getRoyaltyStats()),
+
+    /** Register a dependency edge (protected - caller must be child skill creator) */
+    register: protectedProcedure
+      .input(
+        z.object({
+          parentSkillSlug: z.string().min(1).max(128),
+          childSkillSlug: z.string().min(1).max(128),
+          royaltyBps: z.number().int().min(1).max(2000),
+          onChainEdgePda: z.string().min(1).max(128),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const wallet = ctx.user.walletAddress;
+        if (!wallet) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Authenticated user must have a linked wallet to register a dependency",
+          });
+        }
+
+        try {
+          const edge = await registerDependency({
+            parentSkillSlug: input.parentSkillSlug,
+            childSkillSlug: input.childSkillSlug,
+            royaltyBps: input.royaltyBps,
+            childCreatorWallet: wallet,
+            onChainEdgePda: input.onChainEdgePda,
+          });
+          return { success: true, edge };
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Failed to register dependency";
+          if (message.includes("not found")) {
+            throw new TRPCError({ code: "NOT_FOUND", message });
+          }
+          throw new TRPCError({ code: "BAD_REQUEST", message });
+        }
+      }),
+  }),
+
+  // ────────────────────────────────────────────────────────
+  // API Keys
+  // ────────────────────────────────────────────────────────
+  apiKey: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { listApiKeys } = await import("./api-keys");
+      return listApiKeys((ctx as any).user._id ?? ctx.user.id);
+    }),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1).max(50),
+        scopes: z.array(z.enum(["read", "invoke", "register", "admin"])).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createApiKey } = await import("./api-keys");
+        return createApiKey((ctx as any).user._id ?? ctx.user.id, input.name, input.scopes);
+      }),
+    revoke: protectedProcedure
+      .input(z.object({ keyId: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const { revokeApiKey } = await import("./api-keys");
+        await revokeApiKey(input.keyId, (ctx as any).user._id ?? ctx.user.id);
+        return { success: true };
+      }),
+  }),
+
+  // ────────────────────────────────────────────────────────
+  // Know Your Agent (KYA) Verification
+  // ────────────────────────────────────────────────────────
+  kya: router({
+    report: publicProcedure
+      .input(z.object({ operatorId: z.number() }))
+      .query(async ({ input }) => {
+        const { generateKYAReport } = await import("./kya-engine");
+        return generateKYAReport(input.operatorId);
+      }),
+
+    grade: publicProcedure
+      .input(z.object({ slug: z.string() }))
+      .query(async ({ input }) => {
+        const op = await getOperatorBySlug(input.slug);
+        if (!op) throw new TRPCError({ code: "NOT_FOUND" });
+        const { generateKYAReport } = await import("./kya-engine");
+        const report = await generateKYAReport(op.id);
+        return { slug: input.slug, grade: report.grade, score: report.overallScore };
+      }),
+  }),
+
+  // ────────────────────────────────────────────────────────
+  // Swarm Engine
+  // ────────────────────────────────────────────────────────
+  swarm: router({
+    /** Returns current swarm engine stats and active swarm state */
+    status: publicProcedure.query(async () => {
+      const { getSwarmStatus } = await import("./swarm-engine");
+      return getSwarmStatus();
+    }),
+  }),
+
+  // ────────────────────────────────────────────────────────
+  // MCP Server Verification
+  // ────────────────────────────────────────────────────────
+  mcpVerify: router({
+    submit: protectedProcedure
+      .input(z.object({
+        serverUrl: z.string().url(),
+        name: z.string().min(1).max(100),
+        description: z.string().max(500).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { submitForVerification } = await import("./mcp-verify");
+        const server = await submitForVerification({
+          ...input,
+          ownerWallet: (ctx as any).user?.walletAddress,
+        });
+        return { success: true, server };
+      }),
+    list: publicProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).optional() }).optional())
+      .query(async ({ input }) => {
+        const { getVerifiedServers } = await import("./mcp-verify");
+        return getVerifiedServers(input?.limit ?? 50);
+      }),
+    status: publicProcedure
+      .input(z.object({ serverUrl: z.string() }))
+      .query(async ({ input }) => {
+        const { McpServer } = await import("./db");
+        return McpServer.findOne({ serverUrl: input.serverUrl }).lean();
+      }),
   }),
 });
 

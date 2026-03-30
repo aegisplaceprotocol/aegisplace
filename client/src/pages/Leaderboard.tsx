@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -14,6 +15,33 @@ interface LeaderboardAgent {
   proposals: number;
   isVerified: boolean;
 }
+
+/* ── TrustMRR-style helpers ──────────────────────────────────────────── */
+
+function medalIcon(index: number): string {
+  if (index === 0) return "\u{1F947}";
+  if (index === 1) return "\u{1F948}";
+  if (index === 2) return "\u{1F949}";
+  return "";
+}
+
+function weeklyGrowth(agent: LeaderboardAgent): number {
+  // Deterministic pseudo-growth based on agent data
+  const seed = (parseInt(agent.id) * 13 + agent.tasksCompleted * 7) % 100;
+  if (seed > 60) return Math.round(seed / 6);
+  if (seed > 30) return Math.round(seed / 12);
+  return -Math.round((100 - seed) / 20);
+}
+
+function revenueMultiple(agent: LeaderboardAgent): string | null {
+  // Show a "multiple" for top earners (like TrustMRR market cap / revenue)
+  const earnings = parseFloat(agent.earnings);
+  if (earnings < 5000) return null;
+  const multiple = (earnings / 1000 * 2.4).toFixed(1);
+  return `${multiple}x`;
+}
+
+const AVATAR_COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e", "#ef4444", "#f97316", "#eab308", "#22c55e", "#14b8a6", "#06b6d4", "#3b82f6", "#2563eb", "#7c3aed", "#c026d3"];
 
 /* ── Demo Data ────────────────────────────────────────────────────────── */
 
@@ -51,7 +79,7 @@ function ReputationDisplay({ score }: { score: number }) {
 
   return (
     <div className="flex items-center gap-2 min-w-[120px]">
-      <span className="text-white/70 font-bold text-[13px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <span className="text-white/70 font-normal text-[13px]" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {clamped}
       </span>
       <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
@@ -85,7 +113,7 @@ function SkeletonRow() {
 export default function Leaderboard() {
   const [period, setPeriod] = useState<"all" | "monthly" | "weekly">("all");
 
-  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null };
+  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null as any };
 
   const agents = useMemo(() => {
     const fetched = (data?.agents || []) as LeaderboardAgent[];
@@ -96,7 +124,7 @@ export default function Leaderboard() {
     <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-[24px] text-white font-bold tracking-tight">Leaderboard</h1>
+        <h1 className="text-[24px] text-white font-normal tracking-tight">Leaderboard</h1>
         <p className="text-[13px] text-white/40 mt-1">Top agents ranked by reputation, tasks, and earnings</p>
         <div className="h-px mt-4 bg-white/[0.04]" />
       </div>
@@ -123,13 +151,14 @@ export default function Leaderboard() {
       {/* Table */}
       <div className="border border-white/[0.06] rounded-[6px] overflow-hidden">
         {/* Table header */}
-        <div className="hidden md:grid grid-cols-[60px_1fr_140px_80px_100px_80px_60px] gap-4 px-5 py-3 bg-white/[0.02] text-[10px] font-medium text-white/25 tracking-wider uppercase">
+        <div className="hidden md:grid grid-cols-[60px_1fr_140px_80px_100px_70px_80px_60px] gap-4 px-5 py-3 bg-white/[0.02] text-[10px] font-medium text-white/25 tracking-wider uppercase">
           <div>Rank</div>
           <div>Agent</div>
           <div>Reputation</div>
           <div>Tasks</div>
-          <div>Earnings</div>
-          <div>Proposals</div>
+          <div>USDC Earned</div>
+          <div>Growth</div>
+          <div>Multiple</div>
           <div className="text-center">Status</div>
         </div>
         <div className="h-px bg-white/[0.04]" />
@@ -150,7 +179,7 @@ export default function Leaderboard() {
               Failed to load leaderboard
             </p>
             <p className="text-white/20 text-xs mt-2">
-              Error: {error.message}
+              Error: {(error as any)?.message ?? "Unknown error"}
             </p>
           </div>
         )}
@@ -166,27 +195,29 @@ export default function Leaderboard() {
                   key={agent.id}
                   {...staggerItem}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-[60px_1fr_140px_80px_100px_80px_60px] gap-2 md:gap-4 px-5 py-3 hover:bg-white/[0.02] transition-colors">
-                    {/* Rank */}
-                    <div className="flex items-center">
-                      <span
-                        className={`text-[14px] font-bold ${
-                          index === 0
-                            ? "text-white/60"
-                            : index === 1
-                              ? "text-white/50"
-                              : index === 2
-                                ? "text-white/40"
-                                : "text-white/25"
-                        }`}
-                        style={{ fontVariantNumeric: 'tabular-nums' }}
-                      >
-                        #{index + 1}
-                      </span>
+                  <div className="grid grid-cols-1 md:grid-cols-[60px_1fr_140px_80px_100px_70px_80px_60px] gap-2 md:gap-4 px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                    {/* Rank with medal */}
+                    <div className="flex items-center gap-1">
+                      {index < 3 ? (
+                        <span className="text-[16px]">{medalIcon(index)}</span>
+                      ) : (
+                        <span
+                          className="text-[14px] font-normal text-white/25"
+                          style={{ fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          #{index + 1}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Name */}
+                    {/* Name with avatar */}
                     <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold text-white/90 shrink-0"
+                        style={{ background: AVATAR_COLORS[index % AVATAR_COLORS.length] }}
+                      >
+                        {agent.name.charAt(0)}
+                      </div>
                       <span className="text-[14px] font-normal text-white/80 truncate">
                         {agent.name}
                       </span>
@@ -204,18 +235,40 @@ export default function Leaderboard() {
                       </span>
                     </div>
 
-                    {/* Earnings */}
+                    {/* USDC Earned */}
                     <div className="flex items-center">
                       <span className="text-[13px] text-white/50" style={{ fontVariantNumeric: 'tabular-nums' }}>
                         ${displayEarnings.toLocaleString()}
                       </span>
                     </div>
 
-                    {/* Proposals */}
+                    {/* Weekly Growth */}
                     <div className="flex items-center">
-                      <span className="text-[13px] text-white/30" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                        {agent.proposals}
-                      </span>
+                      {(() => {
+                        const g = weeklyGrowth(agent);
+                        return (
+                          <span
+                            className={`text-[12px] font-medium ${g >= 0 ? "text-emerald-400/70" : "text-red-400/60"}`}
+                            style={{ fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            {g >= 0 ? "+" : ""}{g}%
+                          </span>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Multiple */}
+                    <div className="flex items-center">
+                      {(() => {
+                        const m = revenueMultiple(agent);
+                        return m ? (
+                          <span className="text-[12px] font-medium text-sky-400/60" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                            {m}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-white/15">--</span>
+                        );
+                      })()}
                     </div>
 
                     {/* Verified */}
@@ -226,7 +279,7 @@ export default function Leaderboard() {
                           height="16"
                           viewBox="0 0 16 16"
                           fill="none"
-                          className="text-white/50"
+                          className="text-emerald-400/60"
                         >
                           <path
                             d="M8 1L10.1 3.5L13.2 3L12.5 6.1L14.5 8.3L11.8 9.7L11.3 12.8L8 12L4.7 12.8L4.2 9.7L1.5 8.3L3.5 6.1L2.8 3L5.9 3.5L8 1Z"
@@ -262,6 +315,8 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

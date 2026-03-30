@@ -1,5 +1,5 @@
 [workspace]
-members = ["programs/aegis"]
+members = ["programs/aegis", "programs/royalty-registry", "programs/aegis-governance"]
 resolver = "2"
 
 [workspace.metadata.anchor]

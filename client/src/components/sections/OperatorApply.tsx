@@ -64,13 +64,13 @@ export default function OperatorApply() {
   const { ref, inView } = useInView(0.05);
 
   return (
-    <section id="apply" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="apply" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="OPERATORS" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
           <div>
-            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Ship a service.<br />
               <span className="text-zinc-300">Earn per call.</span>
             </h2>
@@ -86,7 +86,7 @@ export default function OperatorApply() {
               onClick={() => toast("Operator registration opens with devnet launch", { description: "Join the waitlist to get early access." })}
               className="group flex items-center gap-3 px-8 py-4 bg-white hover:bg-zinc-200 text-[#0A0A0A] transition-all duration-300 hover:"
             >
-              <span className="text-[14px] font-bold ">Apply as Operator</span>
+              <span className="text-[14px] font-normal ">Apply as Operator</span>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform duration-300 group-hover:translate-x-1">
                 <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -99,8 +99,8 @@ export default function OperatorApply() {
         <div className={`grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-6 lg:gap-8`}>
 
           {/* Left: How to apply steps */}
-          <div className="border border-white/[0.07] rounded overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/[0.07] bg-white/[0.02]">
+          <div className="border border-white/[0.04] rounded overflow-hidden">
+            <div className="px-5 py-3 border-b border-white/[0.04] bg-white/[0.015]">
               <span className="text-[10px] font-medium text-white/20 tracking-wider">HOW TO REGISTER</span>
             </div>
             <div className="divide-y divide-white/[0.04]">
@@ -110,7 +110,7 @@ export default function OperatorApply() {
                   className={`flex gap-4 sm:gap-5 p-4 sm:p-5`}
                   style={{ transitionDelay: `${300 + i * 100}ms` }}
                 >
-                  <div className="text-[28px] sm:text-[32px] font-bold text-white/[0.06] leading-none shrink-0 w-10">
+                  <div className="text-[28px] sm:text-[32px] font-normal text-white/[0.06] leading-none shrink-0 w-10">
                     {s.step}
                   </div>
                   <div>
@@ -123,8 +123,8 @@ export default function OperatorApply() {
           </div>
 
           {/* Right: Readiness checklist */}
-          <div className="border border-white/[0.07] rounded overflow-hidden">
-            <div className="px-5 py-3 border-b border-white/[0.07] bg-white/[0.02] flex items-center justify-between">
+          <div className="border border-white/[0.04] rounded overflow-hidden">
+            <div className="px-5 py-3 border-b border-white/[0.04] bg-white/[0.015] flex items-center justify-between">
               <span className="text-[10px] font-medium text-white/20 tracking-wider">READINESS CHECKLIST</span>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
@@ -152,7 +152,7 @@ export default function OperatorApply() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[13px] font-medium text-white/60">{check.label}</span>
-                      <code className="text-[10px] font-medium text-zinc-300/35 bg-white/[0.03] px-1.5 py-0.5 rounded">{check.path}</code>
+                      <code className="text-[10px] font-medium text-zinc-300/35 bg-white/[0.015] px-1.5 py-0.5 rounded">{check.path}</code>
                     </div>
                     <div className="text-[11px] text-white/20 leading-relaxed mt-0.5">{check.description}</div>
                   </div>
@@ -170,7 +170,7 @@ export default function OperatorApply() {
               <button
                 key={badge.label}
                 onClick={() => toast(badge.label, { description: badge.description })}
-                className="group flex items-center gap-2 px-4 py-2.5 border border-white/[0.07] rounded hover:border-white/[0.12] bg-white/[0.015] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
+                className="group flex items-center gap-2 px-4 py-2.5 border border-white/[0.04] rounded hover:border-white/[0.08] bg-white/[0.015] hover:bg-white/[0.015] transition-all duration-300 cursor-pointer"
               >
                 <span
                   className="w-2 h-2 rounded-full shrink-0"

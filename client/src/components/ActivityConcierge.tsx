@@ -45,7 +45,7 @@ const ACTIVITY_COLORS: Record<ActivityType, string> = {
   mission_deploy: "#A78BFA",
   skill_browse: "#60A5FA",
   playground_cmd: "#F472B6",
-  dashboard_view: "#34D399",
+  dashboard_view: "rgba(52,211,153,0.55)",
 };
 
 /* ── Context for global activity tracking ────────────────────────────── */
@@ -263,12 +263,12 @@ export function ActivityConciergeDrawer() {
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 z-50 h-full w-[360px] max-w-[90vw] bg-white/[0.02] border-l border-white/[0.07] transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 z-50 h-full w-[360px] max-w-[90vw] bg-white/[0.02] border-l border-white/[0.04] transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/[0.07]">
+        <div className="px-5 py-4 border-b border-white/[0.04]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-white" />
@@ -310,7 +310,7 @@ export function ActivityConciergeDrawer() {
         <div className="overflow-y-auto h-[calc(100%-120px)]" key={timeNow}>
           {activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8">
-              <div className="w-12 h-12 border border-white/[0.07] flex items-center justify-center mb-4">
+              <div className="w-12 h-12 border border-white/[0.04] flex items-center justify-center mb-4">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>

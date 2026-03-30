@@ -1,0 +1,22 @@
+{
+  "name": "@aegis/elizaos-plugin",
+  "version": "1.0.0",
+  "description": "Aegis Protocol plugin for ElizaOS - invoke AI skills on Solana with USDC settlement",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["aegis", "elizaos", "ai-agent", "solana", "mcp", "x402", "usdc"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@elizaos/core": ">=0.2.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

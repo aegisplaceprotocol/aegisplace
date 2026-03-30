@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{Mint, Token};
 use crate::errors::AegisError;
 use crate::events::ProtocolInitialized;
 use crate::state::ProtocolConfig;
@@ -36,6 +37,7 @@ pub fn handler(ctx: Context<Initialize>, fee_bps: [u16; 6]) -> Result<()> {
     config.total_invocations = 0;
     config.total_volume_lamports = 0;
     config.fee_bps = fee_bps;
+    config.pending_admin = Pubkey::default();
     config.bump = ctx.bumps.config;
 
     emit!(ProtocolInitialized {
@@ -68,29 +70,42 @@ pub struct Initialize<'info> {
     )]
     pub config: Account<'info, ProtocolConfig>,
 
-    /// The protocol treasury wallet.
-    /// CHECK: Treasury wallet — validated by admin during initialization.
-    pub treasury: UncheckedAccount<'info>,
+    /// The protocol treasury token account. Validated as owned by SPL Token program.
+    /// CHECK: Validated as token account owned by SPL Token program
+    #[account(
+        constraint = treasury.owner == &anchor_spl::token::ID @ AegisError::InvalidAccount
+    )]
+    pub treasury: AccountInfo<'info>,
 
-    /// The validator reward pool.
-    /// CHECK: Validator pool — validated by admin during initialization.
-    pub validator_pool: UncheckedAccount<'info>,
+    /// The validator reward pool token account. Validated as owned by SPL Token program.
+    /// CHECK: Validated as token account owned by SPL Token program
+    #[account(
+        constraint = validator_pool.owner == &anchor_spl::token::ID @ AegisError::InvalidAccount
+    )]
+    pub validator_pool: AccountInfo<'info>,
 
-    /// The staker reward pool.
-    /// CHECK: Staker pool — validated by admin during initialization.
-    pub staker_pool: UncheckedAccount<'info>,
+    /// The staker reward pool token account. Validated as owned by SPL Token program.
+    /// CHECK: Validated as token account owned by SPL Token program
+    #[account(
+        constraint = staker_pool.owner == &anchor_spl::token::ID @ AegisError::InvalidAccount
+    )]
+    pub staker_pool: AccountInfo<'info>,
 
-    /// The insurance fund.
-    /// CHECK: Insurance fund — validated by admin during initialization.
-    pub insurance_fund: UncheckedAccount<'info>,
+    /// The insurance fund token account. Validated as owned by SPL Token program.
+    /// CHECK: Validated as token account owned by SPL Token program
+    #[account(
+        constraint = insurance_fund.owner == &anchor_spl::token::ID @ AegisError::InvalidAccount
+    )]
+    pub insurance_fund: AccountInfo<'info>,
 
-    /// The $AEGIS Token-2022 mint.
-    /// CHECK: AEGIS mint — validated by admin during initialization.
-    pub aegis_mint: UncheckedAccount<'info>,
+    /// The $AEGIS Token-2022 mint. Deserialized and validated as a Mint account.
+    pub aegis_mint: Account<'info, Mint>,
 
-    /// The USDC mint (stored for validation during invocations).
-    /// CHECK: USDC mint — validated by admin during initialization.
-    pub usdc_mint: UncheckedAccount<'info>,
+    /// The USDC mint (stored for validation during invocations). Deserialized and validated as a Mint account.
+    pub usdc_mint: Account<'info, Mint>,
+
+    /// SPL Token program (required for Mint account deserialization).
+    pub token_program: Program<'info, Token>,
 
     /// Solana system program for account creation.
     pub system_program: Program<'info, System>,

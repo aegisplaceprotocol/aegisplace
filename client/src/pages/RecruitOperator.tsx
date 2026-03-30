@@ -1,4 +1,3 @@
-import ComingSoon from "@/components/ComingSoon";
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
@@ -48,7 +47,7 @@ function TimelineStep({ step, title, desc, duration, active }: {
       {/* Vertical line */}
       <div className="absolute left-[15px] top-8 bottom-0 w-px bg-white/[0.08] group-last:hidden" />
       {/* Step circle */}
-      <div className={`absolute left-0 top-0 w-8 h-8 flex items-center justify-center text-[11px] font-medium font-bold ${
+      <div className={`absolute left-0 top-0 w-8 h-8 flex items-center justify-center text-[11px] font-normal ${
         active ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/[0.03] text-white/30 border border-white/[0.08]"
       }`}>
         {step}
@@ -56,7 +55,7 @@ function TimelineStep({ step, title, desc, duration, active }: {
       <div>
         <div className="flex items-center gap-3 mb-1.5">
           <h4 className="text-[15px] font-normal text-white/90">{title}</h4>
-          <span className="text-[10px] font-medium text-white/25 bg-white/[0.03] border border-white/[0.07] px-2 py-0.5">{duration}</span>
+          <span className="text-[10px] font-medium text-white/25 bg-white/[0.03] border border-white/[0.04] px-2 py-0.5">{duration}</span>
         </div>
         <p className="text-[13px] text-white/40 leading-relaxed">{desc}</p>
       </div>
@@ -71,10 +70,12 @@ function RevenueCalc() {
   const [price, setPrice] = useState(0.02);
 
   const gross = invocations * price;
-  const creatorShare = gross * 0.70;
-  const validatorShare = gross * 0.20;
-  const treasuryShare = gross * 0.09;
-  const disputeShare = gross * 0.01;
+  const creatorShare = gross * 0.60;
+  const validatorShare = gross * 0.15;
+  const stakerShare = gross * 0.12;
+  const treasuryShare = gross * 0.08;
+  const insuranceShare = gross * 0.03;
+  const burnShare = gross * 0.02;
 
   return (
     <div className="border border-white/[0.08] bg-white/[0.02] p-8">
@@ -124,38 +125,48 @@ function RevenueCalc() {
       </div>
 
       {/* Revenue breakdown */}
-      <div className="border-t border-white/[0.07] pt-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="border-t border-white/[0.04] pt-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-white/[0.04] border border-white/15 p-4">
-            <div className="text-[10px] font-medium text-zinc-300/50 mb-1">YOUR SHARE (70%)</div>
-            <div className="text-xl font-bold text-zinc-300">${creatorShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-zinc-300/50 mb-1">YOUR SHARE (60%)</div>
+            <div className="text-xl font-normal text-zinc-300">${creatorShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.08] p-4">
-            <div className="text-[10px] font-medium text-white/30 mb-1">VALIDATORS (20%)</div>
-            <div className="text-xl font-bold text-white/70">${validatorShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-white/30 mb-1">VALIDATORS (15%)</div>
+            <div className="text-xl font-normal text-white/70">${validatorShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.08] p-4">
-            <div className="text-[10px] font-medium text-white/30 mb-1">TREASURY (9%)</div>
-            <div className="text-xl font-bold text-white/70">${treasuryShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-white/30 mb-1">STAKERS (12%)</div>
+            <div className="text-xl font-normal text-white/70">${stakerShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.08] p-4">
-            <div className="text-[10px] font-medium text-white/30 mb-1">DISPUTE POOL (1%)</div>
-            <div className="text-xl font-bold text-white/70">${disputeShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-white/30 mb-1">TREASURY (8%)</div>
+            <div className="text-xl font-normal text-white/70">${treasuryShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/[0.08] p-4">
+            <div className="text-[10px] font-medium text-white/30 mb-1">INSURANCE (3%)</div>
+            <div className="text-xl font-normal text-white/70">${insuranceShare.toFixed(2)}</div>
+            <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/[0.08] p-4">
+            <div className="text-[10px] font-medium text-white/30 mb-1">BURNED (2%)</div>
+            <div className="text-xl font-normal text-white/70">${burnShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.07] p-4 rounded">
+        <div className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] p-4 rounded">
           <span className="text-[13px] text-white/50">Gross monthly revenue</span>
-          <span className="text-2xl font-bold text-white/90">${gross.toFixed(2)}</span>
+          <span className="text-2xl font-normal text-white/90">${gross.toFixed(2)}</span>
         </div>
 
         <p className="text-[11px] text-white/20 mt-4 leading-relaxed">
           Revenue paid in USDC via x402 micropayments. Agents pay per invocation  -  no subscriptions, no minimums.
-          Your 70% share is streamed to your Solana wallet in real-time after each successful invocation.
+          Your 60% share is streamed to your Solana wallet in real-time after each successful invocation.
         </p>
       </div>
     </div>
@@ -256,7 +267,7 @@ function SubmitButton({ formData, bondTier }: {
 /* ── Main Page ────────────────────────────────────────────────────────── */
 
 export default function RecruitOperator() {
-  return <ComingSoon title="Submit Operator" description="Register your AI skill on the Aegis marketplace." />;
+  return <_RecruitOperator />;
 }
 
 function _RecruitOperator() {
@@ -306,7 +317,7 @@ function _RecruitOperator() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 border-b border-white/[0.07]">
+      <section className="pt-32 pb-20 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-8">
@@ -318,7 +329,7 @@ function _RecruitOperator() {
               </span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95] mb-8">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-normal tracking-tight leading-[0.95] mb-8">
               <span className="text-white/90">Register</span>
               <br />
               <span className="text-white/30">your operator.</span>
@@ -334,23 +345,23 @@ function _RecruitOperator() {
       </section>
 
       {/* Stats bar */}
-      <section className="border-b border-white/[0.07] bg-white/[0.01]">
+      <section className="border-b border-white/[0.04] bg-white/[0.01]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white/90"><AnimNum value={2847} /> </div>
+              <div className="text-2xl md:text-3xl font-normal text-white/90"><AnimNum value={2847} /> </div>
               <div className="text-[11px] text-white/25 mt-1 tracking-wider">OPERATORS DEPLOYED</div>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white/90"><AnimNum value={127} suffix="M" /></div>
+              <div className="text-2xl md:text-3xl font-normal text-white/90"><AnimNum value={127} suffix="M" /></div>
               <div className="text-[11px] text-white/25 mt-1 tracking-wider">$AEGIS BONDED</div>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white/90"><AnimNum prefix="$" value={4200000} /></div>
+              <div className="text-2xl md:text-3xl font-normal text-white/90"><AnimNum prefix="$" value={4200000} /></div>
               <div className="text-[11px] text-white/25 mt-1 tracking-wider">REVENUE PAID (USDC)</div>
             </div>
             <div>
-              <div className="text-2xl md:text-3xl font-bold text-white/90"><AnimNum value={70} suffix="%" /></div>
+              <div className="text-2xl md:text-3xl font-normal text-white/90"><AnimNum value={70} suffix="%" /></div>
               <div className="text-[11px] text-white/25 mt-1 tracking-wider">CREATOR SHARE</div>
             </div>
           </div>
@@ -400,7 +411,7 @@ function _RecruitOperator() {
               {/* Step 1: Operator Details */}
               <div className="mb-16">
                 <div className="flex items-center gap-3 mb-8">
-                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-medium font-bold ${
+                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-normal ${
                     activeStep >= 1 ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/[0.03] text-white/30 border border-white/[0.08]"
                   }`}>1</span>
                   <h2 className="text-xl font-normal text-white/90">Operator Details</h2>
@@ -488,7 +499,7 @@ function _RecruitOperator() {
 
                 <button
                   onClick={() => setActiveStep(2)}
-                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-medium font-normal px-8 py-3 transition-all duration-300"
+                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-normal px-8 py-3 transition-all duration-300"
                 >
                   CONTINUE TO CLASS SELECTION
                 </button>
@@ -497,7 +508,7 @@ function _RecruitOperator() {
               {/* Step 2: Operator Class */}
               <div className={`mb-16 ${activeStep >= 2 ? "opacity-100" : "opacity-30 pointer-events-none"}`}>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-medium font-bold ${
+                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-normal ${
                     activeStep >= 2 ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/[0.03] text-white/30 border border-white/[0.08]"
                   }`}>2</span>
                   <h2 className="text-xl font-normal text-white/90">Operator Class</h2>
@@ -528,7 +539,7 @@ function _RecruitOperator() {
                           className="w-2.5 h-2.5 rounded-full"
                           style={{ background: cls.color }}
                         />
-                        <span className="text-[13px] font-medium font-bold tracking-wider" style={{ color: formData.operatorClass === cls.id ? cls.color : "rgba(255,255,255,0.6)" }}>
+                        <span className="text-[13px] font-normal tracking-wider" style={{ color: formData.operatorClass === cls.id ? cls.color : "rgba(255,255,255,0.6)" }}>
                           {cls.name}
                         </span>
                         <span className="text-[10px] font-medium text-white/25">{cls.role}</span>
@@ -536,7 +547,7 @@ function _RecruitOperator() {
                       <p className="text-[12px] text-white/35 leading-relaxed ml-[22px]">{cls.desc}</p>
                       <div className="flex flex-wrap gap-2 mt-3 ml-[22px]">
                         {cls.examples.map(ex => (
-                          <span key={ex} className="text-[9px] font-medium text-white/20 bg-white/[0.03] border border-white/[0.07] px-2 py-0.5">{ex}</span>
+                          <span key={ex} className="text-[9px] font-medium text-white/20 bg-white/[0.03] border border-white/[0.04] px-2 py-0.5">{ex}</span>
                         ))}
                       </div>
                     </button>
@@ -545,7 +556,7 @@ function _RecruitOperator() {
 
                 <button
                   onClick={() => setActiveStep(3)}
-                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-medium font-normal px-8 py-3 transition-all duration-300"
+                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-normal px-8 py-3 transition-all duration-300"
                 >
                   CONTINUE TO BOND SELECTION
                 </button>
@@ -554,7 +565,7 @@ function _RecruitOperator() {
               {/* Step 3: Bond Selection */}
               <div className={`mb-16 ${activeStep >= 3 ? "opacity-100" : "opacity-30 pointer-events-none"}`}>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-medium font-bold ${
+                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-normal ${
                     activeStep >= 3 ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/[0.03] text-white/30 border border-white/[0.08]"
                   }`}>3</span>
                   <h2 className="text-xl font-normal text-white/90">$AEGIS Bond</h2>
@@ -584,7 +595,7 @@ function _RecruitOperator() {
                           <span className="text-[9px] font-medium text-zinc-300/50 bg-white/[0.06] px-2 py-0.5">RECOMMENDED</span>
                         )}
                       </div>
-                      <div className={`text-2xl font-bold mb-1 ${
+                      <div className={`text-2xl font-normal mb-1 ${
                         formData.bondTier === tier.id ? "text-zinc-300" : "text-white/70"
                       }`}>
                         {tier.amount.toLocaleString()}
@@ -601,7 +612,7 @@ function _RecruitOperator() {
 
                 <button
                   onClick={() => setActiveStep(4)}
-                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-medium font-normal px-8 py-3 transition-all duration-300"
+                  className="mt-8 bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-normal px-8 py-3 transition-all duration-300"
                 >
                   CONTINUE TO REVIEW
                 </button>
@@ -610,7 +621,7 @@ function _RecruitOperator() {
               {/* Step 4: Review & Submit */}
               <div className={` ${activeStep >= 4 ? "opacity-100" : "opacity-30 pointer-events-none"}`}>
                 <div className="flex items-center gap-3 mb-8">
-                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-medium font-bold ${
+                  <span className={`w-8 h-8 flex items-center justify-center text-[11px] font-normal ${
                     activeStep >= 4 ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/[0.03] text-white/30 border border-white/[0.08]"
                   }`}>4</span>
                   <h2 className="text-xl font-normal text-white/90">Review & Submit</h2>
@@ -748,7 +759,7 @@ function _RecruitOperator() {
                   Every operator must include a OPERATOR.md file at the repository root. This is the standard format
                   used across the agent ecosystem  -  compatible with Claude Code, Claude Cowork, Codex CLI, Codex App, ChatGPT, Cursor, and more.
                 </p>
-                <pre className="text-[11px] font-medium text-white/40 leading-relaxed bg-white/[0.02] border border-white/[0.07] p-4 rounded overflow-x-auto">
+                <pre className="text-[11px] font-medium text-white/40 leading-relaxed bg-white/[0.02] border border-white/[0.04] p-4 rounded overflow-x-auto">
 {`# Operator Callsign
 
 > One-line description
@@ -781,11 +792,11 @@ Example invocation
       </section>
 
       {/* Revenue Calculator  -  full width */}
-      <section className="py-24 border-t border-white/[0.07]">
+      <section className="py-24 border-t border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="max-w-3xl mb-16">
             <span className="text-[11px] font-medium text-zinc-300/40 tracking-widest">EARNINGS</span>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight mt-4 mb-6">
+            <h2 className="text-4xl md:text-5xl font-normal tracking-tight mt-4 mb-6">
               <span className="text-white/90">Estimate your</span>
               <br />
               <span className="text-white/30">revenue.</span>
@@ -800,7 +811,7 @@ Example invocation
       </section>
 
       {/* x402 callout */}
-      <section className="py-16 border-t border-white/[0.07] bg-white/[0.01]">
+      <section className="py-16 border-t border-white/[0.04] bg-white/[0.01]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div className="max-w-lg">
@@ -812,7 +823,7 @@ Example invocation
             </div>
             <div className="flex flex-wrap gap-3">
               {["x402 Standard", "USDC", "Solana", "Token-2022", "MCP Compatible"].map(name => (
-                <span key={name} className="text-[10px] font-medium text-white/20 bg-white/[0.02] border border-white/[0.07] px-3 py-1.5">
+                <span key={name} className="text-[10px] font-medium text-white/20 bg-white/[0.02] border border-white/[0.04] px-3 py-1.5">
                   {name}
                 </span>
               ))}
@@ -822,9 +833,9 @@ Example invocation
       </section>
 
       {/* Footer CTA */}
-      <section className="py-24 border-t border-white/[0.07]">
+      <section className="py-24 border-t border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white/90 mb-4">Ready to ship?</h2>
+          <h2 className="text-3xl md:text-4xl font-normal text-white/90 mb-4">Ready to ship?</h2>
           <p className="text-[15px] text-white/40 mb-8 max-w-md mx-auto">
             Register your operator, stake your bond, and start earning from the first invocation.
           </p>
@@ -846,7 +857,7 @@ Example invocation
       </section>
 
       {/* Minimal footer */}
-      <footer className="border-t border-white/[0.07] py-8">
+      <footer className="border-t border-white/[0.04] py-8">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 flex items-center justify-between">
           <span className="text-[11px] font-medium text-white/15">AEGIS PROTOCOL</span>
           <span className="text-[11px] font-medium text-white/15">$AEGIS on Solana</span>

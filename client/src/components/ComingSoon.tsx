@@ -3,14 +3,14 @@ export default function ComingSoon({ title, description }: { title: string; desc
     <div className="pt-24 pb-16">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
-          <div className="text-[11px] font-bold tracking-wider uppercase text-zinc-600 mb-6">Coming Soon</div>
-          <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 tracking-tight">{title}</h1>
+          <div className="text-[11px] font-normal tracking-wider uppercase text-white/20 mb-6">In Development</div>
+          <h1 className="text-3xl md:text-5xl font-light text-white mb-4 tracking-tight">{title}</h1>
           {description && (
             <p className="text-base text-zinc-500 max-w-md leading-relaxed mb-10">{description}</p>
           )}
           <a
             href="/"
-            className="text-sm text-zinc-500 hover:text-zinc-300 border border-zinc-800 px-6 py-2.5 rounded transition-colors"
+            className="text-sm font-normal text-white/40 hover:text-white/60 border border-white/[0.05] hover:border-white/[0.08] px-6 py-2.5 rounded transition-colors"
           >
             Back to Home
           </a>

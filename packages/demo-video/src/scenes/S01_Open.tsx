@@ -2,7 +2,7 @@ import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } fr
 import { t, text } from "../theme";
 
 /**
- * S01 — Cold open. No preamble. Just the name and what it is.
+ * S01 - Cold open. No preamble. Just the name and what it is.
  * 3.5 seconds. Swiss grid. Left-aligned.
  */
 export const S01_Open: React.FC = () => {
@@ -20,7 +20,7 @@ export const S01_Open: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: t.bg, padding: "0 140px", justifyContent: "center", opacity: exit }}>
-      {/* Thin horizontal line — reveals left to right */}
+      {/* Thin horizontal line - reveals left to right */}
       <div
         style={{
           width: `${lineReveal * 120}px`,

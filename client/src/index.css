@@ -109,6 +109,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.011em;
+    overflow-x: hidden;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -510,7 +511,7 @@ h1, h2, h3, h4, h5, h6,
 
 /* Delta indicators */
 .delta-positive { color: #34D399; }
-.delta-negative { color: #EF4444; }
+.delta-negative { color: rgba(220,100,60,0.50); }
 .delta-neutral { color: rgba(255,255,255,0.30); }
 
 /* Live dot */

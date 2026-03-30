@@ -46,14 +46,14 @@ export default function Compute() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.07]">
+      <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-white/20 bg-white/[0.04] mb-6">
             <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-pulse" />
-            <span className="text-[11px] font-medium text-zinc-300/60 tracking-wider">COMING SOON</span>
+            <span className="text-[11px] font-medium text-zinc-300/60 tracking-wider">IN DEVELOPMENT</span>
           </div>
 
-          <h1 className="text-[clamp(2rem,5vw,3.75rem)] font-bold text-white leading-[1.05] tracking-tight mb-4">
+          <h1 className="text-[clamp(2rem,5vw,3.75rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
             Every GPU on Earth
             <br />
             <span className="text-white/30">becomes a potential earner.</span>
@@ -68,9 +68,9 @@ export default function Compute() {
       </section>
 
       {/* AI Supply Chain */}
-      <section className="py-16 sm:py-24 border-b border-white/[0.07]">
+      <section className="py-16 sm:py-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The AI supply chain.
           </h2>
           <p className="text-[13px] text-white/25 mb-10">
@@ -82,7 +82,7 @@ export default function Compute() {
             {LAYERS.map((layer, i) => (
               <div
                 key={layer.name}
-                className={`flex items-center gap-4 sm:gap-6 p-4 sm:p-5 border border-white/[0.07] ${
+                className={`flex items-center gap-4 sm:gap-6 p-4 sm:p-5 border border-white/[0.04] ${
                   i > 0 ? "border-t-0" : ""
                 } hover:bg-white/[0.015] transition-all duration-300`}
               >
@@ -104,13 +104,13 @@ export default function Compute() {
       </section>
 
       {/* Features */}
-      <section className="py-16 sm:py-24 border-b border-white/[0.07]">
+      <section className="py-16 sm:py-24 border-b border-white/[0.04]">
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-10">
+          <h2 className="text-xl sm:text-2xl font-normal text-white mb-10">
             What this enables.
           </h2>
 
-          <div className="grid sm:grid-cols-2 gap-px bg-white/[0.06] border border-white/[0.07]">
+          <div className="grid sm:grid-cols-2 gap-px bg-white/[0.06] border border-white/[0.04]">
             {FEATURES.map((feat) => (
               <div
                 key={feat.title}
@@ -133,7 +133,7 @@ export default function Compute() {
             </div>
             <div className="space-y-3 text-[14px] text-white/40 leading-relaxed">
               <p>1 billion agents making 100 calls a day at $0.003 each.</p>
-              <p><span className="text-zinc-300 font-bold">$300M per day</span> in operator fees.</p>
+              <p><span className="text-zinc-300 font-normal">$300M per day</span> in operator fees.</p>
               <p>8% treasury fee = <span className="text-white/60">$24M per day</span> in protocol revenue.</p>
               <p>2% daily burn = <span className="text-red-400/60">$3M in $AEGIS burned per day</span>.</p>
               <p className="text-[16px] text-white/60 font-medium pt-2">

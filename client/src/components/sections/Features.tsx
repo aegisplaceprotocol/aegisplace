@@ -158,7 +158,7 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
   return (
     <div
       ref={cardRef}
-      className={`relative p-5 sm:p-8 lg:p-10 border-b border-r border-white/[0.07] scale-100 ${hovered ? "bg-white/[0.025]" : "bg-transparent"}`}
+      className={`relative p-5 sm:p-8 lg:p-10 border-b border-r border-white/[0.04] scale-100 ${hovered ? "bg-white/[0.015]" : "bg-transparent"}`}
       style={{ transitionDelay: cardVisible ? `${(index % 5) * 100}ms` : "0ms" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -208,7 +208,7 @@ export default function Features() {
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-20">
           <div className={``}>
-            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight">
+            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
               24 Protocol Primitives.
               <br className="hidden lg:block" />
               <span className="text-white/35 font-normal">Zero assumptions.</span>
@@ -220,7 +220,7 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 border-t border-l border-white/[0.07]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 border-t border-l border-white/[0.04]">
           {FEATURES.map((f, i) => (
             <FeatureCard key={f.title} feature={f} index={i} />
           ))}

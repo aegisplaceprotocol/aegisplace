@@ -8,6 +8,21 @@ import logger from "./logger";
 const GUARDRAILS_URL = ENV.guardrailsServerUrl;
 const GUARDRAILS_TIMEOUT_MS = 10_000;
 
+// ── Guardrail metrics (exported for dashboard/stats) ──────
+export const guardrailMetrics = {
+  checksAttempted: 0,
+  checksPassed: 0,
+  checksFailed: 0,
+  checksErrored: 0,
+  serverAvailable: false,
+  lastCheckAt: null as string | null,
+};
+
+/** Return a snapshot of current guardrail metrics */
+export function getGuardrailMetrics() {
+  return { ...guardrailMetrics };
+}
+
 /** Category → NeMo config mapping */
 const CONFIG_MAP: Record<string, string> = {
   "security-audit": "aegis-security",
@@ -16,6 +31,127 @@ const CONFIG_MAP: Record<string, string> = {
 
 /** Default config for categories not in CONFIG_MAP */
 const DEFAULT_CONFIG = "aegis-default";
+
+// ── Adaptive Guardrails Engine ────────────────────────────────
+//
+// Innovation: guardrail strictness scales inversely with operator trust.
+// New operators (trust 0-2000) get maximum safety checks.
+// Established operators (trust 8000+) get lighter checks.
+// Operators that trigger violations get automatically re-tightened.
+// This creates a self-improving feedback loop between trust and safety.
+//
+// Trust tiers map to NeMo parameters:
+//   Tier 0 (0-2000):    Maximum strictness, all rails active, low thresholds
+//   Tier 1 (2000-5000): Standard strictness, all rails active
+//   Tier 2 (5000-8000): Reduced strictness, core rails only
+//   Tier 3 (8000+):     Minimum strictness, content safety only
+//
+// After a violation, the operator is locked to Tier 0 for 24 hours
+// regardless of trust score. This prevents gaming via gradual trust
+// accumulation followed by a single malicious call.
+
+export interface AdaptiveParams {
+  jailbreakThreshold: number;
+  injectionTypes: string[];
+  piiEntities: string[];
+  scoreThreshold: number;
+  outputScan: boolean;
+}
+
+const ADAPTIVE_TIERS: Record<number, AdaptiveParams> = {
+  0: {
+    jailbreakThreshold: 50.0,
+    injectionTypes: ["sqli", "template", "code", "xss", "shell", "path_traversal", "ldap", "xpath"],
+    piiEntities: ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "IP_ADDRESS", "API_KEY", "PASSWORD", "SSH_KEY"],
+    scoreThreshold: 0.2,
+    outputScan: true,
+  },
+  1: {
+    jailbreakThreshold: 70.0,
+    injectionTypes: ["sqli", "template", "code", "xss", "shell", "path_traversal"],
+    piiEntities: ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER", "CREDIT_CARD", "API_KEY", "PASSWORD"],
+    scoreThreshold: 0.4,
+    outputScan: true,
+  },
+  2: {
+    jailbreakThreshold: 89.79,
+    injectionTypes: ["sqli", "template", "code", "xss"],
+    piiEntities: ["EMAIL_ADDRESS", "CREDIT_CARD", "API_KEY"],
+    scoreThreshold: 0.5,
+    outputScan: true,
+  },
+  3: {
+    jailbreakThreshold: 89.79,
+    injectionTypes: ["sqli", "xss"],
+    piiEntities: ["CREDIT_CARD", "API_KEY"],
+    scoreThreshold: 0.6,
+    outputScan: false,
+  },
+};
+
+// Track operators that violated guardrails (locked to Tier 0 for 24h)
+const violationLockout = new Map<string, number>();
+const LOCKOUT_DURATION_MS = 24 * 60 * 60 * 1000;
+
+/** Get adaptive tier based on trust score, with violation lockout override */
+export function getAdaptiveTier(trustScore: number, operatorId?: string): number {
+  // Check lockout
+  if (operatorId) {
+    const lockoutExpiry = violationLockout.get(operatorId);
+    if (lockoutExpiry && Date.now() < lockoutExpiry) {
+      return 0; // Locked to maximum strictness
+    }
+    if (lockoutExpiry && Date.now() >= lockoutExpiry) {
+      violationLockout.delete(operatorId);
+    }
+  }
+
+  if (trustScore < 2000) return 0;
+  if (trustScore < 5000) return 1;
+  if (trustScore < 8000) return 2;
+  return 3;
+}
+
+/** Lock an operator to Tier 0 after a guardrail violation */
+export function lockOperatorToMaxStrictness(operatorId: string) {
+  violationLockout.set(operatorId, Date.now() + LOCKOUT_DURATION_MS);
+  logger.info({ operatorId }, "[AdaptiveGuardrails] Operator locked to Tier 0 for 24h after violation");
+}
+
+/** Get adaptive parameters for an operator */
+export function getAdaptiveParams(trustScore: number, operatorId?: string): AdaptiveParams {
+  const tier = getAdaptiveTier(trustScore, operatorId);
+  return ADAPTIVE_TIERS[tier];
+}
+
+// Track violation patterns for self-improving detection
+const violationPatterns = new Map<string, { count: number; lastSeen: number; types: Set<string> }>();
+
+/** Record a violation pattern for self-improving guardrails */
+export function recordViolationPattern(operatorId: string, violations: string[]) {
+  const existing = violationPatterns.get(operatorId) || { count: 0, lastSeen: 0, types: new Set() };
+  existing.count++;
+  existing.lastSeen = Date.now();
+  for (const v of violations) existing.types.add(v);
+  violationPatterns.set(operatorId, existing);
+
+  // Self-improving: if 3+ violations in 1 hour, auto-lock
+  if (existing.count >= 3 && Date.now() - existing.lastSeen < 60 * 60 * 1000) {
+    lockOperatorToMaxStrictness(operatorId);
+    logger.warn({ operatorId, count: existing.count }, "[SelfImproving] Auto-locked operator after repeated violations");
+  }
+}
+
+/** Export adaptive guardrails stats for the dashboard */
+export function getAdaptiveStats() {
+  return {
+    lockedOperators: violationLockout.size,
+    trackedPatterns: violationPatterns.size,
+    tiers: Object.fromEntries(
+      [0, 1, 2, 3].map(t => [t, ADAPTIVE_TIERS[t]])
+    ),
+  };
+}
 
 export interface GuardrailResult {
   passed: boolean;
@@ -48,6 +184,9 @@ export async function checkInput(category: string, payload: unknown): Promise<Gu
     return { passed: true, violations: [], latencyMs: 0 };
   }
 
+  guardrailMetrics.checksAttempted++;
+  guardrailMetrics.lastCheckAt = new Date().toISOString();
+
   const configId = getConfigId(category);
   const content = stringifyPayload(payload);
   const start = Date.now();
@@ -73,17 +212,25 @@ export async function checkInput(category: string, payload: unknown): Promise<Gu
     clearTimeout(timeout);
     const latencyMs = Date.now() - start;
 
+    guardrailMetrics.serverAvailable = true;
+
     if (!response.ok) {
       logger.warn({ status: response.status }, "[Guardrails] Input check failed, failing open");
+      guardrailMetrics.checksErrored++;
       return { passed: true, violations: [], latencyMs };
     }
 
     const data = await response.json() as GuardrailsResponse;
-    return parseGuardrailResponse(data, latencyMs);
+    const result = parseGuardrailResponse(data, latencyMs);
+    if (result.passed) guardrailMetrics.checksPassed++;
+    else guardrailMetrics.checksFailed++;
+    return result;
   } catch (err: any) {
     const latencyMs = Date.now() - start;
+    guardrailMetrics.serverAvailable = false;
+    guardrailMetrics.checksErrored++;
     // Fail open: if guardrails server is down, allow the request
-    logger.warn({ err }, "[Guardrails] Input check error, failing open");
+    logger.warn({ err: err.message }, "[Guardrails] Input check error (server unreachable), failing open");
     return { passed: true, violations: [], latencyMs };
   }
 }
@@ -96,6 +243,9 @@ export async function checkOutput(category: string, response: unknown): Promise<
   if (!ENV.guardrailsEnabled) {
     return { passed: true, violations: [], latencyMs: 0 };
   }
+
+  guardrailMetrics.checksAttempted++;
+  guardrailMetrics.lastCheckAt = new Date().toISOString();
 
   const configId = getConfigId(category);
   const content = stringifyPayload(response);
@@ -125,16 +275,24 @@ export async function checkOutput(category: string, response: unknown): Promise<
     clearTimeout(timeout);
     const latencyMs = Date.now() - start;
 
+    guardrailMetrics.serverAvailable = true;
+
     if (!res.ok) {
       logger.warn({ status: res.status }, "[Guardrails] Output check failed, failing open");
+      guardrailMetrics.checksErrored++;
       return { passed: true, violations: [], latencyMs };
     }
 
     const data = await res.json() as GuardrailsResponse;
-    return parseGuardrailResponse(data, latencyMs);
+    const result = parseGuardrailResponse(data, latencyMs);
+    if (result.passed) guardrailMetrics.checksPassed++;
+    else guardrailMetrics.checksFailed++;
+    return result;
   } catch (err: any) {
     const latencyMs = Date.now() - start;
-    logger.warn({ err }, "[Guardrails] Output check error, failing open");
+    guardrailMetrics.serverAvailable = false;
+    guardrailMetrics.checksErrored++;
+    logger.warn({ err: err.message }, "[Guardrails] Output check error (server unreachable), failing open");
     return { passed: true, violations: [], latencyMs };
   }
 }

@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
-// Security Scanner — performs 4 checks on a discovery candidate:
+// Security Scanner - performs 4 checks on a discovery candidate:
 //   1. Secret detection (API keys, tokens, passwords in code)
 //   2. Malware pattern detection (obfuscated code, eval, crypto miners)
 //   3. License check (OSI-approved vs. restrictive)
 //   4. Reputation check (owner account age, followers, repo count)
-// All checks use pattern matching and the GitHub API — no external tools.
+// All checks use pattern matching and the GitHub API - no external tools.
 // ---------------------------------------------------------------------------
 
 import type { DiscoveryCandidate } from "./crawlers";

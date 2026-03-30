@@ -1,5 +1,5 @@
 /**
- * demo-loop.ts — Full-cycle Aegis demo script.
+ * demo-loop.ts - Full-cycle Aegis demo script.
  *
  * Runs the complete Aegis cycle on Solana devnet:
  *   Step 1: Connect to devnet, load keypairs
@@ -258,7 +258,7 @@ const INLINE_IDL: Record<string, unknown> = {
 
 async function main(): Promise<void> {
   console.log(`\n${BOLD}${CYAN}${"=".repeat(64)}${RESET}`);
-  console.log(`${BOLD}${CYAN}    AEGIS PROTOCOL — Full Demo Loop (Devnet)${RESET}`);
+  console.log(`${BOLD}${CYAN}    AEGIS PROTOCOL - Full Demo Loop (Devnet)${RESET}`);
   console.log(`${BOLD}${CYAN}${"=".repeat(64)}${RESET}`);
 
   const startTime = Date.now();
@@ -296,7 +296,7 @@ async function main(): Promise<void> {
   // ──────────────────────────────────────────────────────────────────────────
   stepHeader(3, "Create/load USDC devnet token accounts");
 
-  // Check for program ID first — needed to know if we can do full demo
+  // Check for program ID first - needed to know if we can do full demo
   const programIdStr = readFromEnv("AEGIS_PROGRAM_ID");
   if (!programIdStr) {
     console.log(`\n  ${YELLOW}AEGIS_PROGRAM_ID not set in .env.devnet${RESET}`);

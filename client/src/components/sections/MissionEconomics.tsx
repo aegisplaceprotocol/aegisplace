@@ -90,7 +90,7 @@ function FlowBar({ label, amount, pct, color, delay = 0 }: {
         <span className="text-[11px] font-medium text-white/40 tracking-wider">{label}</span>
         <span className="text-[11px] font-medium text-white/60">{amount}</span>
       </div>
-      <div className="h-2.5 bg-white/[0.03] rounded-full overflow-hidden">
+      <div className="h-2.5 bg-white/[0.015] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${width}%`, backgroundColor: color }}
@@ -160,7 +160,7 @@ export default function MissionEconomics() {
             <div className="w-1.5 h-1.5 bg-white" />
             <span className="text-[10px] font-medium text-zinc-300/40 tracking-wider">MISSION ECONOMICS</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-white/90 tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-4xl font-normal text-white/90 tracking-tight mb-3">
             Know Your Exposure<span className="text-zinc-300">.</span>
           </h2>
           <p className="text-white/25 max-w-xl text-sm leading-relaxed">
@@ -172,7 +172,7 @@ export default function MissionEconomics() {
           {/* ── Left: Input Controls ─────────────────────────────────── */}
           <div className="lg:col-span-4 space-y-6">
             {/* Task Value */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <label className="text-[10px] font-medium text-white/25 tracking-wider block mb-3">TASK VALUE ($AEGIS)</label>
               <input
                 type="range"
@@ -181,17 +181,17 @@ export default function MissionEconomics() {
                 step={100}
                 value={taskValue}
                 onChange={(e) => setTaskValue(Number(e.target.value))}
-                className="w-full h-1.5 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+                className="w-full h-1.5 bg-white/[0.04] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
               />
               <div className="flex justify-between mt-2">
                 <span className="text-[10px] font-medium text-white/15">100</span>
-                <span className="text-lg font-bold text-zinc-300">{taskValue.toLocaleString()}</span>
+                <span className="text-lg font-normal text-zinc-300">{taskValue.toLocaleString()}</span>
                 <span className="text-[10px] font-medium text-white/15">50,000</span>
               </div>
             </div>
 
             {/* Duration */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <label className="text-[10px] font-medium text-white/25 tracking-wider block mb-3">EXECUTION DURATION (SEC)</label>
               <input
                 type="range"
@@ -200,17 +200,17 @@ export default function MissionEconomics() {
                 step={30}
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full h-1.5 bg-white/[0.06] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+                className="w-full h-1.5 bg-white/[0.04] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
               />
               <div className="flex justify-between mt-2">
                 <span className="text-[10px] font-medium text-white/15">30s</span>
-                <span className="text-lg font-bold text-white/70">{duration >= 60 ? `${Math.floor(duration / 60)}m ${duration % 60}s` : `${duration}s`}</span>
+                <span className="text-lg font-normal text-white/70">{duration >= 60 ? `${Math.floor(duration / 60)}m ${duration % 60}s` : `${duration}s`}</span>
                 <span className="text-[10px] font-medium text-white/15">60m</span>
               </div>
             </div>
 
             {/* Risk Tier */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <label className="text-[10px] font-medium text-white/25 tracking-wider block mb-3">RISK CLASSIFICATION</label>
               <div className="grid grid-cols-3 gap-2">
                 {(["standard", "elevated", "critical"] as const).map((tier) => (
@@ -222,7 +222,7 @@ export default function MissionEconomics() {
                         ? tier === "standard" ? "border-white/40 bg-white/10 text-zinc-300"
                           : tier === "elevated" ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
                           : "border-red-500/40 bg-red-500/10 text-red-400"
-                        : "border-white/[0.07] text-white/20 hover:text-white/40 hover:border-white/[0.1]"
+                        : "border-white/[0.04] text-white/20 hover:text-white/40 hover:border-white/[0.08]"
                     }`}
                   >
                     {tier.toUpperCase()}
@@ -237,7 +237,7 @@ export default function MissionEconomics() {
             </div>
 
             {/* Bond Summary */}
-            <div className="border border-white/10 bg-white/[0.02] p-5">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5">
               <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider mb-4">BOND REQUIREMENTS</div>
               <div className="space-y-3">
                 {[
@@ -250,7 +250,7 @@ export default function MissionEconomics() {
                       <div className="text-[10px] font-medium text-white/35 tracking-wider">{b.label}</div>
                       <div className="text-[8px] text-white/15">{b.desc}</div>
                     </div>
-                    <div className="text-sm font-bold text-white/70">{b.value.toFixed(0)} <span className="text-[9px] text-white/25">$AEGIS</span></div>
+                    <div className="text-sm font-normal text-white/70">{b.value.toFixed(0)} <span className="text-[9px] text-white/25">$AEGIS</span></div>
                   </div>
                 ))}
               </div>
@@ -264,7 +264,7 @@ export default function MissionEconomics() {
           {/* ── Center: Payout Flow ──────────────────────────────────── */}
           <div className="lg:col-span-5 space-y-6">
             {/* Payout flow header */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <div className="flex items-center justify-between mb-5">
                 <div className="text-[10px] font-medium text-white/25 tracking-wider">PAYOUT FLOW</div>
                 <div className="text-[9px] font-medium text-white/15">
@@ -276,12 +276,12 @@ export default function MissionEconomics() {
               <div className="relative mb-6">
                 {/* Source */}
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/[0.04]">
-                  <div className="w-8 h-8 border border-white/20 bg-white/5 flex items-center justify-center">
+                  <div className="w-8 h-8 border border-white/[0.04] bg-white/[0.015] flex items-center justify-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A1A1AA" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                   </div>
                   <div>
                     <div className="text-xs text-white/50">INVOKING AGENT</div>
-                    <div className="text-lg font-bold text-white/80">{taskValue.toLocaleString()} <span className="text-xs text-white/25">$AEGIS</span></div>
+                    <div className="text-lg font-normal text-white/80">{taskValue.toLocaleString()} <span className="text-xs text-white/25">$AEGIS</span></div>
                   </div>
                 </div>
 
@@ -321,22 +321,22 @@ export default function MissionEconomics() {
               {/* Summary stats */}
               <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/[0.04]">
                 <div className="text-center">
-                  <div className="text-lg font-bold text-[#FF6B6B]">{economics.netBurnRate.toFixed(1)}%</div>
+                  <div className="text-lg font-normal text-[#FF6B6B]">{economics.netBurnRate.toFixed(1)}%</div>
                   <div className="text-[8px] text-white/20 tracking-wider">BURN RATE</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-zinc-300">97.5%</div>
+                  <div className="text-lg font-normal text-zinc-300">97.5%</div>
                   <div className="text-[8px] text-white/20 tracking-wider">OPERATOR NET</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-zinc-300">{(economics.treasuryAmount + economics.validatorRewards).toFixed(0)}</div>
+                  <div className="text-lg font-normal text-zinc-300">{(economics.treasuryAmount + economics.validatorRewards).toFixed(0)}</div>
                   <div className="text-[8px] text-white/20 tracking-wider">PROTOCOL REV</div>
                 </div>
               </div>
             </div>
 
             {/* Cumulative burn projection */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <div className="text-[10px] font-medium text-white/25 tracking-wider mb-4">CUMULATIVE BURN PROJECTION</div>
               <div className="grid grid-cols-4 gap-3">
                 {[
@@ -346,7 +346,7 @@ export default function MissionEconomics() {
                   { label: "YEARLY", txs: 3650000, burn: economics.burnAmount * 3650000 },
                 ].map((p) => (
                   <div key={p.label} className="text-center">
-                    <div className="text-xs font-bold text-[#FF6B6B]/80">{p.burn >= 1000000 ? `${(p.burn / 1000000).toFixed(1)}M` : p.burn >= 1000 ? `${(p.burn / 1000).toFixed(0)}K` : p.burn.toFixed(0)}</div>
+                    <div className="text-xs font-normal text-[#FF6B6B]/80">{p.burn >= 1000000 ? `${(p.burn / 1000000).toFixed(1)}M` : p.burn >= 1000 ? `${(p.burn / 1000).toFixed(0)}K` : p.burn.toFixed(0)}</div>
                     <div className="text-[8px] text-white/15 mt-0.5">{p.label}</div>
                     <div className="text-[7px] text-white/10">{p.txs >= 1000000 ? `${(p.txs / 1000000).toFixed(1)}M txs` : `${(p.txs / 1000).toFixed(0)}K txs`}</div>
                   </div>
@@ -357,7 +357,7 @@ export default function MissionEconomics() {
 
           {/* ── Right: Validation Pressure ───────────────────────────── */}
           <div className="lg:col-span-3 space-y-6">
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <div className="text-[10px] font-medium text-white/25 tracking-wider mb-6">VALIDATION PRESSURE</div>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
@@ -414,7 +414,7 @@ export default function MissionEconomics() {
             </div>
 
             {/* Risk matrix */}
-            <div className="border border-white/[0.07] bg-white/[0.02] p-5 rounded">
+            <div className="border border-white/[0.04] bg-white/[0.015] p-5 rounded">
               <div className="text-[10px] font-medium text-white/25 tracking-wider mb-4">RISK MATRIX</div>
               <div className="space-y-2">
                 {[

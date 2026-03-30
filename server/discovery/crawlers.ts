@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Discovery Crawlers — fetch AI tool candidates from GitHub, awesome lists,
+// Discovery Crawlers - fetch AI tool candidates from GitHub, awesome lists,
 // and HuggingFace. Each crawler returns DiscoveryCandidate[].
 // ---------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@ interface GitHubRepo {
 
 /**
  * Crawl GitHub search for AI agent / MCP / LLM tools.
- * Uses the public GitHub REST API (unauthenticated — rate-limited to 10 req/min).
+ * Uses the public GitHub REST API (unauthenticated - rate-limited to 10 req/min).
  */
 export async function crawlGitHubTrending(): Promise<DiscoveryCandidate[]> {
   const queries = [
@@ -88,7 +88,7 @@ export async function crawlGitHubTrending(): Promise<DiscoveryCandidate[]> {
           readmeUrl: `https://raw.githubusercontent.com/${repo.full_name}/HEAD/README.md`,
         });
       }
-      // Respect rate limits — 2 s between queries
+      // Respect rate limits - 2 s between queries
       await new Promise((r) => setTimeout(r, 2000));
     } catch (err) {
       logger.warn({ err, query: q }, "GitHub search failed");
@@ -99,7 +99,7 @@ export async function crawlGitHubTrending(): Promise<DiscoveryCandidate[]> {
 }
 
 // ---------------------------------------------------------------------------
-// Awesome Lists — parse awesome-list markdown for repo links
+// Awesome Lists - parse awesome-list markdown for repo links
 // ---------------------------------------------------------------------------
 
 const AWESOME_LISTS = [
@@ -176,7 +176,7 @@ export async function crawlAwesomeLists(): Promise<DiscoveryCandidate[]> {
 }
 
 // ---------------------------------------------------------------------------
-// HuggingFace — fetch trending spaces
+// HuggingFace - fetch trending spaces
 // ---------------------------------------------------------------------------
 
 interface HFSpace {

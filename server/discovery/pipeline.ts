@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Discovery Pipeline — orchestrates crawling, deduplication, analysis,
+// Discovery Pipeline - orchestrates crawling, deduplication, analysis,
 // security scanning, and onboarding of new AI tool operators.
 // ---------------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ export async function runDiscoveryPipeline(): Promise<DiscoveryRun> {
       // Small delay between candidates to avoid hammering APIs
       await new Promise((r) => setTimeout(r, 1000));
     } catch (err) {
-      const msg = `Failed: ${candidate.name} — ${err}`;
+      const msg = `Failed: ${candidate.name} - ${err}`;
       run.errors.push(msg);
       logger.warn({ err, candidate: candidate.name }, "Candidate processing failed");
     }

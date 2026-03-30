@@ -1,7 +1,7 @@
 {
   "name": "@aegis/gateway",
   "version": "1.0.0",
-  "description": "Aegis x402 Gateway & MCP Server — Fastify service for payment-gated AI skill invocations",
+  "description": "Aegis x402 Gateway & MCP Server - Fastify service for payment-gated AI skill invocations",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {

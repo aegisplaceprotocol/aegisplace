@@ -1,42 +1,40 @@
 {
   "name": "Aegis Protocol",
-  "description": "AI Agent Skill Marketplace on Solana. 452 operators with trust scoring, NeMo guardrails, USDC micropayments. Creators earn 60% of every invocation fee.",
-  "url": "https://aegisplace.com",
+  "description": "Economic layer for autonomous agent commerce on Solana. Discover, invoke, and pay for AI skills with USDC settlement and NeMo Guardrails safety.",
   "version": "1.0.0",
-  "documentationUrl": "https://aegisplace.com/docs",
-  "provider": {
-    "organization": "Aegis Protocol",
-    "url": "https://aegisplace.com"
-  },
+  "url": "https://aegisplace.com",
   "capabilities": {
-    "streaming": false,
-    "pushNotifications": false,
-    "stateTransitionHistory": false
+    "mcp": {
+      "endpoint": "https://mcp.aegisplace.com/api/mcp",
+      "transport": ["http", "sse"]
+    },
+    "rest": {
+      "endpoint": "https://mcp.aegisplace.com/api/v1",
+      "docs": "https://aegisplace.com/docs"
+    },
+    "a2a": {
+      "endpoint": "https://mcp.aegisplace.com/api/a2a",
+      "version": "1.0.0"
+    }
   },
   "skills": [
-    {
-      "id": "search-operators",
-      "name": "Search Skill Operators",
-      "description": "Search 452 AI agent skill operators by capability, category, price, or trust score",
-      "tags": ["search", "discovery", "marketplace"],
-      "examples": ["Find code review operators", "Search for DeFi trading skills under $0.10"]
-    },
-    {
-      "id": "invoke-operator",
-      "name": "Invoke Skill Operator",
-      "description": "Invoke any operator with USDC payment on Solana. Returns HTTP 402 with payment instructions. Pay and retry to execute.",
-      "tags": ["invoke", "execute", "payment", "x402"]
-    },
-    {
-      "id": "trust-score",
-      "name": "Check Trust Score",
-      "description": "Query the 5-dimension trust score for any operator: success rate, review score, response time, uptime, verification",
-      "tags": ["trust", "reputation", "score"]
-    }
+    { "name": "list_operators", "description": "List all registered skill operators" },
+    { "name": "invoke_skill", "description": "Execute a skill and settle payment in USDC" },
+    { "name": "search_operators", "description": "Search operators by name, category, or tag" },
+    { "name": "get_trust_score", "description": "Get trust score breakdown for any operator" },
+    { "name": "protocol_stats", "description": "Get protocol-wide statistics" },
+    { "name": "file_dispute", "description": "File a dispute against an invocation" },
+    { "name": "claim_royalties", "description": "Claim accumulated skill royalties" }
   ],
-  "defaultInputModes": ["application/json"],
-  "defaultOutputModes": ["application/json"],
   "authentication": {
-    "schemes": ["x402"]
+    "type": "bearer",
+    "description": "API key from aegisplace.com/dashboard"
+  },
+  "chain": "solana",
+  "settlement": "USDC",
+  "protocols": ["mcp", "x402", "a2a"],
+  "contact": {
+    "website": "https://aegisplace.com",
+    "github": "https://github.com/aegis-protocol/aegis"
   }
 }

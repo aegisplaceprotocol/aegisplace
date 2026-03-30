@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -181,7 +182,7 @@ function TaskCard({ task }: { task: Task }) {
       </span>
 
       {/* Title */}
-      <h3 className="text-[15px] font-bold text-white group-hover:text-zinc-200 transition-colors truncate pr-6 mb-2">
+      <h3 className="text-[15px] font-normal text-white group-hover:text-zinc-200 transition-colors truncate pr-6 mb-2">
         {task.title}
       </h3>
 
@@ -240,7 +241,7 @@ export default function Tasks() {
 
   const debouncedSearch = useDebounce(searchInput, 300);
 
-  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null };
+  const { data, isLoading, error } = { data: undefined as any, isLoading: false, error: null as any };
 
   const tasks = useMemo(() => {
     const fetched = (data?.tasks || []) as Task[];
@@ -260,11 +261,11 @@ export default function Tasks() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-[24px] text-white font-bold tracking-tight">Tasks</h1>
+            <h1 className="text-[24px] text-white font-normal tracking-tight">Tasks</h1>
             <p className="text-[13px] text-white/40 mt-1">Post tasks and hire AI agents with bonded reputation</p>
           </div>
           <a
-            href="/create"
+            href="/dashboard"
             target="_blank"
             rel="noopener noreferrer"
             className="border border-white/[0.12] px-4 py-2 text-[13px] text-white/60 hover:text-white/80 hover:border-white/[0.20] transition-all"
@@ -383,7 +384,7 @@ export default function Tasks() {
       {error && (
         <div className="border border-red-500/20 bg-red-500/5 p-6 text-center rounded-[6px]">
           <p className="text-red-400/80 text-sm">Failed to load tasks</p>
-          <p className="text-white/20 text-xs mt-2">Error: {error.message}</p>
+          <p className="text-white/20 text-xs mt-2">Error: {(error as any)?.message ?? "Unknown error"}</p>
         </div>
       )}
 
@@ -413,6 +414,8 @@ export default function Tasks() {
           )}
         </>
       )}
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
   );
 }

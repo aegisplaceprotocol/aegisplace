@@ -282,7 +282,7 @@ export default function AutonomousSwarms() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 mb-12 sm:mb-16">
           <div>
             <h2
-              className={`font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white/95 leading-[1.1] mb-6`}
+              className={`font-heading text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white/95 leading-[1.1] mb-6`}
             >
               One AI researcher works alone.
               <br />
@@ -309,7 +309,7 @@ export default function AutonomousSwarms() {
             <SwarmVisualization active={mode === "swarm"} experimentCount={visibleExps} />
 
             {/* Mode toggle */}
-            <div className="absolute top-3 right-3 flex items-center gap-2 bg-white/[0.03] border border-white/[0.07] px-3 py-1.5">
+            <div className="absolute top-3 right-3 flex items-center gap-2 bg-white/[0.015] border border-white/[0.04] px-3 py-1.5">
               <button
                 onClick={() => setMode("single")}
                 className={`text-[10px] font-medium tracking-wider px-2 py-0.5 transition-all ${
@@ -345,12 +345,12 @@ export default function AutonomousSwarms() {
           className={`grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-12 sm:mb-16`}
         >
           {/* Single agent */}
-          <div className="border border-white/[0.07] bg-white/[0.02] p-5 sm:p-6">
+          <div className="border border-white/[0.04] bg-white/[0.015] p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-2 h-2 rounded-full bg-white/20" />
               <span className="text-[11px] font-medium tracking-wider text-white/40 uppercase">Without Aegis</span>
             </div>
-            <div className="font-heading text-xl sm:text-2xl font-bold text-white/70 mb-3">One AI, One Computer</div>
+            <div className="font-heading text-xl sm:text-2xl font-normal text-white/70 mb-3">One AI, One Computer</div>
             <div className="space-y-2.5 text-sm text-white/35">
               <div className="flex items-start gap-2">
                 <span className="text-white/20 mt-0.5">01</span>
@@ -375,18 +375,18 @@ export default function AutonomousSwarms() {
             </div>
             <div className="mt-5 pt-4 border-t border-white/[0.04]">
               <div className="text-[11px] font-medium text-white/20">SPEED</div>
-              <div className="font-heading text-2xl font-bold text-white/50 mt-1">~100 exp/night</div>
+              <div className="font-heading text-2xl font-normal text-white/50 mt-1">~100 exp/night</div>
             </div>
           </div>
 
           {/* Swarm with Aegis */}
-          <div className="border border-white/20 bg-white/[0.02] p-5 sm:p-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.03] blur-3xl" />
+          <div className="border border-white/[0.04] bg-white/[0.015] p-5 sm:p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.015] blur-3xl" />
             <div className="flex items-center gap-3 mb-4">
               <div className="w-2 h-2 rounded-full bg-white/60" />
               <span className="text-[11px] font-medium tracking-wider text-zinc-300/60 uppercase">With Aegis</span>
             </div>
-            <div className="font-heading text-xl sm:text-2xl font-bold text-white/90 mb-3">100 AIs, Working Together</div>
+            <div className="font-heading text-xl sm:text-2xl font-normal text-white/90 mb-3">100 AIs, Working Together</div>
             <div className="space-y-2.5 text-sm text-white/50">
               <div className="flex items-start gap-2">
                 <span className="text-zinc-300/40 mt-0.5">01</span>
@@ -409,9 +409,9 @@ export default function AutonomousSwarms() {
                 <span>Every AI gets paid for its work, best discoveries earn more</span>
               </div>
             </div>
-            <div className="mt-5 pt-4 border-t border-white/10">
+            <div className="mt-5 pt-4 border-t border-white/[0.04]">
               <div className="text-[11px] font-medium text-zinc-300/40">SPEED</div>
-              <div className="font-heading text-2xl font-bold text-zinc-300 mt-1">~10,000 exp/night</div>
+              <div className="font-heading text-2xl font-normal text-zinc-300 mt-1">~10,000 exp/night</div>
             </div>
           </div>
         </div>
@@ -438,8 +438,8 @@ export default function AutonomousSwarms() {
                 onClick={() => setSelectedAgent(null)}
                 className={`text-[9px] font-medium tracking-wider px-2 py-0.5 border transition-all ${
                   !selectedAgent
-                    ? "border-white/30 text-zinc-300 bg-white/10"
-                    : "border-white/[0.07] text-white/25 hover:text-white/40"
+                    ? "border-white/[0.08] text-zinc-300 bg-white/[0.04]"
+                    : "border-white/[0.04] text-white/25 hover:text-white/40"
                 }`}
               >
                 ALL
@@ -450,8 +450,8 @@ export default function AutonomousSwarms() {
                   onClick={() => setSelectedAgent(selectedAgent === agent ? null : agent)}
                   className={`text-[9px] font-medium tracking-wider px-2 py-0.5 border transition-all ${
                     selectedAgent === agent
-                      ? "border-white/30 text-zinc-300 bg-white/10"
-                      : "border-white/[0.07] text-white/25 hover:text-white/40"
+                      ? "border-white/[0.08] text-zinc-300 bg-white/[0.04]"
+                      : "border-white/[0.04] text-white/25 hover:text-white/40"
                   }`}
                 >
                   {agent.toUpperCase()}
@@ -462,28 +462,28 @@ export default function AutonomousSwarms() {
 
           {/* Stats bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div className="bg-white/[0.02] border border-white/[0.07] px-3 py-2.5">
+            <div className="bg-white/[0.015] border border-white/[0.04] px-3 py-2.5">
               <div className="text-[9px] font-medium text-white/20 tracking-wider">BEST VAL_BPB</div>
-              <div className="font-medium text-lg font-bold text-zinc-300 mt-0.5">{bestBpb.toFixed(6)}</div>
+              <div className="font-normal text-lg text-zinc-300 mt-0.5">{bestBpb.toFixed(6)}</div>
             </div>
-            <div className="bg-white/[0.02] border border-white/[0.07] px-3 py-2.5">
+            <div className="bg-white/[0.015] border border-white/[0.04] px-3 py-2.5">
               <div className="text-[9px] font-medium text-white/20 tracking-wider">KEPT</div>
-              <div className="font-medium text-lg font-bold text-zinc-300/80 mt-0.5">{totalKept}</div>
+              <div className="font-normal text-lg text-zinc-300/80 mt-0.5">{totalKept}</div>
             </div>
-            <div className="bg-white/[0.02] border border-white/[0.07] px-3 py-2.5">
+            <div className="bg-white/[0.015] border border-white/[0.04] px-3 py-2.5">
               <div className="text-[9px] font-medium text-white/20 tracking-wider">DISCARDED</div>
-              <div className="font-medium text-lg font-bold text-white/40 mt-0.5">{visibleExps - totalKept - totalCrash}</div>
+              <div className="font-normal text-lg text-white/40 mt-0.5">{visibleExps - totalKept - totalCrash}</div>
             </div>
-            <div className="bg-white/[0.02] border border-white/[0.07] px-3 py-2.5">
+            <div className="bg-white/[0.015] border border-white/[0.04] px-3 py-2.5">
               <div className="text-[9px] font-medium text-white/20 tracking-wider">CRASHED</div>
-              <div className="font-medium text-lg font-bold text-red-400/60 mt-0.5">{totalCrash}</div>
+              <div className="font-normal text-lg text-red-400/60 mt-0.5">{totalCrash}</div>
             </div>
           </div>
 
           {/* Experiment table */}
-          <div className="border border-white/[0.07] bg-white/[0.01] overflow-hidden">
+          <div className="border border-white/[0.04] bg-white/[0.01] overflow-hidden">
             {/* Table header */}
-            <div className="grid grid-cols-12 gap-2 px-3 sm:px-4 py-2 border-b border-white/[0.07] bg-white/[0.02]">
+            <div className="grid grid-cols-12 gap-2 px-3 sm:px-4 py-2 border-b border-white/[0.04] bg-white/[0.015]">
               <div className="col-span-1 text-[9px] font-medium text-white/20 tracking-wider">#</div>
               <div className="col-span-2 text-[9px] font-medium text-white/20 tracking-wider hidden sm:block">AGENT</div>
               <div className="col-span-4 sm:col-span-3 text-[9px] font-medium text-white/20 tracking-wider">EXPERIMENT</div>
@@ -497,7 +497,7 @@ export default function AutonomousSwarms() {
               {filteredExps.map((exp, i) => (
                 <div
                   key={exp.id}
-                  className={`grid grid-cols-12 gap-2 px-3 sm:px-4 py-2 border-b border-white/[0.03] hover:bg-white/[0.02]`}
+                  className={`grid grid-cols-12 gap-2 px-3 sm:px-4 py-2 border-b border-white/[0.03] hover:bg-white/[0.015]`}
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="col-span-1 text-[10px] font-medium text-white/15">{String(exp.id).padStart(2, "0")}</div>
@@ -526,7 +526,7 @@ export default function AutonomousSwarms() {
 
           {/* Bottom: How it works with Aegis */}
           <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white/[0.02] border border-white/[0.07] p-4 rounded sm:p-5">
+            <div className="bg-white/[0.015] border border-white/[0.04] p-4 rounded sm:p-5">
               <div className="text-[10px] font-medium text-zinc-300/50 tracking-wider mb-3">01 / FIND THE RIGHT WORKERS</div>
               <div className="font-heading text-base font-normal text-white/80 mb-2">Search the Marketplace</div>
               <p className="text-[13px] text-white/30 leading-relaxed">
@@ -535,7 +535,7 @@ export default function AutonomousSwarms() {
                 exactly what you are getting.
               </p>
             </div>
-            <div className="bg-white/[0.02] border border-white/[0.07] p-4 rounded sm:p-5">
+            <div className="bg-white/[0.015] border border-white/[0.04] p-4 rounded sm:p-5">
               <div className="text-[10px] font-medium text-zinc-300/50 tracking-wider mb-3">02 / PAY FOR RESULTS</div>
               <div className="font-heading text-base font-normal text-white/80 mb-2">Tiny Cost Per Experiment</div>
               <p className="text-[13px] text-white/30 leading-relaxed">
@@ -544,7 +544,7 @@ export default function AutonomousSwarms() {
                 legitimate.
               </p>
             </div>
-            <div className="bg-white/[0.02] border border-white/[0.07] p-4 rounded sm:p-5">
+            <div className="bg-white/[0.015] border border-white/[0.04] p-4 rounded sm:p-5">
               <div className="text-[10px] font-medium text-zinc-300/50 tracking-wider mb-3">03 / COMBINE THE BEST IDEAS</div>
               <div className="font-heading text-base font-normal text-white/80 mb-2">The Team Shares Notes</div>
               <p className="text-[13px] text-white/30 leading-relaxed">
@@ -556,8 +556,8 @@ export default function AutonomousSwarms() {
           </div>
 
           {/* Code example */}
-          <div className="mt-6 sm:mt-8 border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.07] bg-white/[0.03]">
+          <div className="mt-6 sm:mt-8 border border-white/[0.04] bg-white/[0.015] overflow-hidden">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.04] bg-white/[0.015]">
               <div className="flex gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-red-400/30" />
                 <div className="w-2 h-2 rounded-full bg-amber-400/25" />

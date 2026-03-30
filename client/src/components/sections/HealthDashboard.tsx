@@ -46,7 +46,7 @@ function StatusBadge({ status }: { status: OperatorHealth["status"] }) {
 function MetricBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
-    <div className="h-1 w-full bg-white/[0.06] rounded-full overflow-hidden">
+    <div className="h-1 w-full bg-white/[0.04] rounded-full overflow-hidden">
       <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -85,13 +85,13 @@ export default function HealthDashboard() {
   const down = operators.filter(s => s.status === "down").length;
 
   return (
-    <section id="health" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="health" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="HEALTH" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <div>
-            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Real-time health.<br />
               <span className="text-white/30">Not static metadata.</span>
             </h2>
@@ -102,24 +102,24 @@ export default function HealthDashboard() {
           </div>
           <div className="flex gap-6">
             <div className="text-center">
-              <div className="text-[28px] font-bold text-zinc-300 ">{operational}</div>
+              <div className="text-[28px] font-normal text-zinc-300 ">{operational}</div>
               <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider">OPERATIONAL</div>
             </div>
             <div className="text-center">
-              <div className="text-[28px] font-bold text-amber-400 ">{degraded}</div>
+              <div className="text-[28px] font-normal text-amber-400 ">{degraded}</div>
               <div className="text-[10px] font-medium text-amber-400/40 tracking-wider">DEGRADED</div>
             </div>
             <div className="text-center">
-              <div className="text-[28px] font-bold text-red-400 ">{down}</div>
+              <div className="text-[28px] font-normal text-red-400 ">{down}</div>
               <div className="text-[10px] font-medium text-red-400/40 tracking-wider">DOWN</div>
             </div>
           </div>
         </div>
 
-        <div className={`grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-0 border border-white/[0.07] rounded overflow-hidden`}>
+        <div className={`grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-0 border border-white/[0.04] rounded overflow-hidden`}>
           {/* Operator list */}
-          <div className="border-b lg:border-b-0 lg:border-r border-white/[0.07] bg-white/[0.01]">
-            <div className="p-3 border-b border-white/[0.07]">
+          <div className="border-b lg:border-b-0 lg:border-r border-white/[0.04] bg-white/[0.01]">
+            <div className="p-3 border-b border-white/[0.04]">
               <span className="text-[10px] font-medium text-white/20 tracking-wider">REGISTERED OPERATORS</span>
             </div>
             <div className="max-h-[400px] overflow-y-auto">
@@ -127,7 +127,7 @@ export default function HealthDashboard() {
                 <button
                   key={s.name}
                   onClick={() => setSelectedOperator(i)}
-                  className={`w-full text-left px-4 py-3 border-b border-white/[0.04] transition-colors ${selectedOperator === i ? "bg-white/[0.04]" : "hover:bg-white/[0.02]"}`}
+                  className={`w-full text-left px-4 py-3 border-b border-white/[0.04] transition-colors ${selectedOperator === i ? "bg-white/[0.04]" : "hover:bg-white/[0.015]"}`}
                 >
                   <div className="flex items-center justify-between">
                     <span className={`text-[13px] font-medium ${selectedOperator === i ? "text-white/80" : "text-white/50"}`}>
@@ -145,35 +145,35 @@ export default function HealthDashboard() {
           <div className="bg-white/[0.015] p-4 sm:p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-[18px] font-bold text-white/80">{selected.name}</h3>
+                <h3 className="text-[18px] font-normal text-white/80">{selected.name}</h3>
                 <div className="text-[12px] font-medium text-zinc-300/40 mt-1">{selected.domain}</div>
               </div>
               <StatusBadge status={selected.status} />
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">UPTIME</div>
                 <div className={`text-[20px] font-normal ${selected.uptime >= 99.5 ? "text-zinc-300" : selected.uptime >= 98 ? "text-amber-400" : "text-red-400"}`}>
                   {selected.uptime}%
                 </div>
                 <MetricBar value={selected.uptime} max={100} color={selected.uptime >= 99.5 ? "bg-white" : selected.uptime >= 98 ? "bg-amber-400" : "bg-red-400"} />
               </div>
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">P99 LATENCY</div>
                 <div className={`text-[20px] font-normal ${selected.p99 <= 200 ? "text-zinc-300" : selected.p99 <= 1000 ? "text-amber-400" : "text-red-400"}`}>
                   {selected.status === "down" ? "--" : `${selected.p99}ms`}
                 </div>
                 <MetricBar value={Math.min(selected.p99, 5000)} max={5000} color={selected.p99 <= 200 ? "bg-white" : selected.p99 <= 1000 ? "bg-amber-400" : "bg-red-400"} />
               </div>
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">ERROR RATE</div>
                 <div className={`text-[20px] font-normal ${selected.errorRate <= 0.1 ? "text-zinc-300" : selected.errorRate <= 1 ? "text-amber-400" : "text-red-400"}`}>
                   {selected.status === "down" ? "100%" : `${selected.errorRate}%`}
                 </div>
                 <MetricBar value={Math.min(selected.errorRate, 5)} max={5} color={selected.errorRate <= 0.1 ? "bg-white" : selected.errorRate <= 1 ? "bg-amber-400" : "bg-red-400"} />
               </div>
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">QUEUE</div>
                 <div className={`text-[20px] font-normal ${selected.queueDepth <= 5 ? "text-zinc-300" : selected.queueDepth <= 20 ? "text-amber-400" : "text-red-400"}`}>
                   {selected.status === "down" ? "--" : selected.queueDepth}
@@ -183,11 +183,11 @@ export default function HealthDashboard() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">24H INVOCATIONS</div>
                 <div className="text-[20px] font-normal text-white/60">{selected.invocations24h.toLocaleString()}</div>
               </div>
-              <div className="p-3 bg-white/[0.03] border border-white/[0.07] rounded">
+              <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">REPUTATION</div>
                 <div className={`text-[20px] font-normal ${selected.reputation >= 90 ? "text-zinc-300" : selected.reputation >= 75 ? "text-amber-400" : "text-red-400"}`}>
                   {selected.reputation}/100
@@ -196,7 +196,7 @@ export default function HealthDashboard() {
             </div>
 
             {/* Endpoint example */}
-            <div className="p-4 bg-white/[0.03] border border-white/[0.07] rounded text-[12px] font-medium">
+            <div className="p-4 bg-white/[0.015] border border-white/[0.04] rounded text-[12px] font-medium">
               <div className="text-white/20 mb-2">// Standard health endpoint</div>
               <div className="text-zinc-300/60">GET</div>
               <div className="text-white/50 ml-4">https://{selected.domain}/aegis/health</div>

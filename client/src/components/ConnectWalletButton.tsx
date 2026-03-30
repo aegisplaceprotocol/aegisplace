@@ -111,12 +111,12 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
       <button
         onClick={handleClick}
         disabled={isLoading}
-        className={`relative text-[13px] font-normal px-8 py-3.5 transition-all duration-300 flex items-center justify-center gap-2 ${
+        className={`relative text-[13px] font-normal px-8 py-3.5 rounded transition-all duration-300 flex items-center justify-center gap-2 ${
           connected
-            ? "text-zinc-300 border border-white/30 bg-white/[0.05] hover:bg-white/[0.08]"
+            ? "text-white/40 border border-white/[0.05] bg-white/[0.03] hover:bg-white/[0.06]"
             : isLoading
-            ? "text-zinc-900 bg-white/70 cursor-wait"
-            : "text-zinc-900 bg-white hover:bg-zinc-200"
+            ? "text-white/40 border border-white/[0.05] bg-white/[0.03] cursor-wait"
+            : "text-white/40 border border-white/[0.05] hover:border-white/[0.08] hover:text-white/60"
         }`}
       >
         {isLoading ? (
@@ -129,7 +129,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
           </>
         ) : connected ? (
           <>
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-white/40 animate-pulse" />
             {truncateAddress(address)}
           </>
         ) : (
@@ -144,12 +144,12 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
       <button
         onClick={handleClick}
         disabled={isLoading}
-        className={`block w-full text-center py-3 text-[13px] font-normal transition-all duration-300 ${
+        className={`block w-full text-center py-3 text-[13px] font-normal rounded transition-all duration-300 ${
           connected
-            ? "text-zinc-300 border border-white/30 bg-white/[0.05]"
+            ? "text-white/40 border border-white/[0.05] bg-white/[0.03]"
             : isLoading
-            ? "text-zinc-900 bg-white/70 cursor-wait"
-            : "text-zinc-900 bg-white"
+            ? "text-white/40 border border-white/[0.05] bg-white/[0.03] cursor-wait"
+            : "text-white/40 border border-white/[0.05] hover:border-white/[0.08] hover:text-white/60"
         }`}
       >
         {isLoading ? (authenticating ? "Signing in..." : "Connecting...") : connected ? truncateAddress(address) : "Connect Wallet"}
@@ -163,12 +163,12 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
       <button
         onClick={handleClick}
         disabled={isLoading}
-        className={`relative text-[12px] font-normal px-4 py-1.5 transition-all duration-300 flex items-center gap-2 ${
+        className={`relative text-[12px] font-normal px-4 py-1.5 rounded transition-all duration-300 flex items-center gap-2 ${
           connected
-            ? "text-zinc-300 border border-white/30 hover:border-white/50 bg-white/[0.05] hover:bg-white/[0.08]"
+            ? "text-white/40 border border-white/[0.05] hover:border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
             : isLoading
-            ? "text-zinc-900 bg-white/70 cursor-wait"
-            : "text-zinc-900 hover:text-zinc-900 bg-white hover:bg-zinc-200"
+            ? "text-white/40 border border-white/[0.05] bg-white/[0.03] cursor-wait"
+            : "text-white/40 border border-white/[0.05] hover:border-white/[0.08] hover:text-white/60"
         }`}
       >
         {isLoading ? (
@@ -181,7 +181,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
           </>
         ) : connected ? (
           <>
-            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-white/40 animate-pulse" />
             {truncateAddress(address)}
             <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className={`transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}>
               <path d="M1 3L4 6L7 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
@@ -194,10 +194,10 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
 
       {/* Wallet dropdown menu */}
       {menuOpen && connected && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-white/[0.02]/97 backdrop-blur-xl border border-white/[0.08] shadow-2xl z-50">
-          <div className="p-3 border-b border-white/[0.07]">
-            <div className="text-[10px] font-medium text-white/30 mb-1">CONNECTED</div>
-            <div className="text-[11px] font-medium text-zinc-300/80 break-all leading-relaxed">{address}</div>
+        <div className="absolute top-full right-0 mt-2 w-56 bg-[#111] backdrop-blur-xl border border-white/[0.04] rounded shadow-2xl z-50">
+          <div className="p-3 border-b border-white/[0.04]">
+            <div className="text-[10px] font-normal text-white/20 mb-1">CONNECTED</div>
+            <div className="text-[11px] font-normal text-white/40 break-all leading-relaxed">{address}</div>
           </div>
           <div className="p-1.5">
             <button
@@ -239,10 +239,10 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
               </svg>
               Open Playground
             </button>
-            <div className="my-1 border-t border-white/[0.07]" />
+            <div className="my-1 border-t border-white/[0.04]" />
             <button
               onClick={handleDisconnect}
-              className="w-full text-left text-[12px] text-red-400/70 hover:text-red-400 hover:bg-red-400/[0.04] px-3 py-2 transition-colors flex items-center gap-2"
+              className="w-full text-left text-[12px] font-normal text-white/30 hover:text-white/50 hover:bg-white/[0.04] px-3 py-2 transition-colors flex items-center gap-2"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.2">
                 <path d="M8 4L11 7L8 10" />

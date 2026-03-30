@@ -5,9 +5,9 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: aegis
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: aegis
     volumes:
       - mysql_data:/var/lib/mysql
@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile.guardrails
     restart: unless-stopped
     ports:
-      - "4001:4001"
+      - "127.0.0.1:4001:4001"
     environment:
       NVIDIA_API_KEY: ${NVIDIA_API_KEY}
     healthcheck:
@@ -40,12 +40,12 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql://root:aegis@mysql:3306/aegis
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_WALLETS: ${ADMIN_WALLETS}
       SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}

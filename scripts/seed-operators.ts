@@ -1,5 +1,5 @@
 /**
- * seed-operators.ts — Registers 5 demo operators into the on-chain Aegis registry.
+ * seed-operators.ts - Registers 5 demo operators into the on-chain Aegis registry.
  *
  * Operators:
  *   1. code-review-v3    (Development, $0.02/call)
@@ -51,7 +51,7 @@ const CATEGORIES = {
   DeFi: 4,
 } as const;
 
-// USDC has 6 decimals — prices in base units
+// USDC has 6 decimals - prices in base units
 function usdToLamports(usd: number): number {
   return Math.round(usd * 1_000_000);
 }
@@ -378,9 +378,9 @@ async function main(): Promise<void> {
       const msg = err instanceof Error ? err.message : String(err);
       // Check if it's an "already in use" error (idempotent)
       if (msg.includes("already in use") || msg.includes("0x0")) {
-        console.log(`  ${YELLOW}[SKIP]${RESET} ${op.name} — already registered`);
+        console.log(`  ${YELLOW}[SKIP]${RESET} ${op.name} - already registered`);
       } else {
-        console.log(`  ${CROSS} ${op.name} — ${msg}`);
+        console.log(`  ${CROSS} ${op.name} - ${msg}`);
       }
     }
   }

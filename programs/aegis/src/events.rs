@@ -20,7 +20,7 @@ pub struct OperatorRegistered {
     pub creator: Pubkey,
     pub name: String,
     pub endpoint_url: String,
-    pub price_lamports: u64,
+    pub price_usdc_base: u64,
     pub category: u8,
 }
 
@@ -57,4 +57,12 @@ pub struct OperatorDeactivated {
     pub operator_id: u64,
     pub operator: Pubkey,
     pub creator: Pubkey,
+}
+
+/// Emitted when the protocol admin is rotated.
+#[event]
+pub struct AdminRotated {
+    pub old_admin: Pubkey,
+    pub new_admin: Pubkey,
+    pub timestamp: i64,
 }

@@ -89,7 +89,7 @@ export function repColor(score: number) {
   if (score >= 80) return "#A1A1AA";
   if (score >= 60) return "#71717A";
   if (score >= 40) return "#eab308";
-  return "#ef4444";
+  return "rgba(220,100,60,0.50)";
 }
 
 export const COMPAT_ICONS: Record<string, string> = {

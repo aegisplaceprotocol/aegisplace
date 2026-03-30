@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { fadeInView } from "@/lib/animations";
 import RequireWallet from "@/components/RequireWallet";
-
+import { trpc } from "@/lib/trpc";
 
 /* ── Constants ────────────────────────────────────────────────────────── */
 
@@ -36,7 +36,19 @@ function CreateTaskForm() {
   const [requirements, setRequirements] = useState("");
   const [formError, setFormError] = useState("");
 
-  const createMutation = { mutateAsync: async () => ({}), isPending: false, mutate: () => {} } as any;
+  const createMutation = trpc.task.create.useMutation({
+    onSuccess: (data) => {
+      const taskId = (data as { id: string })?.id;
+      if (taskId) {
+        navigate(`/tasks/${taskId}`);
+      } else {
+        navigate("/tasks");
+      }
+    },
+    onError: (err) => {
+      setFormError(err.message || "Failed to create task.");
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +69,7 @@ function CreateTaskForm() {
 
     const tags = tagsInput
       .split(",")
-      .map(t => t.trim())
+      .map((t) => t.trim())
       .filter(Boolean);
 
     createMutation.mutate({
@@ -74,12 +86,12 @@ function CreateTaskForm() {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
-      <div className="pt-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
+      <div className="pt-[72px]">
+        <div className="container py-12 md:py-16 max-w-2xl">
           {/* Header */}
           <motion.div {...fadeInView} className="mb-10">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">
+              <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
                 CREATE TASK
               </span>
             </div>
@@ -93,11 +105,7 @@ function CreateTaskForm() {
           </motion.div>
 
           {/* Form */}
-          <motion.form
-            {...fadeInView}
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
+          <motion.form {...fadeInView} onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}
             <div>
               <label className="block text-[12px] font-medium text-white/40 mb-2 tracking-wider uppercase">
@@ -106,7 +114,7 @@ function CreateTaskForm() {
               <input
                 type="text"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Build a token dashboard"
                 className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all "
               />
@@ -119,7 +127,7 @@ function CreateTaskForm() {
               </label>
               <textarea
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={5}
                 placeholder="Describe the task in detail..."
                 className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all  resize-none"
@@ -133,7 +141,7 @@ function CreateTaskForm() {
               </label>
               <select
                 value={category}
-                onChange={e => setCategory(e.target.value)}
+                onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3.5 focus:border-white/25 focus:outline-none transition-all  appearance-none cursor-pointer"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 5L6 8L9 5' stroke='%23ffffff40' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,
@@ -141,12 +149,8 @@ function CreateTaskForm() {
                   backgroundPosition: "right 16px center",
                 }}
               >
-                {CATEGORIES.map(cat => (
-                  <option
-                    key={cat.value}
-                    value={cat.value}
-                    className="bg-white/[0.02]"
-                  >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value} className="bg-zinc-900">
                     {cat.label}
                   </option>
                 ))}
@@ -159,17 +163,21 @@ function CreateTaskForm() {
                 Budget (USDC)
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm font-light">
+                <span
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
                   $
                 </span>
                 <input
                   type="number"
                   value={budget}
-                  onChange={e => setBudget(e.target.value)}
+                  onChange={(e) => setBudget(e.target.value)}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 pl-8 pr-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all font-light"
+                  className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 pl-8 pr-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all "
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 />
               </div>
             </div>
@@ -182,7 +190,7 @@ function CreateTaskForm() {
               <input
                 type="text"
                 value={tagsInput}
-                onChange={e => setTagsInput(e.target.value)}
+                onChange={(e) => setTagsInput(e.target.value)}
                 placeholder="e.g. solana, dashboard, typescript (comma separated)"
                 className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all "
               />
@@ -198,7 +206,7 @@ function CreateTaskForm() {
               </label>
               <textarea
                 value={requirements}
-                onChange={e => setRequirements(e.target.value)}
+                onChange={(e) => setRequirements(e.target.value)}
                 rows={4}
                 placeholder="List any specific requirements..."
                 className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3.5 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all  resize-none"
@@ -207,8 +215,8 @@ function CreateTaskForm() {
 
             {/* Error */}
             {formError && (
-              <div className="border border-white/[0.10] bg-white/[0.02] p-4">
-                <p className="text-white/60 text-sm">{formError}</p>
+              <div className="border border-red-500/20 bg-red-500/5 p-4 ">
+                <p className="text-red-400/80 text-sm">{formError}</p>
               </div>
             )}
 
@@ -216,7 +224,7 @@ function CreateTaskForm() {
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="w-full text-[14px] font-normal bg-white text-[#0A0A0A] py-4 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full text-[14px] font-semibold bg-emerald-500 text-white py-4 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors "
             >
               {createMutation.isPending ? "Creating..." : "Create Task"}
             </button>

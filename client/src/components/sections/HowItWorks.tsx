@@ -3,17 +3,15 @@ import { fadeInView } from "@/lib/animations";
 import SectionLabel from "@/components/SectionLabel";
 
 const STEPS = [
-  { num: "01", title: "Discover", desc: "Agent searches the Aegis index for the best operator by success score, price, and latency." },
-  { num: "02", title: "Pay", desc: "USDC micropayment via x402. Swapped to $AEGIS on Jupiter before execution." },
-  { num: "03", title: "Guard", desc: "NeMo Guardrails check every input for safety, injection, and compliance before execution." },
-  { num: "04", title: "Execute", desc: "Operator runs in a sandboxed environment. Isolated. Auditable. Deterministic." },
-  { num: "05", title: "Validate", desc: "Bonded validators attest output quality. NeMo Evaluator scores the response." },
-  { num: "06", title: "Settle", desc: "Revenue splits atomically on Solana: 60% creator, 15% validators, 12% stakers, 8% treasury, 3% insurance, 2% burned." },
+  { num: "01", title: "Register", desc: "Operators register skills with bonded $AEGIS stake. Skin in the game guarantees quality from day one." },
+  { num: "02", title: "Discover", desc: "Agents discover skills via MCP with NeMo guardrails filtering every request for safety, injection, and compliance." },
+  { num: "03", title: "Pay", desc: "x402 micropayments handle billing per invocation. USDC in, swapped to $AEGIS on Jupiter, settled on Solana." },
+  { num: "04", title: "Protect", desc: "Trust scores, slashing, and insurance protect everyone. Bad operators lose their bond. Good ones compound reputation." },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section id="how-it-works" className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
         </motion.div>
@@ -22,20 +20,19 @@ export default function HowItWorks() {
           <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
             One skill invocation.
             <br />
-            <span className="text-zinc-500 font-normal">Six steps. Under half a second.</span>
+            <span className="text-zinc-500 font-normal">Four steps. Under half a second.</span>
           </h2>
           <p className="text-[14px] text-zinc-500 max-w-md leading-relaxed lg:text-right">
-            An agent needs a skill. Aegis finds the right operator, handles the micropayment,
-            validates the output, and splits the earnings. Every step is recorded on Solana
-            so anyone can audit the receipts.
+            Operators stake real money. Agents discover skills through guardrails. x402 handles payment.
+            Trust scores and slashing keep everyone honest. Every step is recorded on Solana.
           </p>
         </motion.div>
 
         {/* 6-step flow cards */}
-        <motion.div {...fadeInView} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-16 sm:mb-20">
+        <motion.div {...fadeInView} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16 sm:mb-20">
           {STEPS.map((step) => (
             <div key={step.num} className="rounded border border-zinc-800 bg-zinc-900/40 p-5">
-              <div className="text-[11px] font-bold text-emerald-500 mb-2">{step.num}</div>
+              <div className="text-[11px] font-normal text-white/50 mb-2">{step.num}</div>
               <div className="text-[15px] font-medium text-white mb-2">{step.title}</div>
               <div className="text-[12px] text-zinc-500 leading-relaxed">{step.desc}</div>
             </div>
@@ -216,8 +213,8 @@ export default function HowItWorks() {
               <div
                 className={`p-6 border transition-colors rounded ${
                   node.accent
-                    ? "border-white/[0.15] bg-white/[0.03]"
-                    : "border-white/[0.07] bg-white/[0.02]"
+                    ? "border-white/[0.15] bg-white/[0.015]"
+                    : "border-white/[0.04] bg-white/[0.015]"
                 }`}
               >
                 <div

@@ -7,6 +7,7 @@ import SuccessEngine from "@/components/sections/SuccessEngine";
 import Protections from "@/components/sections/Protections";
 import TokenSection from "@/components/sections/TokenSection";
 import WhyHoldAegis from "@/components/sections/WhyHoldAegis";
+import BagSkills from "@/components/sections/BagSkills";
 import PreFooterCTA from "@/components/sections/PreFooterCTA";
 import Footer from "@/components/sections/Footer";
 
@@ -21,6 +22,7 @@ export default function Home() {
       <Protections />
       <TokenSection />
       <WhyHoldAegis />
+      <BagSkills />
       <PreFooterCTA />
       <Footer />
       <MobileBottomNav />

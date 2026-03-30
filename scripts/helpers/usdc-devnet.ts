@@ -160,7 +160,7 @@ async function createNewMint(
   // Ensure mint authority has SOL for the transaction
   const balance = await connection.getBalance(mintAuthority.publicKey);
   if (balance < 10_000_000) {
-    // Airdrop if needed — mint authority needs some SOL to sign
+    // Airdrop if needed - mint authority needs some SOL to sign
     // But payer covers rent, so this is optional
   }
 

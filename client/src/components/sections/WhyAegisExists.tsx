@@ -48,10 +48,10 @@ export default function WhyAegisExists() {
           {PLATFORMS.map((p, i) => (
             <div
               key={p.era}
-              className={`rounded-[6px] p-6 text-center ${i === 3 ? 'card-glow border border-white/[0.10]' : 'card-standard'}`}
+              className={`rounded p-6 text-center ${i === 3 ? 'card-glow border border-white/[0.04]' : 'card-standard'}`}
             >
               <div className="text-[11px] uppercase tracking-[0.1em] text-white/20 mb-3">{p.era}</div>
-              <div className={`text-[16px] tracking-tight ${i === 3 ? 'text-white/90 font-bold' : 'text-white/50'}`}>
+              <div className={`text-[16px] tracking-tight ${i === 3 ? 'text-white/90 font-normal' : 'text-white/50'}`}>
                 {p.result}
               </div>
             </div>
@@ -84,8 +84,8 @@ export default function WhyAegisExists() {
           }}
         >
           {FAILURES.map((f) => (
-            <div key={f.name} className="card-standard rounded-[6px] p-6">
-              <div className="text-[14px] text-white/50 font-bold mb-2">{f.name}</div>
+            <div key={f.name} className="card-standard rounded p-6">
+              <div className="text-[14px] text-white/50 font-normal mb-2">{f.name}</div>
               <div className="text-[12px] text-white/25 leading-[1.7]">{f.reason}</div>
             </div>
           ))}
@@ -105,7 +105,7 @@ export default function WhyAegisExists() {
           </p>
 
           <p
-            className="text-[28px] font-bold text-white/80 mb-8 tracking-tight"
+            className="text-[28px] font-normal text-white/80 mb-8 tracking-tight"
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(8px)",

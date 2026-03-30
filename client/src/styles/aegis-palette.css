@@ -1,0 +1,33 @@
+/* Aegis Protocol - Design Tokens */
+:root {
+  /* Backgrounds */
+  --aegis-bg-0: #09090b;
+  --aegis-bg-1: #18181b;
+  --aegis-bg-2: #27272a;
+  --aegis-bg-3: #3f3f46;
+
+  /* Accent */
+  --aegis-accent: #10B981;
+  --aegis-accent-hover: #059669;
+  --aegis-accent-muted: rgba(16, 185, 129, 0.15);
+  --aegis-accent-subtle: rgba(16, 185, 129, 0.06);
+
+  /* Text */
+  --aegis-text-primary: #fafafa;
+  --aegis-text-secondary: #a1a1aa;
+  --aegis-text-tertiary: #71717a;
+  --aegis-text-dim: #52525b;
+
+  /* Borders */
+  --aegis-border: rgba(255, 255, 255, 0.06);
+  --aegis-border-hover: rgba(255, 255, 255, 0.12);
+
+  /* Fonts */
+  --aegis-font-sans: 'Aeonik', -apple-system, system-ui, sans-serif;
+  --aegis-font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* Spacing */
+  --aegis-radius-sm: 4px;
+  --aegis-radius-md: 6px;
+  --aegis-radius-lg: 8px;
+}

@@ -115,14 +115,14 @@ function TrackerStat({
   color?: string;
 }) {
   return (
-    <div className="p-4 sm:p-5 border border-white/[0.07] bg-white/[0.015] hover:bg-white/[0.025] transition-colors">
+    <div className="p-4 sm:p-5 border border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.015] transition-colors">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[10px] font-medium text-white/20 tracking-wider uppercase">{label}</span>
         {trend && (
           <span className="text-[10px] font-medium text-zinc-300/50">{trend}</span>
         )}
       </div>
-      <div className="text-[clamp(1.4rem,3vw,2rem)] font-bold text-white/85 tracking-tight mb-3">
+      <div className="text-[clamp(1.4rem,3vw,2rem)] font-normal text-white/85 tracking-tight mb-3">
         {prefix}{value}{suffix}
       </div>
       <Sparkline data={sparkData} color={color} height={28} />
@@ -248,7 +248,7 @@ export default function X402LiveTracker() {
   }, []);
 
   return (
-    <section id="x402-tracker" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="x402-tracker" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container px-5 sm:px-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-14">
@@ -256,7 +256,7 @@ export default function X402LiveTracker() {
             <div className="text-[10px] font-medium sm:text-[11px] tracking-wider text-white/15 mb-4">
               LIVE x402 ECOSYSTEM
             </div>
-            <h2 className={`text-[clamp(1.8rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+            <h2 className={`text-[clamp(1.8rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
               Real-time agent economy.<br />
               <span className="text-white/30">Verified on-chain.</span>
             </h2>
@@ -264,14 +264,14 @@ export default function X402LiveTracker() {
           <div className="flex items-center gap-4">
             <ActivityPulse />
             <div className="text-right">
-              <div className="text-[18px] sm:text-[22px] font-bold text-zinc-300 ">{tps} tps</div>
+              <div className="text-[18px] sm:text-[22px] font-normal text-zinc-300 ">{tps} tps</div>
               <div className="text-[10px] font-medium text-white/20 tracking-wider">CURRENT THROUGHPUT</div>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.06] mb-8`}>
+        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04] mb-8`}>
           <TrackerStat
             label="Total Transactions"
             value={formatNumber(txCount)}
@@ -301,9 +301,9 @@ export default function X402LiveTracker() {
         </div>
 
         {/* Live Transaction Feed */}
-        <div className={`border border-white/[0.07] bg-white/[0.01] overflow-hidden`}>
+        <div className={`border border-white/[0.04] bg-white/[0.01] overflow-hidden`}>
           {/* Feed Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-3 px-3 sm:px-4 border-b border-white/[0.08] bg-white/[0.02]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 py-3 px-3 sm:px-4 border-b border-white/[0.04] bg-white/[0.015]">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/40 opacity-75" />
@@ -340,7 +340,7 @@ export default function X402LiveTracker() {
               return (
                 <div
                   key={tx.id}
-                  className={`grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_80px_80px_70px] gap-2 sm:gap-3 items-center py-3 px-3 sm:px-4 border-b border-white/[0.04] transition-all ${isNew ? "bg-white/[0.03]" : "bg-transparent"}`}
+                  className={`grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_100px_80px_80px_70px] gap-2 sm:gap-3 items-center py-3 px-3 sm:px-4 border-b border-white/[0.04] transition-all ${isNew ? "bg-white/[0.015]" : "bg-transparent"}`}
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
                     <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -360,7 +360,7 @@ export default function X402LiveTracker() {
           </div>
 
           {/* Feed Footer */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 py-3 px-3 sm:px-4 border-t border-white/[0.08] bg-white/[0.02]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 py-3 px-3 sm:px-4 border-t border-white/[0.04] bg-white/[0.015]">
             <span className="text-[9px] sm:text-[10px] font-medium text-white/15">
               Data baseline: x402scan.com | Updated: March 8, 2026
             </span>
@@ -374,21 +374,21 @@ export default function X402LiveTracker() {
         <div className="mt-6 grid sm:grid-cols-3 gap-4">
           <div className="p-4 border border-white/[0.04] bg-white/[0.01]">
             <div className="text-[10px] font-medium text-zinc-300/30 tracking-wider mb-2">SOLANA DOMINANCE</div>
-            <div className="text-[20px] font-bold text-white/70 mb-1">49%</div>
+            <div className="text-[20px] font-normal text-white/70 mb-1">49%</div>
             <p className="text-[11px] text-white/25 leading-relaxed">
               Solana processes 49% of all x402 transactions. 400ms finality and $0.00025 per tx make it the natural settlement layer.
             </p>
           </div>
           <div className="p-4 border border-white/[0.04] bg-white/[0.01]">
             <div className="text-[10px] font-medium text-zinc-300/30 tracking-wider mb-2">TOP SERVER (24H)</div>
-            <div className="text-[13px] font-bold text-white/70 mb-1">acp-x402.virtuals.io</div>
+            <div className="text-[13px] font-normal text-white/70 mb-1">acp-x402.virtuals.io</div>
             <p className="text-[11px] text-white/25 leading-relaxed">
               71K transactions, $87K volume, 3.9K buyers in the last 24 hours. Virtuals Protocol is the largest x402 consumer.
             </p>
           </div>
           <div className="p-4 border border-white/[0.04] bg-white/[0.01]">
             <div className="text-[10px] font-medium text-zinc-300/30 tracking-wider mb-2">AEGIS OPPORTUNITY</div>
-            <div className="text-[13px] font-bold text-white/70 mb-1">Zero success layer</div>
+            <div className="text-[13px] font-normal text-white/70 mb-1">Zero success layer</div>
             <p className="text-[11px] text-white/25 leading-relaxed">
               104K daily transactions with no validation, no bonding, no reputation scoring. Every transaction is a potential Aegis customer.
             </p>

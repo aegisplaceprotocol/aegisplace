@@ -40,7 +40,7 @@ export default function MCPConnect() {
   }
 
   return (
-    <section className="py-20 border-t border-white/[0.06]">
+    <section className="py-20 border-t border-white/[0.04]">
       <div className="container">
         <motion.div {...fadeInView} className="mb-8">
           <span className="text-[11px] font-medium text-white/20 uppercase tracking-[0.2em]">
@@ -50,12 +50,12 @@ export default function MCPConnect() {
 
         <motion.div
           {...fadeInView}
-          className="grid lg:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.06]"
+          className="grid lg:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.04]"
         >
           {/* Left. config + description */}
-          <div className="bg-white/[0.02] p-6 sm:p-8 flex flex-col justify-between">
+          <div className="bg-white/[0.015] p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <h2 className="text-[clamp(1.75rem,4.5vw,2.5rem)] font-bold text-white leading-[1.05] tracking-tight mb-4">
+              <h2 className="text-[clamp(1.75rem,4.5vw,2.5rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
                 One line to connect.
               </h2>
               <p className="text-[14px] text-white/30 leading-relaxed mb-8">
@@ -64,13 +64,13 @@ export default function MCPConnect() {
               </p>
 
               {/* Code block */}
-              <div className="border border-white/[0.06] bg-white/[0.02] p-5 relative">
+              <div className="border border-white/[0.04] bg-white/[0.015] p-5 relative">
                 <pre className="text-[13px] font-light text-white/50 leading-relaxed overflow-x-auto">
                   {MCP_CONFIG}
                 </pre>
                 <button
                   onClick={copy}
-                  className="absolute top-3 right-3 text-[10px] text-white/20 hover:text-white/50 border border-white/[0.08] hover:border-white/[0.15] px-2 py-1 transition-all bg-white/[0.02]"
+                  className="absolute top-3 right-3 text-[10px] text-white/20 hover:text-white/50 border border-white/[0.04] hover:border-white/[0.08] px-2 py-1 transition-all bg-white/[0.015]"
                 >
                   {copied ? "Copied" : "Copy"}
                 </button>
@@ -81,7 +81,7 @@ export default function MCPConnect() {
               {["Claude", "Cursor", "Windsurf", "OpenCode"].map(name => (
                 <span
                   key={name}
-                  className="text-[11px] text-white/25 border border-white/[0.06] px-3 py-1.5"
+                  className="text-[11px] text-white/25 border border-white/[0.04] px-3 py-1.5"
                 >
                   {name}
                 </span>
@@ -115,7 +115,7 @@ export default function MCPConnect() {
             </div>
             <div className="px-6 py-4 border-t border-white/[0.04]">
               <Link
-                href="/connect"
+                href="/docs"
                 className="text-[12px] text-white/25 hover:text-white/45 transition-colors"
               >
                 View full integration guide

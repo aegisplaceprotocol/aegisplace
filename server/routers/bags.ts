@@ -1,5 +1,5 @@
 /**
- * Aegis Protocol — Bags tRPC Router
+ * Aegis Protocol - Bags tRPC Router
  *
  * Exposes Bags.fm integration endpoints to the frontend.
  */

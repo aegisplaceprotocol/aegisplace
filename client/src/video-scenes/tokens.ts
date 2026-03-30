@@ -1,4 +1,4 @@
-/** Aegis Video Design Tokens — V3. Pure monochrome. Zero color. */
+/** Aegis Video Design Tokens - V3. Pure monochrome. Zero color. */
 
 export const colors = {
   bg: '#0A0A0A',

@@ -278,13 +278,13 @@ function HighlightCard({ item, index, inView }: { item: Highlight; index: number
 
   return (
     <div
-      className={`group relative bg-white/[0.02] border border-white/[0.07] overflow-hidden ${hovered ? "border-white/20 bg-white/[0.035]" : ""}`}
+      className={`group relative bg-white/[0.015] border border-white/[0.04] overflow-hidden ${hovered ? "border-white/20 bg-white/[0.015]" : ""}`}
       style={{ transitionDelay: `${200 + index * 150}ms` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Canvas area */}
-      <div className="relative h-48 sm:h-56 border-b border-white/[0.07] bg-white/[0.02]">
+      <div className="relative h-48 sm:h-56 border-b border-white/[0.04] bg-white/[0.015]">
         <WireframeCanvas type={item.vizType} />
         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
       </div>
@@ -293,7 +293,7 @@ function HighlightCard({ item, index, inView }: { item: Highlight; index: number
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Badge -- all brand green */}
         <span
-          className="inline-block text-[11px] font-medium tracking-wide uppercase px-3 py-1 border mb-5 text-zinc-300 border-white/20 bg-white/[0.06]"
+          className="inline-block text-[11px] font-medium tracking-wide uppercase px-3 py-1 border mb-5 text-zinc-300 border-white/[0.04] bg-white/[0.015]"
         >
           {item.badge}
         </span>
@@ -318,13 +318,13 @@ export default function FeatureHighlights() {
   const { ref, inView } = useInView(0.05);
 
   return (
-    <section id="highlights" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="highlights" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="THE AEGIS ADVANTAGE" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <div className={``}>
-            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight">
+            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
               Why Aegis is Different.
               <br className="hidden lg:block" />
               <span className="text-white/35 font-normal">Four protections. One system.</span>

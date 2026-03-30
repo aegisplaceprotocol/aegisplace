@@ -78,7 +78,7 @@ const TRENDING_REPOS = [
 
 export default function SocialProof() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.05]">
+    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="container">
         {/* Section label */}
         <motion.div {...fadeInView}>
@@ -89,7 +89,7 @@ export default function SocialProof() {
             </span>
           </div>
 
-          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-bold text-white leading-[1.1] tracking-tight mb-4">
+          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-normal text-white leading-[1.1] tracking-tight mb-4">
             Everyone is building payments and identity.
             <br />
             <span className="text-white/30">Nobody has solved quality.</span>
@@ -103,11 +103,11 @@ export default function SocialProof() {
         </motion.div>
 
         {/* Market validation cards */}
-        <div className="grid sm:grid-cols-2 gap-px bg-white/[0.06] border border-white/[0.07] mb-12 sm:mb-16">
+        <div className="grid sm:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.04] mb-12 sm:mb-16">
           {MARKET_VALIDATION.map((item) => (
             <div
               key={item.name}
-              className="bg-white/[0.02] p-5 sm:p-7 hover:bg-white/[0.015] transition-all duration-300"
+              className="bg-white/[0.015] p-5 sm:p-7 hover:bg-white/[0.015] transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[15px] sm:text-[16px] font-normal text-white/80">
@@ -133,7 +133,7 @@ export default function SocialProof() {
             {TRENDING_REPOS.map((repo) => (
               <div
                 key={repo.name}
-                className="border border-white/[0.06] bg-white/[0.01] p-4 hover:border-white/[0.10] transition-all duration-300 group"
+                className="border border-white/[0.04] bg-white/[0.01] p-4 hover:border-white/[0.08] transition-all duration-300 group"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[13px] font-normal text-zinc-300 group-hover:text-white transition-colors">
@@ -162,7 +162,7 @@ export default function SocialProof() {
           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
             {PROTOCOL_STACK.map((proto) => (
               <div key={proto.name} className="flex items-center gap-2 group">
-                <div className="w-2 h-2 border border-white/30 bg-white/10 group-hover:bg-white/20 transition-colors" />
+                <div className="w-2 h-2 border border-white/[0.04] bg-white/[0.015] group-hover:bg-white/[0.04] transition-colors" />
                 <div>
                   <span className="text-[13px] font-medium sm:text-[14px] text-white/50 group-hover:text-white/70 transition-colors font-mono">
                     {proto.name}
@@ -185,7 +185,7 @@ export default function SocialProof() {
             {COMPATIBLE_WITH.map((tool) => (
               <span
                 key={tool}
-                className="text-[12px] font-medium font-mono sm:text-[13px] px-3 sm:px-4 py-2 border border-white/[0.07] text-white/35 bg-white/[0.02] hover:border-white/[0.12] hover:text-white/55 transition-all duration-300"
+                className="text-[12px] font-medium font-mono sm:text-[13px] px-3 sm:px-4 py-2 border border-white/[0.04] text-white/35 bg-white/[0.015] hover:border-white/[0.08] hover:text-white/55 transition-all duration-300"
               >
                 {tool}
               </span>
@@ -207,8 +207,8 @@ export default function SocialProof() {
         </div>
 
         {/* Key stat */}
-        <div className="border border-white/[0.07] bg-white/[0.015] p-6 sm:p-10 lg:p-12 mb-10 sm:mb-14">
-          <div className="text-[36px] sm:text-[48px] lg:text-[56px] font-bold text-zinc-300 leading-none tracking-tight mb-3">
+        <div className="border border-white/[0.04] bg-white/[0.015] p-6 sm:p-10 lg:p-12 mb-10 sm:mb-14">
+          <div className="text-[36px] sm:text-[48px] lg:text-[56px] font-normal text-zinc-300 leading-none tracking-tight mb-3">
             49%
           </div>
           <div className="text-[14px] sm:text-[16px] text-white/50 max-w-lg leading-relaxed">
@@ -218,14 +218,14 @@ export default function SocialProof() {
         </div>
 
         {/* Vitalik quote */}
-        <div className="border-l-2 border-white/30 pl-6 sm:pl-8 py-2">
+        <div className="border-l-2 border-white/[0.08] pl-6 sm:pl-8 py-2">
           <blockquote className="text-[16px] sm:text-[18px] lg:text-[20px] text-white/50 leading-relaxed mb-4 italic">
             "Bots paying bots, security deposits, reputations, dispute resolution
             : the four pillars of crypto and AI."
           </blockquote>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center">
-              <span className="text-[11px] font-medium text-white/30 font-bold">VB</span>
+            <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center">
+              <span className="text-[11px] font-normal text-white/30">VB</span>
             </div>
             <div>
               <div className="text-[13px] text-white/60 font-medium">Vitalik Buterin</div>

@@ -136,7 +136,7 @@ function StepChain({ steps }: { steps: BlueprintStep[] }) {
     <div className="flex items-center gap-1 overflow-x-auto py-2">
       {steps.map((step, i) => (
         <div key={i} className="flex items-center gap-1 flex-shrink-0">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 border border-white/[0.07] bg-white/[0.02] hover:border-white/[0.12] transition-colors group">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 border border-white/[0.04] bg-white/[0.015] hover:border-white/[0.08] transition-colors group">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
               style={{ background: CLASS_COLORS[step.class] || "#666" }}
@@ -161,7 +161,7 @@ function StepChain({ steps }: { steps: BlueprintStep[] }) {
 function BlueprintCard({ bp, index, inView }: { bp: Blueprint; index: number; inView: boolean }) {
   return (
     <div
-      className={`border border-white/[0.07] bg-white/[0.01] p-4 sm:p-6 hover:border-white/15 hover:bg-white/[0.008]`}
+      className={`border border-white/[0.04] bg-white/[0.01] p-4 sm:p-6 hover:border-white/[0.08] hover:bg-white/[0.008]`}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
       {/* Header */}
@@ -194,7 +194,7 @@ function BlueprintCard({ bp, index, inView }: { bp: Blueprint; index: number; in
             <div className="text-[13px] font-medium text-zinc-300/60">{bp.avgEarnings}</div>
           </div>
         </div>
-        <button className="text-[10px] font-medium text-white/20 border border-white/[0.07] px-3 py-1.5 hover:text-zinc-300 hover:border-white/20 transition-all">
+        <button className="text-[10px] font-medium text-white/20 border border-white/[0.04] px-3 py-1.5 hover:text-zinc-300 hover:border-white/[0.08] transition-all">
           FORK
         </button>
       </div>
@@ -225,13 +225,13 @@ export default function MissionBlueprints() {
   const visible = showAll ? BLUEPRINTS : BLUEPRINTS.slice(0, 4);
 
   return (
-    <section id="blueprints" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="blueprints" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="MISSION BLUEPRINTS" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <div className={``}>
-            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight">
+            <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
               Pre-built Pipelines.
               <br className="hidden lg:block" />
               <span className="text-white/35 font-normal">Fork. Customize. Deploy.</span>
@@ -260,7 +260,7 @@ export default function MissionBlueprints() {
           <div className={`mt-8 text-center`}>
             <button
               onClick={() => setShowAll(true)}
-              className="text-[12px] font-medium text-white/20 border border-white/[0.07] px-6 py-2.5 hover:text-zinc-300 hover:border-white/20 transition-all"
+              className="text-[12px] font-medium text-white/20 border border-white/[0.04] px-6 py-2.5 hover:text-zinc-300 hover:border-white/[0.08] transition-all"
             >
               VIEW ALL {BLUEPRINTS.length} BLUEPRINTS
             </button>
@@ -268,21 +268,21 @@ export default function MissionBlueprints() {
         )}
 
         {/* Economics summary */}
-        <div className={`mt-8 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-6 sm:pt-10 border-t border-white/[0.07]`}>
+        <div className={`mt-8 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pt-6 sm:pt-10 border-t border-white/[0.04]`}>
           <div>
-            <div className="text-2xl font-bold text-white/80 tracking-tight">{BLUEPRINTS.length}</div>
+            <div className="text-2xl font-normal text-white/80 tracking-tight">{BLUEPRINTS.length}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">BLUEPRINTS</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-white/80 tracking-tight">{BLUEPRINTS.reduce((a, b) => a + b.forks, 0).toLocaleString()}</div>
+            <div className="text-2xl font-normal text-white/80 tracking-tight">{BLUEPRINTS.reduce((a, b) => a + b.forks, 0).toLocaleString()}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">TOTAL FORKS</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-zinc-300/70 tracking-tight">$0.13</div>
+            <div className="text-2xl font-normal text-zinc-300/70 tracking-tight">$0.13</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">AVG COST/RUN</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-zinc-300/70 tracking-tight">95.3%</div>
+            <div className="text-2xl font-normal text-zinc-300/70 tracking-tight">95.3%</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">AVG SUCCESS RATE</div>
           </div>
         </div>

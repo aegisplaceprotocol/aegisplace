@@ -58,18 +58,18 @@ export default function Pitch() {
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider mb-6">CONFIDENTIAL -- INVESTOR OVERVIEW</div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white/95 leading-[1.1] mb-6">
-            The economic layer for<br />
-            <span className="text-zinc-300">autonomous agent commerce.</span>
+          <h1 className="text-4xl md:text-6xl font-normal tracking-tight text-white/95 leading-[1.1] mb-6">
+            The only platform combining marketplace +<br />
+            <span className="text-zinc-300">trust layer + payments + IDE for the $52B agent economy.</span>
           </h1>
           <p className="text-lg text-white/30 leading-relaxed max-w-2xl mb-10">
-            Aegis turns 412,893 open-source AI skills into a bonded marketplace with micropayments, validation, and on-chain reputation. Every agent invocation generates protocol revenue. Every transaction burns $AEGIS.
+            Cursor raised at $29B. Copilot has 20M users. 19K MCP servers exist. 75M x402 transactions have settled. But nobody built what agents actually need: trust + payments + IDE in one platform. Aegis has AegisX with 57 tools including Solana-native capabilities no competitor offers, NeMo guardrails for trust, x402 for payments, and direct Bags.fm integration ($5B volume, $40M creator payouts). Every invocation generates protocol revenue. Every transaction burns $AEGIS.
           </p>
           <div className="flex flex-wrap gap-4 mb-12">
             <a href="mailto:invest@aegisplace.com" className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">
               Schedule a Call
             </a>
-            <a href="/execution-manifest.json" target="_blank" className="text-sm font-medium border border-white/[0.07] text-white/35 hover:text-white/55 hover:border-white/[0.12] px-8 py-3.5 transition-all">
+            <a href="/execution-manifest.json" target="_blank" className="text-sm font-medium border border-white/[0.04] text-white/35 hover:text-white/55 hover:border-white/[0.12] px-8 py-3.5 transition-all">
               Execution Manifest
             </a>
           </div>
@@ -77,10 +77,10 @@ export default function Pitch() {
           {/* Product Demo Video */}
           <div className="relative group">
             <div className="absolute -inset-px bg-gradient-to-b from-[#A1A1AA]/10 via-transparent to-transparent rounded opacity-0 group-hover:opacity-100" />
-            <div className="relative border border-white/[0.07] rounded overflow-hidden bg-white/[0.02]">
+            <div className="relative border border-white/[0.04] rounded overflow-hidden bg-white/[0.02]">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/[0.04] bg-white/[0.02]">
                 <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[rgba(220,100,60,0.45)]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                   <div className="w-2.5 h-2.5 rounded-full bg-white/50" />
                 </div>
@@ -109,16 +109,16 @@ export default function Pitch() {
       </section>
 
       {/* ── Key Metrics ───────────────────────────────────────────────── */}
-      <section className="border-y border-white/[0.07]">
+      <section className="border-y border-white/[0.04]">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
           {[
-            { value: 412893, suffix: "", label: "Indexed Skills", prefix: "" },
-            { value: 109, suffix: "", label: "Curated Operators", prefix: "" },
-            { value: 13, suffix: "", label: "Skill Categories", prefix: "" },
-            { value: 47, suffix: "ms", label: "Avg Settlement", prefix: "" },
+            { value: 57, suffix: "", label: "AegisX Tools", prefix: "" },
+            { value: 19000, suffix: "+", label: "MCP Servers", prefix: "" },
+            { value: 75, suffix: "M+", label: "x402 Transactions", prefix: "" },
+            { value: 29, suffix: "B", label: "Cursor Valuation", prefix: "$" },
           ].map((m, i) => (
-            <div key={i} className={`p-6 md:p-8 ${i < 3 ? "border-r border-white/[0.07]" : ""} ${i < 2 ? "border-b md:border-b-0 border-white/[0.07]" : ""}`}>
-              <div className="text-2xl md:text-3xl font-bold text-white/90 ">
+            <div key={i} className={`p-6 md:p-8 ${i < 3 ? "border-r border-white/[0.04]" : ""} ${i < 2 ? "border-b md:border-b-0 border-white/[0.04]" : ""}`}>
+              <div className="text-2xl md:text-3xl font-normal text-white/90 ">
                 <AnimatedNumber target={m.value} prefix={m.prefix} suffix={m.suffix} />
               </div>
               <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">{m.label}</div>
@@ -133,14 +133,14 @@ export default function Pitch() {
           <SectionDivider label="THE PROBLEM" />
           <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-6">
-                AI agents cannot transact with each other.
+              <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-6">
+                AI agents cannot discover, trust, pay, and execute autonomously.
               </h2>
               <p className="text-sm text-white/30 leading-relaxed mb-4">
-                There are 412,893 open-source AI skills available today. None of them have payment rails. None of them have quality guarantees. None of them have reputation systems. Agents calling other agents is a trust-free, payment-free wasteland.
+                Cursor raised at $29B building IDE tools. Copilot has 20M users for code completion. But neither enables autonomous agent commerce. 19K MCP servers have zero trust verification. 75M x402 transactions flow without quality guarantees. Agents default to centralized APIs because there is no unified platform for discovery, trust, payment, and execution.
               </p>
               <p className="text-sm text-white/30 leading-relaxed">
-                The result: agents default to calling centralized APIs (OpenAI, Anthropic) because there is no infrastructure for peer-to-peer agent commerce. This creates a bottleneck that limits the entire autonomous agent economy.
+                The result: a $7B x402 ecosystem and a $5B Solana DeFi market (Bags.fm alone) are disconnected from agent infrastructure. Aegis is the only platform that unifies marketplace, trust layer (NeMo guardrails + bonded operators), payments (x402), and IDE (AegisX with 57 tools) in one protocol.
               </p>
             </div>
             <div className="space-y-3">
@@ -151,8 +151,8 @@ export default function Pitch() {
                 { problem: "No dispute resolution", detail: "When a skill fails, there is no recourse. Payment is lost." },
                 { problem: "No economic incentive", detail: "Skill creators have no revenue model. Validators have no reward." },
               ].map((p, i) => (
-                <div key={i} className="border border-white/[0.07] bg-white/[0.01] p-4 hover:bg-white/[0.02] transition-colors">
-                  <div className="text-sm font-normal text-red-400/70 mb-1">{p.problem}</div>
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-4 hover:bg-white/[0.02] transition-colors">
+                  <div className="text-sm font-normal text-[rgba(220,100,60,0.50)] mb-1">{p.problem}</div>
                   <div className="text-[12px] text-white/25 leading-relaxed">{p.detail}</div>
                 </div>
               ))}
@@ -162,12 +162,12 @@ export default function Pitch() {
       </section>
 
       {/* ── Solution ──────────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="THE SOLUTION" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-8">
-              Aegis is Uber for AI agents.
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-8">
+              Aegis: the full stack for autonomous agent commerce.
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
@@ -205,13 +205,13 @@ export default function Pitch() {
                   title: "Burn Flywheel",
                   desc: "2% of every invocation fee is permanently burned. The busier the protocol gets, the scarcer $AEGIS becomes. Usage drives deflation.",
                   metric: "Burn rate",
-                  value: "1% per tx",
+                  value: "2% per tx",
                 },
               ].map((s, i) => (
-                <div key={i} className="border border-white/[0.07] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
                   <div className="text-sm font-normal text-white/70 mb-2">{s.title}</div>
                   <p className="text-[12px] text-white/25 leading-relaxed mb-4">{s.desc}</p>
-                  <div className="border-t border-white/[0.07] pt-3 flex items-center justify-between">
+                  <div className="border-t border-white/[0.04] pt-3 flex items-center justify-between">
                     <span className="text-[10px] font-medium text-white/15">{s.metric}</span>
                     <span className="text-[11px] font-medium text-zinc-300/60">{s.value}</span>
                   </div>
@@ -222,45 +222,93 @@ export default function Pitch() {
         </div>
       </section>
 
+      {/* ── Why Now ──────────────────────────────────────────────────── */}
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
+        <div className="max-w-4xl mx-auto">
+          <SectionDivider label="WHY NOW" />
+          <div className="mt-10">
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
+              Five market signals in five weeks.
+            </h2>
+            <p className="text-sm text-white/25 leading-relaxed mb-8 max-w-2xl">
+              The agent economy just hit an inflection point. Infrastructure is shipping fast, but trust is missing from every layer. Aegis exists to fill that gap.
+            </p>
+            <div className="space-y-3">
+              {[
+                {
+                  signal: "Cursor raised at $29B, Copilot hit 20M users",
+                  implication: "AI coding tools are the fastest-growing software category. But none offer agent-to-agent commerce, trust infrastructure, or Solana-native capabilities. Aegis fills the gap with AegisX (57 tools).",
+                },
+                {
+                  signal: "Stripe MPP launched March 18 with Visa/Mastercard/OpenAI",
+                  implication: "Validates agent payments as a category. Creates immediate need for a trust layer on top of payment rails.",
+                },
+                {
+                  signal: "19K+ MCP servers with zero trust model",
+                  implication: "McpInject malware is already harvesting secrets from MCP servers. The ecosystem has no verification, no reputation, no safety layer.",
+                },
+                {
+                  signal: "351K+ skills indexed, no quality verification",
+                  implication: "The open-source agent skill ecosystem is exploding but completely unverified. Anyone can publish, no one validates.",
+                },
+                {
+                  signal: "Bags.fm hit $5B volume, $40M creator payouts",
+                  implication: "Solana DeFi is liquid and real. Aegis integrates directly with Bags.fm, giving agents access to trading, portfolio management, and DeFi strategies through AegisX.",
+                },
+                {
+                  signal: "A2A v1.0 shipped",
+                  implication: "Google's Agent-to-Agent protocol means agent interop is here. But interop without trust is a security nightmare.",
+                },
+              ].map((s, i) => (
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
+                  <div className="text-sm font-normal text-zinc-300/70 mb-1">{s.signal}</div>
+                  <div className="text-[12px] text-white/25 leading-relaxed">{s.implication}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── TAM / SAM / SOM ───────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="MARKET OPPORTUNITY" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-4">
-              The agent economy is the next trillion-dollar market.
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
+              Three converging markets. One platform.
             </h2>
             <p className="text-sm text-white/25 leading-relaxed mb-10 max-w-2xl">
-              AI agent spending is projected to exceed $1.3T by 2030. Aegis captures value at the transaction layer -- every time one agent pays another, the protocol earns revenue and burns tokens.
+              AI coding tools ($29B Cursor valuation alone), agent infrastructure ($7B x402 ecosystem, 75M transactions), and Solana DeFi ($5B+ Bags.fm volume). The AI agent market is growing at 46.3% CAGR to $52.62B by 2030. Aegis is the only platform spanning all three markets: IDE (AegisX, 57 tools), trust (NeMo guardrails, bonded operators), and payments (x402 micropayments).
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
               {[
                 {
                   label: "TAM",
-                  title: "Total Addressable Market",
-                  value: "$1.3T",
-                  desc: "Global AI agent spending by 2030. Includes all autonomous agent transactions, API calls, and inter-agent commerce.",
-                  source: "Gartner, McKinsey AI Index 2025",
+                  title: "AI Coding + Agent Infrastructure",
+                  value: "$52.62B",
+                  desc: "AI coding tools ($29B Cursor alone), AI agent market ($7.84B growing to $52.62B by 2030 at 46.3% CAGR), and Solana DeFi ($5B+ Bags.fm). Three markets converging into one platform.",
+                  source: "MarketsandMarkets, Cursor Series C, Bags.fm Analytics",
                 },
                 {
                   label: "SAM",
-                  title: "Serviceable Addressable Market",
-                  value: "$89B",
-                  desc: "Agent-to-agent transaction volume on crypto rails. Subset of TAM that settles on-chain with micropayment protocols.",
-                  source: "a16z State of Crypto 2025",
+                  title: "Agent Commerce + DeFi",
+                  value: "$7B",
+                  desc: "x402 ecosystem ($7B, 75M transactions), 19K MCP servers, 20M Copilot users. Bags.fm alone has $5B volume and $40M creator payouts. 65% of agentic payments settle on Solana.",
+                  source: "x402 Foundation, GitHub, Bags.fm, Dune Analytics",
                 },
                 {
                   label: "SOM",
-                  title: "Serviceable Obtainable Market",
+                  title: "Platform Capture",
                   value: "$4.2B",
-                  desc: "Aegis's realistic capture in first 3 years. Based on 5% market share of on-chain agent transactions with 1% protocol fee.",
+                  desc: "Aegis captures across three revenue streams: marketplace fees (trust layer), IDE subscriptions (AegisX 57 tools), and DeFi integration (Bags.fm). Only platform combining all four: marketplace + trust + payments + IDE.",
                   source: "Internal projections",
                 },
               ].map((m, i) => (
-                <div key={i} className="border border-white/[0.07] bg-white/[0.01] p-6">
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-6">
                   <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider mb-3">{m.label}</div>
-                  <div className="text-3xl font-bold text-white/90 mb-1">{m.value}</div>
+                  <div className="text-3xl font-normal text-white/90 mb-1">{m.value}</div>
                   <div className="text-xs text-white/40 mb-3">{m.title}</div>
                   <p className="text-[12px] text-white/20 leading-relaxed mb-3">{m.desc}</p>
                   <div className="text-[10px] font-medium text-white/10">{m.source}</div>
@@ -268,15 +316,34 @@ export default function Pitch() {
               ))}
             </div>
 
+            {/* Ecosystem Adoption */}
+            <div className="border border-white/[0.04] bg-white/[0.01] p-6 mb-4">
+              <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">ECOSYSTEM ADOPTION</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { metric: "19K+", label: "MCP Servers", detail: "Model Context Protocol ecosystem" },
+                  { metric: "57", label: "AegisX Tools", detail: "Solana, Trading, Bags.fm, AI, Intel, Browser" },
+                  { metric: "75M+", label: "x402 Transactions", detail: "Autonomous agent payments" },
+                  { metric: "$5B", label: "Bags.fm Volume", detail: "$40M creator payouts integrated" },
+                ].map((e, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-xl md:text-2xl font-normal text-white/90">{e.metric}</div>
+                    <div className="text-[11px] font-medium text-white/40 mt-1">{e.label}</div>
+                    <div className="text-[10px] text-white/15 mt-0.5">{e.detail}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Growth drivers */}
-            <div className="border border-white/[0.07] bg-white/[0.01] p-6">
+            <div className="border border-white/[0.04] bg-white/[0.01] p-6">
               <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">GROWTH CATALYSTS</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { driver: "x402 Foundation backing", detail: "Coinbase, Cloudflare, Google, Visa, AWS, Circle, Anthropic, Vercel. Aegis is native to the x402 payment standard." },
-                  { driver: "OpenClaw ecosystem", detail: "275K+ stars, 30K+ skills. Aegis indexes and monetizes the entire open-source agent skill ecosystem." },
-                  { driver: "Solana settlement", detail: "Sub-second finality, sub-cent fees. The only chain fast enough for per-invocation micropayments." },
-                  { driver: "MCP + A2A compatibility", detail: "Native support for Model Context Protocol and Agent-to-Agent standards. Interoperable with Claude, GPT, Codex." },
+                  { driver: "AI coding market proven ($29B Cursor, 20M Copilot)", detail: "AegisX with 57 tools competes directly. Solana-native capabilities and x402 payments are unique moats no incumbent can replicate." },
+                  { driver: "x402 Foundation + Bags.fm integration", detail: "75M x402 transactions. $5B Bags.fm volume. $40M creator payouts. Aegis connects agent infrastructure to real DeFi liquidity." },
+                  { driver: "MCP ecosystem (19K+ servers, zero trust)", detail: "McpInject malware already exploiting the gap. NeMo guardrails and bonded operators solve the trust crisis." },
+                  { driver: "Solana dominance (65% of agentic payments)", detail: "Sub-second finality, sub-cent fees. Aegis is Solana-native with direct Bags.fm DeFi integration." },
                 ].map((g, i) => (
                   <div key={i} className="flex gap-3">
                     <div className="w-1 bg-white/20 flex-shrink-0" />
@@ -293,23 +360,23 @@ export default function Pitch() {
       </section>
 
       {/* ── Traction ──────────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="TRACTION" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-8">
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-8">
               Built in public. Shipping weekly.
             </h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
               {[
-                { value: "412,893", label: "Skills Indexed", trend: "+12K/week" },
-                { value: "109", label: "Curated Operators", trend: "+8/week" },
-                { value: "13", label: "Skill Categories", trend: "Growing" },
-                { value: "6", label: "Protocol Integrations", trend: "x402, MCP, A2A" },
+                { value: "57", label: "AegisX Tools Live", trend: "Solana, Trading, Bags.fm, AI" },
+                { value: "1", label: "Working IDE", trend: "aegisx CLI + MCP bridge" },
+                { value: "19K+", label: "MCP Servers Bridged", trend: "Growing" },
+                { value: "Live", label: "Dashboard + Marketplace", trend: "aegisplace.com" },
               ].map((t, i) => (
-                <div key={i} className="border border-white/[0.07] bg-white/[0.01] p-4 md:p-5">
-                  <div className="text-xl md:text-2xl font-bold text-white/90 ">{t.value}</div>
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-4 md:p-5">
+                  <div className="text-xl md:text-2xl font-normal text-white/90 ">{t.value}</div>
                   <div className="text-[10px] font-medium text-white/20 tracking-wider mt-1">{t.label}</div>
                   <div className="text-[10px] font-medium text-zinc-300/40 mt-2">{t.trend}</div>
                 </div>
@@ -317,7 +384,7 @@ export default function Pitch() {
             </div>
 
             {/* Milestones */}
-            <div className="border border-white/[0.07] bg-white/[0.01] p-6">
+            <div className="border border-white/[0.04] bg-white/[0.01] p-6">
               <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">MILESTONES</div>
               <div className="space-y-4">
                 {[
@@ -350,38 +417,45 @@ export default function Pitch() {
       </section>
 
       {/* ── Competitive ───────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="COMPETITIVE LANDSCAPE" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-8">
-              No one else has all five.
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
+              Our moat: the only platform combining all five.
             </h2>
+            <p className="text-sm text-white/25 leading-relaxed mb-8 max-w-2xl">
+              Cursor ($29B) has an IDE but no payments or trust. Copilot (20M users) has code completion but no agent commerce. x402 has payments but no validation. MCP has discovery but no safety. Bags.fm has DeFi liquidity but no agent infrastructure. Aegis is the only platform that combines marketplace + trust layer + payments + IDE + DeFi integration.
+            </p>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-white/[0.07]">
+                  <tr className="border-b border-white/[0.04]">
                     <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 pr-4">PLATFORM</th>
                     <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 px-3 text-center">PAYMENTS</th>
                     <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 px-3 text-center">VALIDATION</th>
                     <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 px-3 text-center">REPUTATION</th>
-                    <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 px-3 text-center">ECONOMIC MODEL</th>
+                    <th className="text-[10px] font-medium text-white/20 tracking-wider py-3 px-3 text-center">SAFETY LAYER</th>
                     <th className="text-[10px] font-medium text-[#76B900]/40 tracking-wider py-3 px-3 text-center">NVIDIA NeMo</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { name: "Aegis Protocol", payments: true, validation: true, reputation: true, economic: true, nvidia: true, highlight: true },
-                    { name: "OpenClaw / MCP", payments: false, validation: false, reputation: false, economic: false, nvidia: false, highlight: false },
-                    { name: "402.bot", payments: true, validation: false, reputation: false, economic: false, nvidia: false, highlight: false },
-                    { name: "PersistentAI", payments: true, validation: false, reputation: false, economic: true, nvidia: false, highlight: false },
-                    { name: "Virtuals Protocol", payments: true, validation: false, reputation: false, economic: true, nvidia: false, highlight: false },
-                    { name: "Autonolas / Olas", payments: true, validation: false, reputation: true, economic: true, nvidia: false, highlight: false },
+                    { name: "Aegis Protocol", payments: true, validation: true, reputation: true, safety: true, nvidia: true, highlight: true, note: "57 tools, NeMo guardrails, x402, Bags.fm, IDE" },
+                    { name: "Cursor ($29B)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "IDE only -- no payments, no trust, no agents" },
+                    { name: "GitHub Copilot (20M)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "Code completion -- no agent commerce" },
+                    { name: "Stripe MPP / x402", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "75M tx -- payment rail only, no trust layer" },
+                    { name: "MCP Ecosystem (19K)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "Discovery only -- zero trust, McpInject exploits" },
+                    { name: "Warden Protocol", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "$200M val -- separate L1, no safety or IDE" },
+                    { name: "Bags.fm ($5B vol)", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "DeFi only -- Aegis integrates their liquidity" },
                   ].map((c, i) => (
                     <tr key={i} className={`border-b border-white/[0.04] ${c.highlight ? "bg-white/[0.02]" : ""}`}>
-                      <td className={`py-3 pr-4 text-sm ${c.highlight ? "text-zinc-300 font-normal" : "text-white/40"}`}>{c.name}</td>
-                      {[c.payments, c.validation, c.reputation, c.economic, c.nvidia].map((v, j) => (
+                      <td className={`py-3 pr-4 ${c.highlight ? "text-zinc-300 font-normal" : "text-white/40"}`}>
+                        <div className="text-sm">{c.name}</div>
+                        <div className="text-[10px] text-white/15 mt-0.5">{c.note}</div>
+                      </td>
+                      {[c.payments, c.validation, c.reputation, c.safety, c.nvidia].map((v, j) => (
                         <td key={j} className="py-3 px-3 text-center">
                           <span className={`text-sm ${v ? "text-zinc-300" : "text-white/10"}`}>{v ? "\u2713" : "\u2717"}</span>
                         </td>
@@ -393,7 +467,7 @@ export default function Pitch() {
             </div>
 
             <p className="text-[12px] text-white/15 mt-4 leading-relaxed">
-              OpenClaw provides the skill registry but no economic layer. 402.bot provides routing but no validation or reputation. Virtuals and Olas provide token models but no bonded validation. Aegis is the only protocol that combines all five: micropayments, bonded validation, on-chain reputation, a deflationary token model, and enterprise NVIDIA NeMo infrastructure. No competitor has NeMo Guardrails, NeMo Evaluator, NIM deployment, Nemotron models, NeMo Curator, or NeMo RL baked into their protocol.
+              Cursor ($29B) and Copilot (20M users) prove the AI coding market is massive but offer no agent commerce. x402 has 75M transactions but no trust layer. MCP has 19K servers but zero validation. Bags.fm has $5B volume but no agent infrastructure. Aegis is the only platform that combines all five: micropayments (x402), bonded validation (NeMo guardrails), on-chain reputation, a safety layer, and a full IDE (AegisX with 57 Solana-native tools). Our team has deep expertise in MCP, x402, Solana, and NeMo guardrails -- we understand the market because we built the integrations.
             </p>
 
             {/* NVIDIA Moat */}
@@ -426,11 +500,11 @@ export default function Pitch() {
       </section>
 
       {/* ── Token Economics ────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="TOKEN ECONOMICS" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-4">
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
               Usage burns tokens. Validation locks tokens.
             </h2>
             <p className="text-sm text-white/25 leading-relaxed mb-8 max-w-2xl">
@@ -439,14 +513,16 @@ export default function Pitch() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               {/* Revenue Split */}
-              <div className="border border-white/[0.07] bg-white/[0.01] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.01] p-6">
                 <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">REVENUE SPLIT</div>
                 <div className="space-y-3">
                   {[
-                    { label: "Operator (creator)", pct: 70, color: "#A1A1AA" },
-                    { label: "Validator", pct: 20, color: "#71717A" },
-                    { label: "Protocol Treasury", pct: 9, color: "#eab308" },
-                    { label: "Permanent Burn", pct: 1, color: "#ef4444" },
+                    { label: "Operator (creator)", pct: 60, color: "#A1A1AA" },
+                    { label: "Validators", pct: 15, color: "#71717A" },
+                    { label: "Stakers", pct: 12, color: "#6B7280" },
+                    { label: "Protocol Treasury", pct: 8, color: "#eab308" },
+                    { label: "Insurance", pct: 3, color: "#3b82f6" },
+                    { label: "Permanent Burn", pct: 2, color: "rgba(220,100,60,0.50)" },
                   ].map((r, i) => (
                     <div key={i}>
                       <div className="flex items-center justify-between mb-1">
@@ -462,7 +538,7 @@ export default function Pitch() {
               </div>
 
               {/* Token Allocation */}
-              <div className="border border-white/[0.07] bg-white/[0.01] p-6">
+              <div className="border border-white/[0.04] bg-white/[0.01] p-6">
                 <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">TOKEN ALLOCATION</div>
                 <div className="space-y-3">
                   {[
@@ -488,7 +564,7 @@ export default function Pitch() {
             </div>
 
             {/* Flywheel */}
-            <div className="border border-white/[0.07] bg-white/[0.01] p-6">
+            <div className="border border-white/[0.04] bg-white/[0.01] p-6">
               <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">DEFLATIONARY FLYWHEEL</div>
               <div className="flex flex-wrap items-center justify-center gap-3 text-[12px] font-medium">
                 {[
@@ -501,7 +577,7 @@ export default function Pitch() {
                   "More invocations, more burns",
                 ].map((step, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <span className="text-white/30 bg-white/[0.03] border border-white/[0.07] px-3 py-1.5">{step}</span>
+                    <span className="text-white/30 bg-white/[0.03] border border-white/[0.04] px-3 py-1.5">{step}</span>
                     {i < 6 && <span className="text-zinc-300/30">&rarr;</span>}
                   </div>
                 ))}
@@ -512,11 +588,11 @@ export default function Pitch() {
       </section>
 
       {/* ── Research Backing ───────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="RESEARCH BACKING" />
           <div className="mt-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-8">
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-8">
               Grounded in peer-reviewed research.
             </h2>
             <div className="space-y-3">
@@ -527,7 +603,7 @@ export default function Pitch() {
                 { title: "Formal Contracts for AI Agents", authors: "Haupt & Christoffersen", venue: "MIT CSAIL 2024", insight: "Binding reward transfers produce socially optimal outcomes in multi-agent systems. Aegis's x402 payments are exactly this mechanism." },
                 { title: "Ethereum as AI Settlement Layer", authors: "Vitalik Buterin", venue: "2026", insight: "Bots paying bots, security deposits, reputations, dispute resolution. Aegis builds this vision on Solana for speed and cost." },
               ].map((p, i) => (
-                <div key={i} className="border border-white/[0.07] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
+                <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                     <div className="text-sm font-normal text-white/60">{p.title}</div>
                     <div className="text-[10px] font-medium text-white/15">{p.authors} -- {p.venue}</div>
@@ -541,15 +617,15 @@ export default function Pitch() {
       </section>
 
       {/* ── The Ask ────────────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.07]">
+      <section className="py-16 sm:py-24 px-4 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <SectionDivider label="THE ASK" />
           <div className="mt-10 border border-white/15 bg-white/[0.02] p-8 md:p-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white/90 tracking-tight mb-4">
-              Raising a seed round to ship the Solana programs and launch the validator network.
+            <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
+              Live product. Working IDE. 57 tools. MCP bridge functional. Raising to scale.
             </h2>
             <p className="text-sm text-white/30 leading-relaxed mb-8 max-w-2xl">
-              The frontend, marketplace, success scoring, and protocol design are complete. The next phase is deploying the Solana programs, onboarding the first 50 validators, and launching the $AEGIS token. We are looking for strategic investors who understand the agent economy.
+              The live dashboard, working AegisX IDE with 57 tools, MCP server bridge, marketplace, and protocol design are complete. Traction: functional aegisx CLI, Bags.fm integration, NeMo guardrails, x402 payment flow. The vision: autonomous agents that discover, evaluate, pay for, and execute skills without human intervention. We are looking for strategic investors who understand that the next $29B company in AI is not another IDE -- it is the trust and payment infrastructure underneath all of them.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
@@ -577,7 +653,7 @@ export default function Pitch() {
               <Link href="/dashboard" className="text-sm font-medium border border-white/20 text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-8 py-3.5 transition-all">
                 View Live Dashboard
               </Link>
-              <Link href="/marketplace" className="text-sm font-medium border border-white/[0.07] text-white/35 hover:text-white/55 hover:border-white/[0.12] px-8 py-3.5 transition-all">
+              <Link href="/marketplace" className="text-sm font-medium border border-white/[0.04] text-white/35 hover:text-white/55 hover:border-white/[0.12] px-8 py-3.5 transition-all">
                 Browse Marketplace
               </Link>
             </div>
@@ -586,7 +662,7 @@ export default function Pitch() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/[0.07] py-10 px-4">
+      <footer className="border-t border-white/[0.04] py-10 px-4">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[10px] font-medium text-white/15">
             AEGIS PROTOCOL -- CONFIDENTIAL INVESTOR OVERVIEW

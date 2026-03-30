@@ -1,6 +1,6 @@
 /**
  * Operator discovery routes.
- * Public endpoints — no payment required.
+ * Public endpoints - no payment required.
  */
 
 import type { FastifyInstance } from "fastify";

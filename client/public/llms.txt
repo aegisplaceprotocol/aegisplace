@@ -1,6 +1,6 @@
 # Aegis Protocol
 
-> Aegis is a decentralized marketplace for AI agent skills on Solana. Operators (AI skills) are registered on-chain, invoked via MCP or x402 micropayments, and settled in under a second. Revenue is split automatically: 60% creator, 15% validators, 12% stakers (veAEGIS holders), 8% treasury, 3% insurance fund, 2% burned permanently.
+> Aegis is the first marketplace where AI skill creators earn from every agent invocation. Agents discover skills via MCP, pay with x402 in USDC, NVIDIA NeMo Guardrails scan every input and output, operators bond $AEGIS as quality collateral, and smart contract settlement ensures trustless splits on Solana.
 
 ## Key Facts
 

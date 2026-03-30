@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useParams, Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import { NvidiaEyeLogo } from "@/components/NvidiaLogo";
-import { trpc } from "@/lib/trpc";
+import { trpc, type RouterOutputs } from "@/lib/trpc";
+
+type InvocationRecord = RouterOutputs["invoke"]["byOperator"][number];
 import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
 
@@ -28,7 +30,7 @@ function repColor(score: number) {
   if (score >= 80) return "rgb(161,161,170)";
   if (score >= 60) return "rgb(113,113,122)";
   if (score >= 40) return "rgb(234,179,8)";
-  return "rgb(239,68,68)";
+  return "rgba(220,100,60,0.50)";
 }
 
 /* ── Tab Navigation ──────────────────────────────────────────────────── */
@@ -127,10 +129,12 @@ export default function OperatorDetail() {
     : "100.0";
   const price = parseFloat(operator.pricePerCall);
   const priceDisplay = price < 0.01 ? price.toFixed(4) : price < 1 ? price.toFixed(3) : price.toFixed(2);
-  const creatorShare = (price * 0.70).toFixed(4);
-  const validatorShare = (price * 0.20).toFixed(4);
-  const treasuryShare = (price * 0.09).toFixed(4);
-  const burnAmount = (price * 0.01).toFixed(4);
+  const creatorShare = (price * 0.60).toFixed(4);
+  const validatorShare = (price * 0.15).toFixed(4);
+  const stakerShare = (price * 0.12).toFixed(4);
+  const treasuryShare = (price * 0.08).toFixed(4);
+  const insuranceShare = (price * 0.03).toFixed(4);
+  const burnAmount = (price * 0.02).toFixed(4);
 
   return (
     <div className="min-h-screen bg-white/[0.02]">
@@ -234,8 +238,8 @@ export default function OperatorDetail() {
                 {/* Success score bar */}
                 <div className="mb-8">
                   <h3 className="text-[12px] font-medium text-zinc-500 mb-3">Success Rate Breakdown</h3>
-                  <div className="h-2 bg-zinc-800 w-full rounded-full overflow-hidden mb-2">
-                    <div className="h-full rounded-full transition-all duration-1000"
+                  <div className="h-2 bg-zinc-800 w-full rounded overflow-hidden mb-2">
+                    <div className="h-full rounded transition-all duration-1000"
                       style={{ width: `${operator.trustScore}%`, background: repColor(operator.trustScore) }}
                     />
                   </div>
@@ -273,28 +277,36 @@ export default function OperatorDetail() {
                     </div>
                     <div className="h-px bg-zinc-800/50" />
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-400">Creator (70%)</span>
+                      <span className="text-zinc-400">Creator (60%)</span>
                       <span className="text-zinc-300">${creatorShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Validator (20%)</span>
+                      <span className="text-zinc-500">Validators (15%)</span>
                       <span className="text-zinc-400">${validatorShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Treasury (9%)</span>
+                      <span className="text-zinc-500">Stakers (12%)</span>
+                      <span className="text-zinc-400">${stakerShare}</span>
+                    </div>
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-zinc-500">Treasury (8%)</span>
                       <span className="text-zinc-400">${treasuryShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Burn (1%)</span>
+                      <span className="text-zinc-500">Insurance (3%)</span>
+                      <span className="text-zinc-400">${insuranceShare}</span>
+                    </div>
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-zinc-500">Burned (2%)</span>
                       <span className="text-zinc-400">${burnAmount}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* NeMo Stack Status */}
-                <div className="border border-emerald-500/10 bg-emerald-500/[0.03] rounded p-6">
-                  <h3 className="flex items-center gap-2 text-[12px] font-medium text-emerald-400/70 mb-4">
-                    <NvidiaEyeLogo size={14} className="text-emerald-500/70" />
+                <div className="border border-[rgba(52,211,153,0.08)] bg-[rgba(52,211,153,0.02)] rounded p-6">
+                  <h3 className="flex items-center gap-2 text-[12px] font-normal text-[rgba(52,211,153,0.55)] mb-4">
+                    <NvidiaEyeLogo size={14} className="text-[rgba(52,211,153,0.55)]" />
                     NeMo Stack
                   </h3>
                   <div className="space-y-2">
@@ -306,7 +318,7 @@ export default function OperatorDetail() {
                     ].map(item => (
                       <div key={item.name} className="flex items-center justify-between text-[12px]">
                         <span className="text-zinc-500">{item.name}</span>
-                        <span className="font-medium text-emerald-400/60 text-[10px]">{item.status}</span>
+                        <span className="font-normal text-[rgba(52,211,153,0.55)] text-[10px]">{item.status}</span>
                       </div>
                     ))}
                   </div>
@@ -328,7 +340,7 @@ export default function OperatorDetail() {
                   {invokeMutation.isPending ? "Invoking..." : `Invoke for $${priceDisplay} USDC`}
                 </button>
                 <p className="text-[10px] text-zinc-600 text-center">
-                  Simulated invocation. Real x402 payments coming soon.
+                  Simulated invocation. Real x402 payments settle on Solana mainnet.
                 </p>
               </div>
             </div>
@@ -347,7 +359,7 @@ export default function OperatorDetail() {
                     <span>Response</span>
                     <span>Trust</span>
                   </div>
-                  {invocations.map((inv: any) => (
+                  {invocations.map((inv: InvocationRecord) => (
                     <div key={inv.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-white/[0.06]/20 text-[12px] items-center hover:bg-zinc-800/20 transition-colors">
                       <span className="font-medium text-zinc-500 truncate">
                         {inv.callerWallet ? `${inv.callerWallet.slice(0, 6)}...${inv.callerWallet.slice(-4)}` : "Anonymous"}
@@ -356,12 +368,12 @@ export default function OperatorDetail() {
                       <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded border ${
                         inv.success
                           ? "text-zinc-300 border-white/[0.06]/30 bg-zinc-800/40"
-                          : "text-red-400 border-red-500/20 bg-red-500/10"
+                          : "text-[rgba(220,100,60,0.50)] border-[rgba(220,100,60,0.15)] bg-[rgba(220,100,60,0.06)]"
                       }`}>
                         {inv.success ? "OK" : "FAIL"}
                       </span>
                       <span className="font-medium text-zinc-500">{inv.responseMs}ms</span>
-                      <span className={`text-[10px] font-medium ${inv.trustDelta > 0 ? "text-zinc-300" : inv.trustDelta < 0 ? "text-red-400" : "text-zinc-600"}`}>
+                      <span className={`text-[10px] font-medium ${inv.trustDelta > 0 ? "text-zinc-300" : inv.trustDelta < 0 ? "text-[rgba(220,100,60,0.50)]" : "text-zinc-600"}`}>
                         {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
                       </span>
                     </div>
@@ -392,7 +404,7 @@ export default function OperatorDetail() {
                   <div className="space-y-3 text-[13px]">
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Status</span>
-                      <span className={invokeMutation.data.success ? "text-zinc-200" : "text-red-400"}>
+                      <span className={invokeMutation.data.success ? "text-zinc-200" : "text-[rgba(220,100,60,0.50)]"}>
                         {invokeMutation.data.success ? "Success" : "Failed"}
                       </span>
                     </div>
@@ -406,7 +418,7 @@ export default function OperatorDetail() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-zinc-500">Trust delta</span>
-                      <span className={`font-normal ${invokeMutation.data.validation.trustDelta > 0 ? "text-zinc-200" : "text-red-400"}`}>
+                      <span className={`font-normal ${invokeMutation.data.validation.trustDelta > 0 ? "text-zinc-200" : "text-[rgba(220,100,60,0.50)]"}`}>
                         {invokeMutation.data.validation.trustDelta > 0 ? "+" : ""}{invokeMutation.data.validation.trustDelta}
                       </span>
                     </div>

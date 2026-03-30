@@ -50,15 +50,15 @@ Service health + Solana RPC status.
 SSE connection for MCP clients. Exposes tools:
 
 **Tools:**
-- `list_skills` — Search/filter available operator skills
-- `invoke_skill` — Invoke an operator (triggers x402 payment)
-- `get_trust_score` — Get operator's trust breakdown
-- `get_invocation` — Get invocation receipt by ID
-- `protocol_stats` — Total operators, invocations, volume
+- `list_skills` - Search/filter available operator skills
+- `invoke_skill` - Invoke an operator (triggers x402 payment)
+- `get_trust_score` - Get operator's trust breakdown
+- `get_invocation` - Get invocation receipt by ID
+- `protocol_stats` - Total operators, invocations, volume
 
 **Resources:**
-- `aegis://skills/catalog` — Full skill catalog as JSON
-- `aegis://skills/{slug}` — Individual skill metadata
+- `aegis://skills/catalog` - Full skill catalog as JSON
+- `aegis://skills/{slug}` - Individual skill metadata
 
 #### `POST /mcp/messages`
 Message endpoint for SSE transport.
@@ -66,7 +66,7 @@ Message endpoint for SSE transport.
 ## Technical Design
 
 ### Stack
-- Fastify (not Express — faster, schema validation built-in)
+- Fastify (not Express - faster, schema validation built-in)
 - @solana/web3.js for on-chain verification
 - @coral-xyz/anchor for program interaction
 - @modelcontextprotocol/sdk for MCP server

@@ -20,7 +20,7 @@ const POLICIES = [
 
 export default function OWSSection() {
   return (
-    <section className="py-20 border-t border-white/[0.06]">
+    <section className="py-20 border-t border-white/[0.04]">
       <div className="container">
         <motion.div {...fadeInView} className="mb-8">
           <span className="text-[11px] font-medium text-white/20 uppercase tracking-[0.2em]">
@@ -30,12 +30,12 @@ export default function OWSSection() {
 
         <motion.div
           {...fadeInView}
-          className="grid lg:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.06] mb-10"
+          className="grid lg:grid-cols-2 gap-px bg-white/[0.04] border border-white/[0.04] mb-10"
         >
           {/* Left. headline + stack */}
-          <div className="bg-white/[0.02] p-6 sm:p-8 flex flex-col justify-between">
+          <div className="bg-white/[0.015] p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <h2 className="text-[clamp(1.75rem,4.5vw,2.5rem)] font-bold text-white leading-[1.05] tracking-tight mb-4">
+              <h2 className="text-[clamp(1.75rem,4.5vw,2.5rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
                 Keys never leave the machine.
               </h2>
               <p className="text-[14px] text-white/30 leading-relaxed mb-10">
@@ -50,7 +50,7 @@ export default function OWSSection() {
                   <div
                     key={i}
                     className={`flex items-center justify-between py-3.5 ${
-                      i < STACK.length - 1 ? "border-b border-white/[0.06]" : ""
+                      i < STACK.length - 1 ? "border-b border-white/[0.04]" : ""
                     }`}
                   >
                     <span className="text-[14px] font-medium text-white/60">
@@ -66,7 +66,7 @@ export default function OWSSection() {
 
             <div className="mt-8">
               <Link
-                href="/wallet"
+                href="/docs"
                 className="text-[12px] text-white/25 hover:text-white/45 transition-colors"
               >
                 Set up agent wallet
@@ -112,7 +112,7 @@ export default function OWSSection() {
                 { value: "Zero", label: "Key exposure" },
                 { value: "Local", label: "Infrastructure" },
               ].map((stat, i) => (
-                <div key={i} className="bg-white/[0.02] p-5 sm:p-6">
+                <div key={i} className="bg-white/[0.015] p-5 sm:p-6">
                   <div className="text-[18px] font-normal text-white/60">
                     {stat.value}
                   </div>

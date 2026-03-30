@@ -76,7 +76,7 @@ function BenefitCard({ benefit, index, inView }: { benefit: typeof BENEFITS[0]; 
 
   return (
     <div
-      className={`relative p-5 sm:p-8 lg:p-12 border-b lg:border-b-0 border-r-0 lg:border-r border-white/[0.07] last:border-b-0 last:border-r-0 ${hovered ? "bg-white/[0.02]" : ""}`}
+      className={`relative p-5 sm:p-8 lg:p-12 border-b lg:border-b-0 border-r-0 lg:border-r border-white/[0.04] last:border-b-0 last:border-r-0 ${hovered ? "bg-white/[0.015]" : ""}`}
       style={{ transitionDelay: `${index * 120}ms` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -85,7 +85,7 @@ function BenefitCard({ benefit, index, inView }: { benefit: typeof BENEFITS[0]; 
         {benefit.role}
       </div>
 
-      <div className="text-[clamp(2.5rem,7vw,5rem)] font-bold leading-none mb-4 sm:mb-6 tabular-nums text-zinc-300 tracking-tight">
+      <div className="text-[clamp(2.5rem,7vw,5rem)] font-normal leading-none mb-4 sm:mb-6 tabular-nums text-zinc-300 tracking-tight">
         {displayStat}
       </div>
 
@@ -93,12 +93,12 @@ function BenefitCard({ benefit, index, inView }: { benefit: typeof BENEFITS[0]; 
 
       {/* Revenue math */}
       <div className={`text-[12px] font-medium px-4 py-3 border mb-8 transition-all duration-300 ${
-        hovered ? "border-white/15 bg-white/[0.03] text-white/40" : "border-white/[0.04] bg-white/[0.015] text-white/20"
+        hovered ? "border-white/15 bg-white/[0.015] text-white/40" : "border-white/[0.04] bg-white/[0.015] text-white/20"
       }`}>
         {benefit.math}
       </div>
 
-      <div className="space-y-3 pt-8 border-t border-white/[0.07]">
+      <div className="space-y-3 pt-8 border-t border-white/[0.04]">
         {benefit.details.map((d) => (
           <div key={d} className="flex items-start gap-3">
             <span className="mt-2 w-1 h-1 bg-white/30 rounded-full shrink-0" />
@@ -114,12 +114,12 @@ export default function Benefits() {
   const { ref, inView } = useInView(0.05);
 
   return (
-    <section id="benefits" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.07]" ref={ref}>
+    <section id="benefits" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>
       <div className="container">
         <SectionLabel text="BENEFITS" />
 
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-20">
-          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-bold text-white leading-[1.05] tracking-tight`}>
+          <h2 className={`text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight`}>
             Three roles. One atomic transaction.
             <br />
             <span className="text-white/35 font-normal">Everyone earns. Everyone has skin in the game.</span>
@@ -130,7 +130,7 @@ export default function Benefits() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 border-t border-white/[0.07]">
+        <div className="grid lg:grid-cols-3 border-t border-white/[0.04]">
           {BENEFITS.map((b, i) => (
             <BenefitCard key={b.role} benefit={b} index={i} inView={inView} />
           ))}
