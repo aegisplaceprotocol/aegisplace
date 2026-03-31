@@ -181,6 +181,7 @@ export async function createApp(): Promise<Express> {
   app.use("/api/mcp", mcpAuthMiddleware);
   app.post("/api/mcp", handleMCP);
   app.get("/api/mcp", handleMCPDiscovery);
+  app.get("/mcp/discovery", handleMCPDiscovery);
 
   app.use("/api/v1", restApi);
   app.use("/api/royalties", royaltyRoutes);

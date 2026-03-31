@@ -1136,15 +1136,6 @@ export async function handleMCP(req: Request, res: Response) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
 
-  // MCP API key authentication (when MCP_API_KEY env var is set)
-  const mcpKey = process.env.MCP_API_KEY;
-  if (mcpKey) {
-    const providedKey = (req.headers["x-api-key"] as string) || (req.headers["authorization"] as string || "").replace("Bearer ", "");
-    if (providedKey !== mcpKey) {
-      return res.status(401).json(jsonrpcError(null, -32000, "Unauthorized"));
-    }
-  }
-
   // Validate content type
   const contentType = req.headers["content-type"];
   if (!contentType || !contentType.includes("application/json")) {
@@ -1162,6 +1153,37 @@ export async function handleMCP(req: Request, res: Response) {
       jsonrpcError(body?.id ?? null, -32600, "Invalid JSON-RPC 2.0 request"),
     );
     return;
+  }
+
+  // MCP API key authentication (when MCP_API_KEY env var is set)
+  // Keep discovery/read-only methods open so agents can discover tools.
+  const rpcMethod = body.method;
+  const toolName = (body.params as any)?.name as string | undefined;
+  const readOnlyTools = new Set([
+    "aegis_list_operators",
+    "aegis_get_operator",
+    "aegis_search_operators",
+    "aegis_get_categories",
+    "aegis_get_stats",
+    "aegis_get_trust_score",
+    "aegis_discovery_stats",
+    "aegis_list_tasks",
+    "aegis_get_operator_token",
+  ]);
+  const isUnauthMethod =
+    rpcMethod === "initialize" ||
+    rpcMethod === "tools/list" ||
+    rpcMethod === "notifications/initialized" ||
+    (rpcMethod === "tools/call" && !!toolName && readOnlyTools.has(toolName));
+
+  const mcpKey = process.env.MCP_API_KEY;
+  if (mcpKey && !isUnauthMethod) {
+    const providedKey =
+      (req.headers["x-api-key"] as string) ||
+      (req.headers["authorization"] as string || "").replace("Bearer ", "");
+    if (providedKey !== mcpKey) {
+      return res.status(401).json(jsonrpcError(body.id ?? null, -32000, "Unauthorized"));
+    }
   }
 
   const { id, method, params } = body;

@@ -210,6 +210,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
 
   // ── 3. Payment verification ──
   let paymentVerified = false;
+  const paymentRecipientWallet = operator.creatorWallet || ENV.treasuryWallet;
 
   if (txSignature) {
     if (!callerWallet) {
@@ -219,10 +220,10 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
         400,
       );
     }
-    if (!ENV.treasuryWallet) {
+    if (!paymentRecipientWallet) {
       throw new InvocationError(
         "INTERNAL_SERVER_ERROR",
-        "Treasury wallet not configured",
+        "No payment recipient wallet configured for this operator",
         500,
       );
     }
@@ -231,7 +232,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
       txSignature,
       price,
       callerWallet,
-      ENV.treasuryWallet,
+      paymentRecipientWallet,
     );
 
     if (!verification.verified) {
@@ -246,7 +247,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
     // Real operator with a price requires payment - demo operators (no endpoint) are free
     throw new InvocationError(
       "PAYMENT_REQUIRED",
-      "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the treasury wallet.",
+      "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the operator payment wallet.",
       402,
     );
   }
