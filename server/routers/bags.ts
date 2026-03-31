@@ -8,8 +8,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "../_core/trpc";
 import { bags, BagsApiError } from "../bags";
-import { OperatorTokenModel } from "../../drizzle/schema";
-import { getOperatorBySlug } from "../db";
+import { OperatorTokenModel, getOperatorBySlug } from "../db";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 

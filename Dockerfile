@@ -35,9 +35,6 @@ RUN pnpm install --frozen-lockfile --prod
 # Copy built output from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy drizzle migrations if needed at runtime
-COPY --from=builder /app/drizzle ./drizzle
-
 RUN addgroup -g 1001 -S aegis && adduser -S aegis -u 1001
 USER aegis
 

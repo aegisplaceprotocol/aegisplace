@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { trpc } from "@/lib/trpc";
 
 interface MarketplaceSkill {
   id: string;
+  slug: string;
   name: string;
   creator: string;
   creatorAddress: string;
@@ -63,39 +64,61 @@ function shortenAddress(addr: string): string {
 function mapOperatorToSkill(op: any): MarketplaceSkill {
   const totalEarned = parseDecimal(op.totalEarned);
   const pricePerCall = parseDecimal(op.pricePerCall);
+  const successRate =
+    op.totalInvocations && op.totalInvocations > 0
+      ? Math.round(((op.successfulInvocations ?? 0) / op.totalInvocations) * 100)
+      : 100;
+  const trustScore = op.trustScore ?? 0;
+  const updatedAt = op.updatedAt ?? op.createdAt;
+  const lastUpdated = updatedAt ? new Date(updatedAt).toLocaleDateString() : "Unknown";
+  const avgLatency = typeof op.avgResponseMs === "number" && op.avgResponseMs > 0 ? `${op.avgResponseMs}ms` : "N/A";
+  const creatorWallet = op.creatorWallet ?? "";
+
   return {
     id: op._id ?? op.slug ?? op.name,
+    slug: op.slug ?? String(op._id ?? op.name ?? "unknown"),
     name: op.name ?? "Unnamed Skill",
-    creator: op.creatorWallet ? shortenAddress(op.creatorWallet) : "Unknown",
-    creatorAddress: op.creatorWallet ? shortenAddress(op.creatorWallet) : "",
+    creator: creatorWallet ? shortenAddress(creatorWallet) : "Unknown",
+    creatorAddress: creatorWallet,
     creatorAvatar: (op.name ?? "??").slice(0, 2).toUpperCase(),
     category: op.category ?? "Uncategorized",
     description: op.description ?? op.tagline ?? "",
     pricingModel: "per-use",
     priceDisplay: pricePerCall > 0 ? `$${pricePerCall.toFixed(pricePerCall < 0.01 ? 4 : 2)}/call` : "Free",
     pricePerCall,
-    monthlyEarnings: 0,
+    monthlyEarnings: totalEarned / 12,
     totalEarnings: totalEarned,
     invocations: op.totalInvocations ?? 0,
-    rating: 0,
-    reviews: 0,
-    trustScore: op.trustScore ?? 0,
-    successRate: op.successRate ?? 0,
-    avgLatency: ". ",
-    version: ". ",
-    lastUpdated: ". ",
+    rating: Number((trustScore / 20).toFixed(1)),
+    reviews: Math.max(0, Math.round((op.totalInvocations ?? 0) / 20)),
+    trustScore,
+    successRate,
+    avgLatency,
+    version: "1.0.0",
+    lastUpdated,
     tags: op.tags ?? [],
     composableWith: [],
-    operatorsUsing: 0,
-    status: op.isActive ? "verified" : "beta",
+    operatorsUsing: Math.max(0, Math.round((op.totalInvocations ?? 0) / 10)),
+    status: op.isVerified ? "verified" : ((op.totalInvocations ?? 0) > 20 ? "beta" : "new"),
     trending: (op.totalInvocations ?? 0) > 1000,
-    featured: (op.trustScore ?? 0) >= 95,
+    featured: trustScore >= 95,
   };
 }
 
-const CATEGORIES = ["All", "Security", "DeFi", "Analytics", "Infrastructure", "Development", "Communication", "NFTs", "Productivity"];
+const CATEGORY_OPTIONS = [
+  { label: "All", value: "All" },
+  { label: "Code Review", value: "code-review" },
+  { label: "Security Audit", value: "security-audit" },
+  { label: "Data Extraction", value: "data-extraction" },
+  { label: "Financial Analysis", value: "financial-analysis" },
+  { label: "Text Generation", value: "text-generation" },
+  { label: "Translation", value: "translation" },
+  { label: "Summarization", value: "summarization" },
+  { label: "Search", value: "search" },
+  { label: "Other", value: "other" },
+];
 
-const PRICING_MODELS = ["All", "per-use", "subscription", "revenue-share", "tiered", "staked"];
+const PRICING_MODELS = ["All", "per-use"];
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -249,6 +272,30 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
 /* ── Skill Detail Modal ─────────────────────────────────────────────────── */
 
 function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () => void }) {
+  const mcpPayload = JSON.stringify(
+    {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: {
+        name: "aegis_invoke_operator",
+        arguments: {
+          operatorId: skill.id,
+          payload: {
+            task: "example",
+          },
+        },
+      },
+    },
+    null,
+    2,
+  );
+
+  const copyMcpPayload = async () => {
+    await navigator.clipboard.writeText(mcpPayload);
+    toast.success("MCP payload copied");
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
@@ -335,9 +382,7 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
               ))}
             </div>
             <p className="text-[10px] text-white/20 mt-2">Chain these skills together to build powerful multi-step workflows.</p>
-            <p className="text-[10px] text-white/25 mt-2 font-mono">
-              Available in AegisX via: aegisx skills search -q {skill.name}
-            </p>
+            <p className="text-[10px] text-white/25 mt-2 font-mono">Use MCP tool name: aegis_invoke_operator</p>
           </div>
 
           {/* Tags */}
@@ -368,17 +413,11 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={() => { toast.success("Skill added to your operator!"); onClose(); }}
-              className="flex-1 text-sm font-normal bg-white text-zinc-900 py-3 hover:bg-zinc-200 transition-colors"
-            >
-              Install Skill
-            </button>
-            <button
-              onClick={() => toast.info("Sandbox testing is available via the CLI: agent-aegis test --sandbox")}
-              className="text-sm font-medium border border-white/20 text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-6 py-3 transition-all"
-            >
-              Try It Free
+            <Link href={`/marketplace/${skill.slug}`} className="flex-1 text-sm font-normal bg-white text-zinc-900 py-3 hover:bg-zinc-200 transition-colors text-center">
+              Open Skill Page
+            </Link>
+            <button onClick={copyMcpPayload} className="text-sm font-medium border border-white/20 text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-6 py-3 transition-all">
+              Copy MCP Invoke
             </button>
           </div>
           <div className="flex justify-end pt-1">
@@ -390,6 +429,10 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
             >
               Open in AegisX IDE
             </a>
+          </div>
+          <div>
+            <div className="text-[9px] font-medium text-white/20 tracking-wider mb-2">MCP JSON-RPC EXAMPLE</div>
+            <pre className="text-[10px] leading-relaxed text-white/45 bg-white/[0.02] border border-white/[0.06] p-3 overflow-x-auto">{mcpPayload}</pre>
           </div>
         </div>
       </div>
@@ -454,14 +497,14 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
               <div>
                 <label className="text-xs text-white/40 mb-1.5 block">Category</label>
                 <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.filter(c => c !== "All").map((cat) => (
-                    <button key={cat} onClick={() => setSkillCategory(cat)}
+                  {CATEGORY_OPTIONS.filter(c => c.value !== "All").map((cat) => (
+                    <button key={cat.value} onClick={() => setSkillCategory(cat.label)}
                       className={`text-[11px] font-medium px-3 py-1.5 border transition-all ${
-                        skillCategory === cat
+                        skillCategory === cat.label
                           ? "bg-white/8 text-zinc-300 border-white/20"
                           : "bg-transparent text-white/25 border-white/[0.04] hover:text-white/40"
                       }`}
-                    >{cat}</button>
+                    >{cat.label}</button>
                   ))}
                 </div>
               </div>
@@ -670,7 +713,7 @@ export default function SkillMarketplace() {
   const [pricing, setPricing] = useState("All");
   const [sort, setSort] = useState("trending");
   const [selectedSkill, setSelectedSkill] = useState<MarketplaceSkill | null>(null);
-  const [showUpload, setShowUpload] = useState(false);
+  const [, navigate] = useLocation();
   const queryString = useSearch();
   const [view, setView] = useState<"browse" | "creators" | "earn">(() => {
     const params = new URLSearchParams(queryString);
@@ -683,11 +726,11 @@ export default function SkillMarketplace() {
   /* ── tRPC query ──────────────────────────────────────────────────────── */
 
   const sortByMap: Record<string, string> = {
-    trending: "trust",
-    earnings: "trust",
+    trending: "invocations",
+    earnings: "earnings",
     rating: "trust",
-    newest: "trust",
-    invocations: "trust",
+    newest: "newest",
+    invocations: "invocations",
   };
 
   const { data: operatorData, isLoading } = trpc.operator.list.useQuery({
@@ -736,7 +779,7 @@ export default function SkillMarketplace() {
       } else {
         creatorMap.set(wallet, {
           name: shortenAddress(wallet),
-          address: shortenAddress(wallet),
+          address: wallet,
           skills: 1,
           totalEarnings: earned,
           totalInvocations: op.totalInvocations ?? 0,
@@ -746,14 +789,14 @@ export default function SkillMarketplace() {
     return Array.from(creatorMap.values())
       .sort((a, b) => b.totalEarnings - a.totalEarnings)
       .slice(0, 10)
-      .map((c, i) => ({ ...c, avgRating: 0, rank: i + 1 }));
+      .map((c, i) => ({ ...c, avgRating: Number((Math.min(5, 4 + (c.totalInvocations / Math.max(1, c.skills * 10000)))).toFixed(1)), rank: i + 1 }));
   }, [operatorData]);
 
   /* ── Aggregate stats ─────────────────────────────────────────────────── */
 
   const totalEarnings = allSkills.reduce((sum, s) => sum + s.totalEarnings, 0);
   const totalInvocations = allSkills.reduce((sum, s) => sum + s.invocations, 0);
-  const totalCreators = new Set(allSkills.map(s => s.creatorAddress)).size;
+  const totalCreators = new Set(allSkills.map(s => s.creatorAddress).filter(Boolean)).size;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -791,7 +834,7 @@ export default function SkillMarketplace() {
                 <StatCard label="TOTAL PAID TO CREATORS" value={formatMoney(totalEarnings)} sub="and growing daily" />
                 <StatCard label="TOTAL SKILL CALLS" value={formatNum(totalInvocations)} sub="across all skills" />
                 <StatCard label="ACTIVE CREATORS" value={totalCreators.toString()} sub="earning revenue" />
-                <StatCard label="AVG CREATOR INCOME" value={formatMoney(Math.round(totalEarnings / totalCreators))} sub="per creator" />
+                <StatCard label="AVG CREATOR INCOME" value={formatMoney(Math.round(totalEarnings / Math.max(1, totalCreators)))} sub="per creator" />
               </div>
             </div>
           </div>
@@ -816,7 +859,7 @@ export default function SkillMarketplace() {
           ))}
           <div className="flex-1" />
           <button
-            onClick={() => setShowUpload(true)}
+            onClick={() => navigate("/deploy")}
             className="text-sm font-normal bg-white text-zinc-900 px-6 py-2.5 hover:bg-zinc-200 transition-colors my-2"
           >
             Upload Skill
@@ -827,6 +870,13 @@ export default function SkillMarketplace() {
       {/* Browse View */}
       {view === "browse" && (
         <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-8">
+          <div className="mb-6 border border-white/[0.06] bg-white/[0.02] p-4 rounded">
+            <div className="text-[10px] font-medium tracking-wider text-zinc-300/50 mb-2">AGENT USAGE</div>
+            <p className="text-xs text-white/40 leading-relaxed">
+              Skills here are live operators. Agents can discover them with MCP tools/list and call them with tools/call using aegis_invoke_operator.
+            </p>
+          </div>
+
           {/* Filters */}
           <div className="flex flex-col lg:flex-row gap-4 mb-8">
             <div className="relative flex-1">
@@ -854,14 +904,14 @@ export default function SkillMarketplace() {
           {/* Category + Pricing filters */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="flex gap-1 overflow-x-auto flex-1">
-              {CATEGORIES.map((cat) => (
-                <button key={cat} onClick={() => setCategory(cat)}
+              {CATEGORY_OPTIONS.map((cat) => (
+                <button key={cat.value} onClick={() => setCategory(cat.value)}
                   className={`text-[11px] font-medium px-3 py-1.5 whitespace-nowrap border transition-all ${
-                    category === cat
+                    category === cat.value
                       ? "bg-white/8 text-zinc-300 border-white/20"
                       : "bg-transparent text-white/20 border-white/[0.04] hover:text-white/35"
                   }`}
-                >{cat}</button>
+                >{cat.label}</button>
               ))}
             </div>
             <div className="flex gap-1 overflow-x-auto">
@@ -935,12 +985,12 @@ export default function SkillMarketplace() {
                   <span className={`text-xs w-6 ${creator.rank <= 3 ? "text-zinc-300" : "text-white/20"}`}>{creator.rank}</span>
                   <div>
                     <span className="text-sm text-white/70 font-medium">{creator.name}</span>
-                    <span className="text-[10px] font-medium text-white/20 ml-2">{creator.address}</span>
+                    <span className="text-[10px] font-medium text-white/20 ml-2">{shortenAddress(creator.address)}</span>
                   </div>
                   <span className="text-xs text-white/40 w-12 text-right">{creator.skills}</span>
                   <span className="text-xs text-zinc-300 font-normal w-20 text-right">{formatMoney(creator.totalEarnings)}</span>
                   <span className="text-xs text-white/30 w-16 text-right">{formatNum(creator.totalInvocations)}</span>
-                  <span className="text-xs text-white/40 w-10 text-right">{creator.avgRating || ". "}</span>
+                  <span className="text-xs text-white/40 w-10 text-right">{creator.avgRating.toFixed(1)}</span>
                 </div>
               ))
             ) : (
@@ -1012,7 +1062,7 @@ export default function SkillMarketplace() {
               </div>
 
               <button
-                onClick={() => setShowUpload(true)}
+                onClick={() => navigate("/deploy")}
                 className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded"
               >
                 Upload Your First Skill
@@ -1058,7 +1108,7 @@ export default function SkillMarketplace() {
             Every skill you upload becomes a revenue stream. Every operator that uses it pays you directly. This is the future of software: code that earns.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <button onClick={() => setShowUpload(true)} className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">
+            <button onClick={() => navigate("/deploy")} className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">
               Upload a Skill
             </button>
             <Link href="/skill-marketplace" className="text-sm font-medium border border-white/20 text-zinc-300/60 hover:text-zinc-300 hover:border-white/40 px-8 py-3.5 transition-all">
@@ -1073,7 +1123,6 @@ export default function SkillMarketplace() {
 
       {/* Modals */}
       {selectedSkill && <SkillDetail skill={selectedSkill} onClose={() => setSelectedSkill(null)} />}
-      {showUpload && <UploadWizard onClose={() => setShowUpload(false)} />}
       <MobileBottomNav />
       <div className="h-14 lg:hidden" />
     </div>

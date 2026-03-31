@@ -11,7 +11,6 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
-    "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "seed:real": "tsx scripts/seed-real-operators.ts"
   },
   "dependencies": {
@@ -73,7 +72,6 @@
     "d3-array": "^3.2.4",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "express-rate-limit": "^8.3.1",
@@ -83,7 +81,6 @@
     "jose": "6.1.0",
     "lucide-react": "^0.453.0",
     "mongoose": "^9.3.3",
-    "mysql2": "^3.15.0",
     "nanoid": "^5.1.5",
     "next-themes": "^0.4.6",
     "pino": "^10.3.1",
@@ -117,7 +114,6 @@
     "@vitejs/plugin-react": "^5.0.4",
     "chai": "^6.2.2",
     "cross-env": "^7.0.3",
-    "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
     "mocha": "^11.7.5",
     "pnpm": "^10.15.1",

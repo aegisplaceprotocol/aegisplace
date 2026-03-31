@@ -15,8 +15,7 @@
     "lib": ["ES2022"],
     "types": ["node"],
     "paths": {
-      "@aegis/db": ["../../server/db"],
-      "@aegis/schema": ["../../drizzle/schema"]
+      "@aegis/db": ["../../server/db"]
     }
   },
   "include": ["src/**/*.ts"],

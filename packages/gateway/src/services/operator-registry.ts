@@ -38,7 +38,7 @@ async function ensureConnection(): Promise<boolean> {
 }
 
 // ────────────────────────────────────────────────────────────
-// Mongoose Schema (mirrors drizzle/schema.ts OperatorModel)
+// Mongoose schema mirroring runtime OperatorModel shape
 // ────────────────────────────────────────────────────────────
 
 const operatorSchema = new mongoose.Schema(
