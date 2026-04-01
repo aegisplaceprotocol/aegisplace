@@ -40,20 +40,6 @@ Aegis wraps every AI skill invocation in four guarantees:
 
 ---
 
-## Live Stats
-
-| Metric | Value |
-|---|---|
-| Skills indexed | 2,838 across 19 categories |
-| Invocations | 21,064,008 |
-| Revenue settled | $307,549 USDC |
-| Real operators | 9 with live health monitoring |
-| Guardrail pass rate | 100% |
-| Settlement time | ~400ms on Solana |
-| Cost per tx | $0.00025 |
-
----
-
 ## Quick Start
 
 **MCP (any MCP-compatible agent)**
