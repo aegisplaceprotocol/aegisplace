@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="client/public/fullvectorwhite.svg" width="80" />
+  <img src="aegis-frontend/public/fullvectorwhite.svg" width="80" />
 </p>
 
 <h1 align="center">Aegis Place</h1>
@@ -284,17 +284,18 @@ All programs built with [Anchor](https://www.anchor-lang.com/) 0.30.1. Checked a
 git clone https://github.com/aegis-protocol/aegis
 cd aegis
 pnpm install
-pnpm dev          # http://localhost:3000
-pnpm build        # Production build
-pnpm test         # Run test suite
+pnpm dev          # Backend dev server
+pnpm dev:frontend # Frontend dev server
+pnpm build        # Build frontend + backend
+pnpm test         # Backend test suite
 ```
 
 ### Project Structure
 
 ```
 aegis/
-├── client/              # React 19 + Vite frontend (49 pages)
-├── server/              # Express + tRPC backend (60+ procedures)
+├── aegis-frontend/      # React 19 + Vite frontend
+├── aegis-backend/       # Express + tRPC backend
 ├── programs/
 │   ├── aegis/           # Core protocol (Anchor/Rust)
 │   ├── royalty-registry/ # Royalty cascade program
@@ -307,7 +308,7 @@ aegis/
 │   ├── gateway/         # API gateway middleware
 │   └── elizaos-plugin/  # ElizaOS integration
 ├── shared/              # Shared types and constants
-└── tests/               # Integration tests
+└── tests/               # Anchor/integration tests
 ```
 
 ---

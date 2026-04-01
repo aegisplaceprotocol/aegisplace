@@ -6,6 +6,10 @@
 dist/
 build/
 *.dist
+aegis-frontend/dist/
+aegis-backend/dist/
+out/
+test-results/
 
 # Environment variables
 .env

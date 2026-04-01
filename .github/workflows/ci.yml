@@ -11,8 +11,8 @@ env:
   SOLANA_CLI_VERSION: "2.2.12"
 
 jobs:
-  build-client:
-    name: Build Client
+  build-apps:
+    name: Build Frontend + Backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,11 +25,16 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Upload build artifacts
+      - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: client-dist
-          path: client/dist/
+          name: aegis-frontend-dist
+          path: aegis-frontend/dist/
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aegis-backend-dist
+          path: aegis-backend/dist/
 
   typecheck:
     name: TypeScript Check
@@ -75,20 +80,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - name: Check for console.log in client
+      - name: Check for console.log in frontend
         run: |
-          if grep -rn "console\.log\|console\.debug" --include="*.ts" --include="*.tsx" client/src/ | grep -v "// " | grep -v "code-example" | grep -v "\.test\." | head -5; then
-            echo "::warning::Found console.log statements in client code"
+          if grep -rn "console\.log\|console\.debug" --include="*.ts" --include="*.tsx" aegis-frontend/src/ | grep -v "// " | grep -v "code-example" | grep -v "\.test\." | head -5; then
+            echo "::warning::Found console.log statements in frontend code"
           fi
       - name: Check for secrets
         run: |
-          if grep -rn "PRIVATE_KEY\|sk-[a-zA-Z0-9]\{20,\}" --include="*.ts" --include="*.tsx" client/src/ server/ | grep -v "\.env\|example\|placeholder\|CHANGEME\|mock\|demo\|masked" | head -5; then
+          if grep -rn "PRIVATE_KEY\|sk-[a-zA-Z0-9]\{20,\}" --include="*.ts" --include="*.tsx" aegis-frontend/src/ aegis-backend/src/ | grep -v "\.env\|example\|placeholder\|CHANGEME\|mock\|demo\|masked" | head -5; then
             echo "::error::Possible secrets found in code"
             exit 1
           fi
       - name: Check for data-loc
         run: |
-          if grep -rn "data-loc" --include="*.tsx" client/src/ | head -1; then
+          if grep -rn "data-loc" --include="*.tsx" aegis-frontend/src/ | head -1; then
             echo "::error::data-loc attributes found (AI trace)"
             exit 1
           fi
