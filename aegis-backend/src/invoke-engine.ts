@@ -7,7 +7,7 @@
  * - SSRF protection on endpoint URLs
  * - Guardrail input/output checks (NeMo)
  * - Endpoint call with 15s timeout
- * - 6-way fee split (60/15/12/8/3/2)
+ * - 6-way fee split (85/10/3/1.5/0.5)
  * - Invocation recording to MongoDB
  * - Trust score update
  * - Payment record creation
@@ -210,7 +210,6 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
 
   // ── 3. Payment verification ──
   let paymentVerified = false;
-  const paymentRecipientWallet = operator.creatorWallet || ENV.treasuryWallet;
 
   if (txSignature) {
     if (!callerWallet) {
@@ -220,10 +219,10 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
         400,
       );
     }
-    if (!paymentRecipientWallet) {
+    if (!ENV.treasuryWallet) {
       throw new InvocationError(
         "INTERNAL_SERVER_ERROR",
-        "No payment recipient wallet configured for this operator",
+        "Treasury wallet not configured",
         500,
       );
     }
@@ -232,7 +231,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
       txSignature,
       price,
       callerWallet,
-      paymentRecipientWallet,
+      ENV.treasuryWallet,
     );
 
     if (!verification.verified) {
@@ -247,7 +246,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
     // Real operator with a price requires payment - demo operators (no endpoint) are free
     throw new InvocationError(
       "PAYMENT_REQUIRED",
-      "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the operator payment wallet.",
+      "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the treasury wallet.",
       402,
     );
   }
@@ -391,8 +390,8 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
     burnAmount: fees.burn.toFixed(8),
     stakersShare: fees.stakers.toFixed(8),
     insuranceShare: fees.insurance.toFixed(8),
-    status: paymentVerified ? "settled" : (paymentToken ? "settled" : "pending"),
-    settledAt: paymentVerified || paymentToken ? new Date() : undefined,
+    status: paymentVerified ? "settled" : "pending",
+    settledAt: paymentVerified ? new Date() : undefined,
   });
 
   // ── 10. Broadcast via SSE live feed ──

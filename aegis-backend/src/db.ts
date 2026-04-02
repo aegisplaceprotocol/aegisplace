@@ -1443,4 +1443,4 @@ const apiKeySchema = new mongoose.Schema(
 );
 
 apiKeySchema.index({ userId: 1 });
-export const ApiKey = mongoose.model("ApiKey", apiKeySchema);
+export const ApiKey = mongoose.models.ApiKey || mongoose.model("ApiKey", apiKeySchema);

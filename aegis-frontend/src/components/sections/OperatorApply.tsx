@@ -24,7 +24,7 @@ const READINESS_CHECKS = [
   {
     label: "MCP manifest",
     path: "mcp-server.json",
-    description: "Discoverable by Claude Code, Codex CLI, and other MCP clients",
+    description: "Discoverable by AegisX, Codex CLI, and other MCP clients",
     status: "recommended",
   },
   {

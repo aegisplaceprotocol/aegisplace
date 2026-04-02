@@ -92,7 +92,7 @@ const INTEGRATIONS = [
     items: [
       { name: "ElizaOS", status: "Compatible", desc: "50K+ deployed agents, 90+ plugins" },
       { name: "Solana Agent Kit", status: "Integrated", desc: "60+ pre-built blockchain actions" },
-      { name: "Claude Code / Codex", status: "Compatible", desc: "MCP-native agent interfaces" },
+      { name: "AegisX / Cursor", status: "Compatible", desc: "MCP-native agent interfaces" },
     ],
   },
   {
@@ -109,7 +109,7 @@ const INTEGRATIONS = [
   {
     category: "Standards Bodies",
     items: [
-      { name: "NIST CAISI", status: "Engaging", desc: "AI Agent Standards Initiative, concept paper due April 2" },
+      { name: "NIST CAISI", status: "Engaging", desc: "AI Agent Standards Initiative, concept paper published" },
       { name: "MCP Server Cards", status: "Planned", desc: "Auto-discovery via .well-known URL" },
       { name: "Agentic AI Foundation", status: "Tracking", desc: "Linux Foundation governance for MCP" },
     ],
@@ -285,12 +285,12 @@ function EarningsCalculator() {
   const earnings = useMemo(() => {
     const gross = dailyCalls * feePerCall;
     return {
-      daily: gross * 0.60,
-      weekly: gross * 0.60 * 7,
-      monthly: gross * 0.60 * 30,
-      yearly: gross * 0.60 * 365,
-      validatorDaily: gross * 0.15,
-      burnedDaily: gross * 0.02,
+      daily: gross * 0.85,
+      weekly: gross * 0.85 * 7,
+      monthly: gross * 0.85 * 30,
+      yearly: gross * 0.85 * 365,
+      validatorDaily: gross * 0.10,
+      burnedDaily: gross * 0.005,
     };
   }, [dailyCalls, feePerCall]);
 
@@ -301,7 +301,7 @@ function EarningsCalculator() {
           How much could you earn?
         </h3>
         <p className="text-[13px] text-white/30 mb-8">
-          Adjust the sliders to model your operator earnings. You keep 60% of every invocation fee.
+          Adjust the sliders to model your operator earnings. You keep 85% of every invocation fee.
         </p>
         <div className="space-y-8">
           <div>
@@ -366,7 +366,7 @@ function EarningsCalculator() {
       <div className="p-4 sm:p-6 border-t border-white/[0.04] flex flex-wrap gap-6 text-[12px] text-white/25">
         <span>Validators earn: <span className="text-white/50">${earnings.validatorDaily.toFixed(2)}/day</span></span>
         <span>Burned daily: <span className="text-[rgba(220,100,60,0.45)]">${earnings.burnedDaily.toFixed(2)}</span></span>
-        <span>Treasury: <span className="text-white/50">${(earnings.daily / 0.60 * 0.08).toFixed(2)}/day</span></span>
+        <span>Treasury: <span className="text-white/50">${(earnings.daily / 0.85 * 0.03).toFixed(2)}/day</span></span>
       </div>
     </div>
   );
@@ -427,7 +427,7 @@ function EconomicsContent() {
             {
               number: "03",
               title: "Earn while you sleep",
-              desc: "AI agents discover your operator via MCP, pay via x402, and you earn 60% of every fee. Automatically. On Solana. In under a second.",
+              desc: "AI agents discover your operator via MCP, pay via x402, and you earn 85% of every fee. Automatically. On Solana. In under a second.",
               detail: "No invoices. No contracts. No employer. No permission needed. Your operator earns 24/7/365.",
             },
           ].map((step, i) => (
@@ -609,7 +609,7 @@ const ARCH_LAYERS = [
   { layer: "Deploy", tool: "NVIDIA NIM", desc: "GPU-optimized inference containers with OpenAI-compatible APIs" },
   { layer: "Guard", tool: "NeMo Guardrails", desc: "Programmable input/output/dialog/retrieval safety rails" },
   { layer: "Optimize", tool: "NeMo RL + Gym", desc: "Reinforcement learning from real invocation feedback" },
-  { layer: "Settle", tool: "Solana + x402", desc: "Sub-second payment settlement with 60/15/12/8/3/2 revenue split" },
+  { layer: "Settle", tool: "Solana + x402", desc: "Sub-second payment settlement with 85/10/3/1.5/0.5 revenue split" },
 ];
 
 function NvidiaContent() {
@@ -807,7 +807,7 @@ const COMPUTE_FEATURES = [
   },
   {
     title: "Nemotron foundation models",
-    desc: "Operators built on NVIDIA Nemotron across three tiers. Nano for lightweight edge inference. Super for balanced reasoning and RAG. Ultra for maximum capability. Open weights, training data, and fine-tuning recipes. A researcher fine-tunes Nemotron on medical data, uploads it as an Aegis operator, and earns 60% of every call.",
+    desc: "Operators built on NVIDIA Nemotron across three tiers. Nano for lightweight edge inference. Super for balanced reasoning and RAG. Ultra for maximum capability. Open weights, training data, and fine-tuning recipes. A researcher fine-tunes Nemotron on medical data, uploads it as an Aegis operator, and earns 85% of every call.",
   },
   {
     title: "NeMo RL data flywheel",
@@ -896,7 +896,7 @@ function ComputeContent() {
             <p>1 billion agents making 100 calls a day at $0.003 each.</p>
             <p><span className="text-zinc-300 font-normal">$300M per day</span> in operator fees.</p>
             <p>8% treasury fee = <span className="text-white/60">$24M per day</span> in protocol revenue.</p>
-            <p>2% daily burn = <span className="text-[rgba(220,100,60,0.45)]">$3M in $AEGIS burned per day</span>.</p>
+            <p>0.5% per-invocation burn = <span className="text-[rgba(220,100,60,0.45)]">$3M in $AEGIS burned per day</span>.</p>
             <p className="text-[16px] text-white/60 font-medium pt-2">
               Annual: $110B in operator fees. $9.9B in protocol revenue.
             </p>

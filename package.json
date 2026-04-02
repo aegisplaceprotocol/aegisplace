@@ -1,36 +1,27 @@
 {
-  "name": "aegis-site",
+  "name": "aegis-workspace",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "author": "Aegis Protocol <team@aegisplace.com>",
-  "license": "MIT",
-  "scripts": {
-    "dev": "pnpm --dir aegis-backend dev",
-    "dev:frontend": "pnpm --dir aegis-frontend dev",
-    "dev:backend": "pnpm --dir aegis-backend dev",
-    "build": "pnpm --dir aegis-frontend build && pnpm --dir aegis-backend build",
-    "start": "pnpm --dir aegis-backend start",
-    "check": "pnpm --dir aegis-frontend check && pnpm --dir aegis-backend check",
-    "format": "prettier --write .",
-    "test": "pnpm --dir aegis-backend test",
-    "seed:real": "pnpm --dir aegis-backend seed:real"
-  },
-  "devDependencies": {
-    "pnpm": "^10.15.1",
-    "prettier": "^3.6.2",
-    "typescript": "5.9.3"
+  "engines": {
+    "node": ">=20.19.0"
   },
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "scripts": {
+    "install:frontend": "pnpm install --filter aegis-frontend",
+    "install:backend": "pnpm install --filter aegis-backend",
+    "install:apps": "pnpm install --filter aegis-frontend --filter aegis-backend",
+    "dev:frontend": "pnpm --filter aegis-frontend run dev",
+    "dev:backend": "pnpm --filter aegis-backend run dev",
+    "dev": "pnpm -r --parallel --filter aegis-frontend --filter aegis-backend run dev",
+    "build:frontend": "pnpm --filter aegis-frontend run build",
+    "build:backend": "pnpm --filter aegis-backend run build",
+    "build": "pnpm run build:backend && pnpm run build:frontend",
+    "start:backend": "pnpm --filter aegis-backend run start",
+    "preview:frontend": "pnpm --filter aegis-frontend run preview"
+  },
   "pnpm": {
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
-    },
-    "onlyBuiltDependencies": [
-      "bigint-buffer",
-      "bufferutil",
-      "esbuild",
-      "utf-8-validate"
-    ]
+    }
   }
 }

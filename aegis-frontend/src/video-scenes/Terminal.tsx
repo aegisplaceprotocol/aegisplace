@@ -19,7 +19,7 @@ const L: { t: number; type: LT; text: string }[] = [
   { t: 58,  type: "ok",    text: "  [OK] USDC payment confirmed (tx: 4kR9...mN2x)" },
   { t: 66,  type: "gap",   text: "" },
   { t: 70,  type: "split", text: "  Revenue split:" },
-  { t: 74,  type: "split", text: "    60%  → creator    9pLm...kQ4w" },
+  { t: 74,  type: "split", text: "    85%  → creator    9pLm...kQ4w" },
   { t: 78,  type: "split", text: "    15%  → validators pool" },
   { t: 82,  type: "split", text: "    12%  → stakers    pool" },
   { t: 86,  type: "split", text: "     8%  → treasury" },

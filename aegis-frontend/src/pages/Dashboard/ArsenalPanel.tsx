@@ -56,7 +56,7 @@ const FEATURES: Feature[] = [
   {
     title: "82K Operator Index",
     shortDesc: "Wraps operators.sh with bonded validation and reputation.",
-    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. Compatible with Claude Code, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
+    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
     cmd: "agent-aegis search code-review",
     paper: "operators.sh, Vercel Labs",
     category: "Infrastructure",

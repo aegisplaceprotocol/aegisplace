@@ -27,14 +27,14 @@ const CARDS: Card[] = [
   },
   {
     tag: "INSURANCE FUND",
-    title: "3% builds the safety net.",
-    body: "3% of every invocation fee flows to the insurance fund. If an operator causes real damage, the fund pays you back. Credit cards have chargebacks. Aegis has on-chain insurance.",
+    title: "1.5% builds the safety net.",
+    body: "1.5% of every invocation fee flows to the insurance fund. If an operator causes real damage, the fund pays you back. Credit cards have chargebacks. Aegis has on-chain insurance.",
     vizType: "grid",
   },
   {
     tag: "SETTLEMENT",
-    title: "60/15/12/8/3/2. Every time.",
-    body: "Every fee splits atomically on Solana. 60% creator, 15% validators, 12% stakers, 8% treasury, 3% insurance, 2% burned forever. No invoices. No delays. No middlemen.",
+    title: "85/10/3/1.5/0.5. Every time.",
+    body: "Every fee splits atomically on Solana. 85% creator, 10% validators, 3% treasury, 1.5% insurance, 0.5% burned forever. No invoices. No delays. No middlemen.",
     vizType: "scatter",
   },
 ];

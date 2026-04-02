@@ -21,7 +21,7 @@ const DATA_CARDS = [
 
 export default function ProblemSolution() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
+    <section className="py-16 sm:py-20 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
           <div className="flex items-center gap-2 mb-6">
@@ -34,7 +34,7 @@ export default function ProblemSolution() {
           </h2>
 
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
-            Aegis solves all three: a marketplace with trust and discovery, x402 for autonomous agent payments, and AegisX. the first Solana-native IDE with 57 built-in tools.
+            Aegis solves all three: a marketplace with trust and discovery, x402 for autonomous agent payments, and AegisX — the first Solana-native IDE with 86 built-in modules.
           </p>
         </motion.div>
 

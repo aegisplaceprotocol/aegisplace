@@ -40,7 +40,7 @@ export interface ApiOperator {
 /* ── Constants ─────────────────────────────────────────────────────────── */
 
 export const FEE_SPLIT = [
-  { label: "Creator", pct: 60 },
+  { label: "Creator", pct: 85 },
   { label: "Validators", pct: 15 },
   { label: "Stakers", pct: 12 },
   { label: "Treasury", pct: 8 },
@@ -109,26 +109,42 @@ export const OPERATORS_FOR_FEED = [
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
 
-export function randomAddr() {
-  const c = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz123456789";
-  let a = "", b = "";
-  for (let i = 0; i < 4; i++) a += c[Math.floor(Math.random() * c.length)];
-  for (let i = 0; i < 4; i++) b += c[Math.floor(Math.random() * c.length)];
-  return `${a}...${b}`;
-}
+/**
+ * Format a real invocation record (from trpc.invoke.recent) into a LiveTx.
+ * The API returns { invocation, operatorName, operatorSlug }[].
+ */
+export function formatInvocationAsTx(row: {
+  invocation: {
+    id?: number | string;
+    callerWallet?: string | null;
+    amountPaid?: string | null;
+    success?: boolean;
+    responseMs?: number | null;
+    createdAt?: string | Date | null;
+  };
+  operatorName?: string | null;
+  operatorSlug?: string | null;
+}, index: number): LiveTx {
+  const inv = row.invocation;
+  const wallet = inv.callerWallet ?? null;
+  const shortCaller = wallet
+    ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}`
+    : "anon";
+  const amount = inv.amountPaid ? `$${parseFloat(inv.amountPaid).toFixed(2)}` : "$0.00";
+  const status: LiveTx["status"] = inv.success ? "completed" : inv.responseMs === 0 ? "pending" : "failed";
+  const latency = inv.responseMs != null ? `${inv.responseMs}ms` : "--";
+  const time = inv.createdAt
+    ? new Date(inv.createdAt).toLocaleTimeString()
+    : "just now";
 
-export function makeTx(id: number): LiveTx {
-  const op = OPERATORS_FOR_FEED[Math.floor(Math.random() * OPERATORS_FOR_FEED.length)];
-  const amounts = ["$0.02", "$0.04", "$0.05", "$0.08", "$0.10", "$0.12", "$0.15"];
-  const statuses: LiveTx["status"][] = ["completed", "completed", "completed", "completed", "pending", "failed"];
   return {
-    id,
-    operator: op,
-    caller: randomAddr(),
-    amount: amounts[Math.floor(Math.random() * amounts.length)],
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    latency: `${Math.floor(Math.random() * 300 + 40)}ms`,
-    time: "just now",
+    id: typeof inv.id === "number" ? inv.id : index,
+    operator: row.operatorName ?? row.operatorSlug ?? "unknown",
+    caller: shortCaller,
+    amount,
+    status,
+    latency,
+    time,
   };
 }
 

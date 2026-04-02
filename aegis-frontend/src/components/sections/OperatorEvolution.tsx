@@ -188,7 +188,7 @@ export default function OperatorEvolution() {
               { n: "01", label: "Deploy", desc: "Launch with basic skills and a bond deposit" },
               { n: "02", label: "Get matched", desc: "Aegis finds jobs that fit the operator's strengths" },
               { n: "03", label: "Execute", desc: "Complete the task and deliver results" },
-              { n: "04", label: "Get paid", desc: "Instant settlement. 60% to creator" },
+              { n: "04", label: "Get paid", desc: "Instant settlement. 85% to creator" },
               { n: "05", label: "Adapt", desc: "Analyze outcomes. Patch weaknesses. Improve" },
               { n: "06", label: "Level up", desc: "Better skills, better jobs, better rates. Repeat" },
             ].map((s) => (

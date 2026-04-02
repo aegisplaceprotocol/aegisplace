@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { NvidiaBadge } from "@/components/NvidiaLogo";
 import { LogoBar } from "@/components/BrandLogos";
 import { trpc } from "@/lib/trpc";
 
@@ -17,6 +16,10 @@ function WireframeMesh() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const visibleRef = useRef(true);
+  const prefersReducedMotion = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
   const nodesRef = useRef<{
     x: number; y: number; z: number;
     baseX: number; baseY: number; baseZ: number;
@@ -29,12 +32,15 @@ function WireframeMesh() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || prefersReducedMotion) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let raf: number;
     let time = 0;
+    const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+    const nodeCount = isCoarsePointer ? 48 : 96;
+    const maxDist = isCoarsePointer ? 120 : 160;
 
     const resize = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -45,8 +51,8 @@ function WireframeMesh() {
 
     const initNodes = () => {
       const nodes: typeof nodesRef.current = [];
-      const count = 240;
-      const spread = 750;
+      const count = nodeCount;
+      const spread = isCoarsePointer ? 520 : 680;
       for (let i = 0; i < count; i++) {
         const phi = Math.acos(1 - 2 * (i + 0.5) / count);
         const theta = Math.PI * (1 + Math.sqrt(5)) * i;
@@ -108,7 +114,6 @@ function WireframeMesh() {
       });
 
       // Draw connections
-      const maxDist = 220;
       for (let i = 0; i < projected.length; i++) {
         for (let j = i + 1; j < projected.length; j++) {
           const dx = projected[i].px - projected[j].px;
@@ -128,7 +133,7 @@ function WireframeMesh() {
 
       // Draw nodes
       for (const p of projected) {
-        const r = 2 * p.scale;
+        const r = Math.max(1.2, 1.7 * p.scale);
         const alpha = 0.15 + p.scale * 0.25;
         ctx.fillStyle = `rgba(210,210,220,${Math.min(alpha, 0.35)})`;
         ctx.beginPath();
@@ -146,21 +151,23 @@ function WireframeMesh() {
       ctx.fillRect(0, 0, w, h);
 
       // Orbiting agent names
-      ctx.font = "600 11px 'Aeonik', system-ui, sans-serif";
-      ctx.textAlign = "center";
-      for (const orb of orbitRef.current) {
-        orb.angle += orb.speed;
-        const ox = cx + Math.cos(orb.angle) * orb.radius;
-        const oy = cy + Math.sin(orb.angle) * orb.radius * 0.45;
-        const pulse = 0.75 + Math.sin(time * 0.015 + orb.angle) * 0.25;
-        const nameAlpha = Math.min(orb.opacity * pulse * 1.8, 0.2);
-        ctx.fillStyle = `rgba(220,220,230,${nameAlpha})`;
-        ctx.fillText(orb.name, ox, oy);
+      if (!isCoarsePointer) {
+        ctx.font = "600 11px 'Aeonik', system-ui, sans-serif";
+        ctx.textAlign = "center";
+        for (const orb of orbitRef.current) {
+          orb.angle += orb.speed;
+          const ox = cx + Math.cos(orb.angle) * orb.radius;
+          const oy = cy + Math.sin(orb.angle) * orb.radius * 0.45;
+          const pulse = 0.75 + Math.sin(time * 0.015 + orb.angle) * 0.25;
+          const nameAlpha = Math.min(orb.opacity * pulse * 1.8, 0.14);
+          ctx.fillStyle = `rgba(220,220,230,${nameAlpha})`;
+          ctx.fillText(orb.name, ox, oy);
 
-        ctx.fillStyle = `rgba(220,220,230,${nameAlpha * 0.6})`;
-        ctx.beginPath();
-        ctx.arc(ox - ctx.measureText(orb.name).width / 2 - 10, oy - 4, 2.5, 0, Math.PI * 2);
-        ctx.fill();
+          ctx.fillStyle = `rgba(220,220,230,${nameAlpha * 0.6})`;
+          ctx.beginPath();
+          ctx.arc(ox - ctx.measureText(orb.name).width / 2 - 10, oy - 4, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       if (visibleRef.current) {
@@ -186,17 +193,23 @@ function WireframeMesh() {
     );
     if (canvas) observer.observe(canvas);
 
-    window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("resize", resize, { passive: true });
+    if (!isCoarsePointer) {
+      window.addEventListener("mousemove", handleMove, { passive: true });
+    }
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", handleMove);
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
+  if (prefersReducedMotion) {
+    return null;
+  }
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-80" />;
 }
 
 /* Hero Section */
@@ -210,11 +223,11 @@ export default function Hero() {
   }, []);
 
   return (
-    <section id="about" aria-label="Aegis hero" className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section id="about" aria-label="Aegis hero" className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
       <WireframeMesh />
 
       {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#060606]/90 via-[#060606]/40 to-[#060606]/95 pointer-events-none z-[2]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#060606]/92 via-[#060606]/55 to-[#060606]/96 pointer-events-none z-[2]" />
       <div className="absolute inset-0 pointer-events-none z-[2]" style={{
         background: "radial-gradient(ellipse at 50% 48%, rgba(200,200,220,0.06) 0%, transparent 50%)",
       }} />
@@ -244,7 +257,7 @@ export default function Hero() {
           and safety checks on every call. Creators publish skills, AI agents pay a few
           cents each time they use one, and if your skill builds on someone else's work,
           they get paid too. Every payment is instant, automatic, and verified on Solana.
-          No invoices, no middlemen. {stats?.totalOperators?.toLocaleString() ?? '...'} skills
+          No invoices, no middlemen. {stats?.totalOperators?.toLocaleString() ?? '...'} operators
           live and counting.
         </motion.p>
 
@@ -253,7 +266,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 12 }}
           animate={visible ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="flex flex-wrap items-center justify-center gap-4 mb-20"
+          className="flex flex-wrap items-center justify-center gap-4 mb-10"
         >
           <a
             href="/earn"

@@ -1,32 +1,39 @@
 /**
  * Aegis Dashboard. Activity Panel
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { T } from "./theme";
 import { SIcon, BrandIcon } from "./icons";
 import { Card, PageHeader, StatusBadge } from "./primitives";
-import { type LiveTx, makeTx } from "./constants";
+import { type LiveTx, formatInvocationAsTx } from "./constants";
 
 export default function ActivityPanel() {
   const [filter, setFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
   const [visibleCount, setVisibleCount] = useState(20);
-  const [allTxs] = useState<LiveTx[]>(() => Array.from({ length: 60 }, (_, i) => ({
-    ...makeTx(i),
-    time: `${Math.floor(Math.random() * 59 + 1)}m ago`,
-    latency: `${Math.floor(Math.random() * 300 + 40)}ms`,
-  })));
 
+  const recentQuery = trpc.invoke.recent.useQuery(
+    { limit: 100 },
+    { staleTime: 30_000, refetchInterval: 30_000 },
+  );
   const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
   const rawStats = statsQuery.data as Record<string, unknown> | undefined;
+
+  const allTxs: LiveTx[] = useMemo(() => {
+    if (!recentQuery.data) return [];
+    return (recentQuery.data as any[]).map((row, i) => formatInvocationAsTx(row, i));
+  }, [recentQuery.data]);
 
   const filtered = filter === "all" ? allTxs : allTxs.filter((tx) => tx.status === filter);
   const visible = filtered.slice(0, visibleCount);
 
   const successCount = allTxs.filter((tx) => tx.status === "completed").length;
-  const successRate = ((successCount / allTxs.length) * 100).toFixed(1);
-  const avgLatency = Math.round(allTxs.reduce((acc, tx) => acc + parseInt(tx.latency), 0) / allTxs.length);
-  const totalFees = rawStats?.totalEarnings ? `$${(parseFloat(String(rawStats.totalEarnings)) * 0.0001).toFixed(2)}` : "...";
+  const successRate = allTxs.length > 0 ? ((successCount / allTxs.length) * 100).toFixed(1) : "—";
+  const avgLatencyMs = allTxs.length > 0
+    ? Math.round(allTxs.reduce((acc, tx) => acc + (parseInt(tx.latency) || 0), 0) / allTxs.length)
+    : null;
+  const avgLatency = avgLatencyMs != null ? `${avgLatencyMs}ms` : "—";
+  const totalFees = rawStats?.totalEarnings ? `$${parseFloat(String(rawStats.totalEarnings)).toFixed(2)}` : "—";
 
   const filterTabs: Array<{ key: typeof filter; label: string }> = [
     { key: "all",       label: "All" },
@@ -61,10 +68,10 @@ export default function ActivityPanel() {
 
         <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
           {[
-            { label: "Today", value: `${allTxs.length} calls` },
-            { label: "Success Rate", value: `${successRate}%` },
-            { label: "Avg Latency", value: `${avgLatency}ms` },
-            { label: "Total Fees", value: totalFees },
+            { label: "Recent", value: `${allTxs.length} calls` },
+            { label: "Success Rate", value: allTxs.length > 0 ? `${successRate}%` : "—" },
+            { label: "Avg Latency", value: avgLatency },
+            { label: "Total Earnings", value: totalFees },
           ].map((s) => (
             <div key={s.label} style={{ display: "flex", gap: 6, alignItems: "baseline" }}>
               <span style={{ fontSize: 10, letterSpacing: "0.04em", fontWeight: 500, color: T.text20 }}>{s.label}</span>

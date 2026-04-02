@@ -32,7 +32,7 @@ const UTILITIES = [
   },
   {
     title: "Transfer Fee Burn",
-    desc: "2% of every invocation fee burned permanently via Token-2022. Deflationary over time.",
+    desc: "0.5% of every invocation fee burned permanently via Token-2022. Deflationary over time.",
     cmd: "// Enforced at protocol level via Token-2022",
   },
   {
@@ -46,7 +46,7 @@ const FLYWHEEL_STEPS = [
   { label: "Agent discovers operator via MCP", accent: false },
   { label: "Agent pays USDC via x402", accent: false },
   { label: "USDC swapped to $AEGIS on Jupiter", accent: true },
-  { label: "Revenue splits: 60% creator, 15% validator", accent: false },
+  { label: "Revenue splits: 85% creator, 10% validators, 3% treasury, 1.5% insurance, 0.5% burned", accent: false },
   { label: "Creator reinvests in better operators", accent: false },
   { label: "Better operators attract more agents", accent: true },
   { label: "More agents = more buy pressure", accent: true },
@@ -72,8 +72,8 @@ export default function Tokenomics() {
             <span className="text-white/35 font-normal">Every agent that pays is buying.</span>
           </h2>
           <p className={`text-[14px] text-white/30 max-w-md leading-relaxed lg:text-right`}>
-            100M+ x402 payments already flowing. Every USDC payment swaps to $AEGIS
-            via Jupiter. 2% burned per invocation. The more agents use operators, the more
+            140M+ x402 transactions already flowing. Every USDC payment swaps to $AEGIS
+            via Jupiter. 0.5% burned per invocation. The more agents use operators, the more
             $AEGIS gets bought and burned.
           </p>
         </div>
@@ -81,7 +81,7 @@ export default function Tokenomics() {
         {/* Token-2022 stats row */}
         <div className={`grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/[0.04] border border-white/[0.04] mb-12 sm:mb-20`}>
           {[
-            { label: "Transfer Fee", value: "1%" },
+            { label: "Transfer Fee", value: "0.5%" },
             { label: "Burn Rate", value: "0.5%" },
             { label: "Total Supply", value: "1B" },
             { label: "Chain", value: "Solana" },
@@ -175,8 +175,8 @@ export default function Tokenomics() {
         <div className={`grid md:grid-cols-3 gap-px bg-white/[0.04] border border-white/[0.04] mb-12 sm:mb-24`}>
           {[
             { title: "Organic Demand", desc: "Every operator registration, validator bond, and dispute requires $AEGIS. Protocol usage creates buy pressure." },
-            { title: "Deflationary", desc: "2% of every invocation fee is burned permanently. Supply decreases over time. More usage, more burns." },
-            { title: "Protocol Revenue", desc: "12% treasury fee on every invocation. x402 USDC payments are swapped to $AEGIS via Jupiter. Every agent invocation across the ecosystem drives buy pressure." },
+            { title: "Deflationary", desc: "0.5% of every invocation fee is burned permanently. Supply decreases over time. More usage, more burns." },
+            { title: "Protocol Revenue", desc: "3% treasury fee on every invocation. x402 USDC payments are swapped to $AEGIS via Jupiter. Every agent invocation across the ecosystem drives buy pressure." },
           ].map((item) => (
             <div key={item.title} className="bg-white/[0.015] p-4 sm:p-8 lg:p-10">
               <div className="text-[15px] font-normal text-white/70 mb-3">{item.title}</div>

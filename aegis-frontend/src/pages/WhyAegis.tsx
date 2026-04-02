@@ -101,7 +101,7 @@ export default function WhyAegis() {
               By 2028, autonomous AI agents are projected to outnumber humans online. These sovereign agents open wallets,
               pay for services, hold stablecoins, and launch businesses -- all without human intervention. But sovereign
               agents making autonomous financial decisions need a trust layer, a payment rail, and development tools. Aegis built all three:
-              a bonded marketplace with NeMo guardrails for trust, x402 micropayments for commerce, and AegisX -- a full IDE with 57 tools
+              a bonded marketplace with NeMo guardrails for trust, x402 micropayments for commerce, and AegisX -- a full IDE with 86 modules
               including Solana-native capabilities no competitor offers. We integrate directly with Bags.fm ($5B volume, $40M in creator payouts),
               giving agents access to real DeFi liquidity from day one.
             </p>
@@ -144,7 +144,7 @@ export default function WhyAegis() {
             </div>
             <div className="bg-background p-5 sm:p-8 border-l-2 border-white/30">
               <div className="text-[14px] font-normal text-zinc-300/70 mb-2 sm:mb-3">Trust + IDE</div>
-              <div className="text-[12px] sm:text-[13px] text-white/40 leading-relaxed">Validation and tooling. Should I trust this tool? Can I build with it? No one has solved both. Aegis combines NeMo guardrails with bonded operators for trust, and AegisX with 57 tools for development -- the only platform that unifies marketplace, trust layer, payments, and IDE.</div>
+              <div className="text-[12px] sm:text-[13px] text-white/40 leading-relaxed">Validation and tooling. Should I trust this tool? Can I build with it? No one has solved both. Aegis combines NeMo guardrails with bonded operators for trust, and AegisX with 86 modules for development -- the only platform that unifies marketplace, trust layer, payments, and IDE.</div>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function WhyAegis() {
             <ThesisCard
               number="02"
               title="Supply Lock + Full Stack"
-              body="Creators bond tokens to list. Validators bond tokens to review. AegisX users stake to access premium tools. 57 integrated tools across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories -- all driving token demand. The more the ecosystem grows, the more supply gets removed from circulation."
+              body="Creators bond tokens to list. Validators bond tokens to review. AegisX users stake to access premium tools. 86 integrated modules across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories -- all driving token demand. The more the ecosystem grows, the more supply gets removed from circulation."
               delay={100}
             />
             <ThesisCard
@@ -218,12 +218,12 @@ export default function WhyAegis() {
 
           <div className="space-y-px">
             {[
-              { pct: "60%", label: "Creator", desc: "The developer who built and bonded the operator" },
+              { pct: "85%", label: "Creator", desc: "The developer who built and bonded the operator" },
               { pct: "15%", label: "Validators", desc: "Independent reviewers who stake to attest quality" },
-              { pct: "12%", label: "Stakers", desc: "Token holders who stake $AEGIS to secure the network" },
+              { pct: "3%", label: "Stakers", desc: "Token holders who stake $AEGIS to secure the network" },
               { pct: "8%", label: "Treasury", desc: "Protocol development, grants, and ecosystem growth" },
               { pct: "3%", label: "Insurance", desc: "Consumer protection fund for verified damage claims" },
-              { pct: "2%", label: "Burned", desc: "Permanently removed from supply on every transaction" },
+              { pct: "0.5%", label: "Burned", desc: "Permanently removed from supply on every transaction" },
             ].map((row, i) => {
               const { ref, inView } = useStaggeredInView(0.1);
               return (
@@ -257,7 +257,7 @@ export default function WhyAegis() {
             <ThesisCard
               number="CURSOR / COPILOT"
               title="$29B valuation. 20M users. No agent commerce."
-              body="Cursor raised at $29B. GitHub Copilot has 20M users. They are IDE companies. They do not offer agent-to-agent payments, bonded validation, or on-chain reputation. AegisX has 57 tools with Solana-native capabilities they cannot match, plus integrated x402 payments."
+              body="Cursor raised at $29B. GitHub Copilot has 20M users. They are IDE companies. They do not offer agent-to-agent payments, bonded validation, or on-chain reputation. AegisX has 86 modules with Solana-native capabilities they cannot match, plus integrated x402 payments."
               delay={0}
             />
             <ThesisCard
@@ -325,7 +325,7 @@ export default function WhyAegis() {
             <ThesisCard
               number="57"
               title="AegisX Tools"
-              body="AegisX ships with 57 tools across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories. Solana-native capabilities include wallet management, token operations, DeFi integration, and on-chain analytics. No competitor -- not Cursor at $29B, not Copilot with 20M users -- offers this."
+              body="AegisX ships with 86 modules across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories. Solana-native capabilities include wallet management, token operations, DeFi integration, and on-chain analytics. No competitor -- not Cursor at $29B, not Copilot with 20M users -- offers this."
               delay={100}
             />
             <ThesisCard

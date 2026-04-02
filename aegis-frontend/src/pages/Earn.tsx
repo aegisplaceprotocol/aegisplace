@@ -12,10 +12,10 @@ function EarningsCalculator() {
   const earnings = useMemo(() => {
     const gross = dailyCalls * feePerCall;
     return {
-      daily: gross * 0.60,
-      weekly: gross * 0.60 * 7,
-      monthly: gross * 0.60 * 30,
-      yearly: gross * 0.60 * 365,
+      daily: gross * 0.85,
+      weekly: gross * 0.85 * 7,
+      monthly: gross * 0.85 * 30,
+      yearly: gross * 0.85 * 365,
       validatorDaily: gross * 0.15,
       burnedDaily: gross * 0.02,
     };
@@ -28,7 +28,7 @@ function EarningsCalculator() {
           How much could you earn?
         </h3>
         <p className="text-[13px] text-white/30 mb-8">
-          Adjust the sliders to model your operator earnings. You keep 60% of every invocation fee.
+          Adjust the sliders to model your operator earnings. You keep 85% of every invocation fee.
         </p>
 
         <div className="space-y-8">
@@ -101,7 +101,7 @@ function EarningsCalculator() {
       <div className="p-4 sm:p-6 border-t border-white/[0.04] flex flex-wrap gap-6 text-[12px] text-white/25">
         <span>Validators earn: <span className="text-white/50">${earnings.validatorDaily.toFixed(2)}/day</span></span>
         <span>Burned daily: <span className="text-red-400/60">${earnings.burnedDaily.toFixed(2)}</span></span>
-        <span>Treasury: <span className="text-white/50">${(earnings.daily / 0.60 * 0.08).toFixed(2)}/day</span></span>
+        <span>Treasury: <span className="text-white/50">${(earnings.daily / 0.85 * 0.03).toFixed(2)}/day</span></span>
       </div>
     </div>
   );
@@ -125,7 +125,7 @@ function ThreeStepGuide() {
     {
       number: "03",
       title: "Earn while you sleep",
-      desc: "AI agents discover your operator via MCP, pay via x402, and you earn 60% of every fee. Automatically. On Solana. In under a second.",
+      desc: "AI agents discover your operator via MCP, pay via x402, and you earn 85% of every fee. Automatically. On Solana. In under a second.",
       detail: "No invoices. No contracts. No employer. No permission needed. Your operator earns 24/7/365.",
     },
   ];

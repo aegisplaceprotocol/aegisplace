@@ -30,12 +30,12 @@ const TERMINAL_SCRIPT: TermLine[] = [
   { type: "output", text: "Signing x402 payment header...", delay: 300 },
   { type: "payment", text: "  Payment: 0.003 USDC >> Swap to $AEGIS on Jupiter >> Revenue split executing", delay: 500 },
   { type: "divider", text: "", delay: 200 },
-  { type: "success", text: "  Creator:                 $0.0018  (60%)", delay: 300 },
+  { type: "success", text: "  Creator:                 $0.0018  (85%)", delay: 300 },
   { type: "success", text: "  Validators:              $0.00045 (15%)", delay: 200 },
-  { type: "output", text: "  Stakers:                 $0.00036 (12%)", delay: 150 },
+  { type: "output", text: "  Treasury:                $0.00009 (3%)", delay: 150 },
   { type: "output", text: "  Treasury:                $0.00024 (8%)", delay: 150 },
   { type: "output", text: "  Insurance:               $0.00009 (3%)", delay: 150 },
-  { type: "output", text: "  Burned forever:          $0.00006 (2%)", delay: 150 },
+  { type: "output", text: "  Burned forever:          $0.000015 (0.5%)", delay: 150 },
   { type: "divider", text: "", delay: 300 },
   { type: "output", text: "Executing in sandboxed environment...", delay: 600 },
   { type: "output", text: "NeMo Evaluator scoring output quality...", delay: 500 },
@@ -195,23 +195,23 @@ function MoneyFlow() {
       {/* Visual bar breakdown */}
       <div className="mb-5">
         <div className="flex h-3 overflow-hidden gap-0.5 rounded">
-          <div className="bg-white/30 flex-[60] rounded-l-sm" title="Creator: 60%" />
+          <div className="bg-white/30 flex-[60] rounded-l-sm" title="Creator: 85%" />
           <div className="bg-white/20 flex-[15]" title="Validators: 15%" />
-          <div className="bg-white/[0.04] flex-[12]" title="Stakers: 12%" />
+          <div className="bg-white/[0.04] flex-[3]" title="Treasury: 3%" />
           <div className="bg-zinc-500/40 flex-[8]" title="Treasury: 8%" />
           <div className="bg-amber-500/40 flex-[3]" title="Insurance: 3%" />
-          <div className="bg-red-500/40 flex-[2] rounded-r-sm" title="Burned: 2%" />
+          <div className="bg-red-500/40 flex-[1] rounded-r-sm" title="Burned: 0.5%" />
         </div>
       </div>
 
       <div className="space-y-2.5">
         {[
-          { label: "You (the creator)", pct: "60%", color: "bg-white/30", amount: "$0.0018" },
+          { label: "You (the creator)", pct: "85%", color: "bg-white/30", amount: "$0.0018" },
           { label: "Validator network", pct: "15%", color: "bg-white/20", amount: "$0.00045" },
-          { label: "Stakers", pct: "12%", color: "bg-white/[0.04]", amount: "$0.00036" },
+          { label: "Stakers", pct: "3%", color: "bg-white/[0.04]", amount: "$0.00036" },
           { label: "Protocol treasury", pct: "8%", color: "bg-zinc-500/40", amount: "$0.00024" },
           { label: "Insurance fund", pct: "3%", color: "bg-amber-500/40", amount: "$0.00009" },
-          { label: "Burned forever", pct: "2%", color: "bg-red-500/40", amount: "$0.00006" },
+          { label: "Burned forever", pct: "0.5%", color: "bg-red-500/40", amount: "$0.00006" },
         ].map((item) => (
           <div key={item.label} className="flex items-center justify-between text-[12px]">
             <div className="flex items-center gap-2.5">
@@ -320,7 +320,7 @@ function EarningsCalc() {
       </div>
 
       <p className="text-[10px] text-zinc-600 mt-3 text-center">
-        Based on 60% creator share. Actual earnings depend on demand and pricing.
+        Based on 85% creator share. Actual earnings depend on demand and pricing.
       </p>
     </GlowCard>
   );
@@ -329,7 +329,7 @@ function EarningsCalc() {
 /* ---- Comparison table ---- */
 function ComparisonTable() {
   const rows = [
-    { feature: "Creator revenue share", aegis: "60%", others: "0 to 30%" },
+    { feature: "Creator revenue share", aegis: "85%", others: "0 to 30%" },
     { feature: "Settlement time", aegis: "< 1 second", others: "30 to 90 days" },
     { feature: "Quality validation", aegis: "NVIDIA NeMo", others: "None" },
     { feature: "Dispute resolution", aegis: "On chain", others: "Manual" },
@@ -380,7 +380,7 @@ export default function InteractiveDemo() {
           </h2>
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed">
             This is the actual invocation flow. An AI agent discovers a skill, pays for it
-            with x402 micropayments, and the creator earns 60% of the fee instantly on Solana.
+            with x402 micropayments, and the creator earns 85% of the fee instantly on Solana.
             No invoices. No waiting. No middlemen.
           </p>
         </motion.div>

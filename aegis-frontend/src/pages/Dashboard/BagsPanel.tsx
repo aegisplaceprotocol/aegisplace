@@ -803,7 +803,7 @@ function IntegrationTab() {
             {[
               {
                 label: "AI Agent",
-                items: ["Claude Code", "Cursor", "Custom"],
+                items: ["AegisX", "Cursor", "Custom"],
                 color: T.text50,
               },
               {

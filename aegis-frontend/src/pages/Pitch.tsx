@@ -63,7 +63,7 @@ export default function Pitch() {
             <span className="text-zinc-300">trust layer + payments + IDE for the $52B agent economy.</span>
           </h1>
           <p className="text-lg text-white/30 leading-relaxed max-w-2xl mb-10">
-            Cursor raised at $29B. Copilot has 20M users. 19K MCP servers exist. 75M x402 transactions have settled. But nobody built what agents actually need: trust + payments + IDE in one platform. Aegis has AegisX with 57 tools including Solana-native capabilities no competitor offers, NeMo guardrails for trust, x402 for payments, and direct Bags.fm integration ($5B volume, $40M creator payouts). Every invocation generates protocol revenue. Every transaction burns $AEGIS.
+            Cursor raised at $29B. Copilot has 20M users. 19K MCP servers exist. 75M x402 transactions have settled. But nobody built what agents actually need: trust + payments + IDE in one platform. Aegis has AegisX with 86 modules including Solana-native capabilities no competitor offers, NeMo guardrails for trust, x402 for payments, and direct Bags.fm integration ($5B volume, $40M creator payouts). Every invocation generates protocol revenue. Every transaction burns $AEGIS.
           </p>
           <div className="flex flex-wrap gap-4 mb-12">
             <a href="mailto:invest@aegisplace.com" className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">
@@ -140,7 +140,7 @@ export default function Pitch() {
                 Cursor raised at $29B building IDE tools. Copilot has 20M users for code completion. But neither enables autonomous agent commerce. 19K MCP servers have zero trust verification. 75M x402 transactions flow without quality guarantees. Agents default to centralized APIs because there is no unified platform for discovery, trust, payment, and execution.
               </p>
               <p className="text-sm text-white/30 leading-relaxed">
-                The result: a $7B x402 ecosystem and a $5B Solana DeFi market (Bags.fm alone) are disconnected from agent infrastructure. Aegis is the only platform that unifies marketplace, trust layer (NeMo guardrails + bonded operators), payments (x402), and IDE (AegisX with 57 tools) in one protocol.
+                The result: a $7B x402 ecosystem and a $5B Solana DeFi market (Bags.fm alone) are disconnected from agent infrastructure. Aegis is the only platform that unifies marketplace, trust layer (NeMo guardrails + bonded operators), payments (x402), and IDE (AegisX with 86 modules) in one protocol.
               </p>
             </div>
             <div className="space-y-3">
@@ -185,7 +185,7 @@ export default function Pitch() {
                 },
                 {
                   title: "Validator Attestation",
-                  desc: "Independent validators stake $AEGIS to verify output quality. Accurate attestations earn 15% of revenue. Inaccurate ones get slashed.",
+                  desc: "Independent validators stake $AEGIS to verify output quality. Accurate attestations earn 10% of revenue. Inaccurate ones get slashed.",
                   metric: "Revenue share",
                   value: "15%",
                 },
@@ -203,7 +203,7 @@ export default function Pitch() {
                 },
                 {
                   title: "Burn Flywheel",
-                  desc: "2% of every invocation fee is permanently burned. The busier the protocol gets, the scarcer $AEGIS becomes. Usage drives deflation.",
+                  desc: "0.5% of every invocation fee is permanently burned. The busier the protocol gets, the scarcer $AEGIS becomes. Usage drives deflation.",
                   metric: "Burn rate",
                   value: "2% per tx",
                 },
@@ -237,7 +237,7 @@ export default function Pitch() {
               {[
                 {
                   signal: "Cursor raised at $29B, Copilot hit 20M users",
-                  implication: "AI coding tools are the fastest-growing software category. But none offer agent-to-agent commerce, trust infrastructure, or Solana-native capabilities. Aegis fills the gap with AegisX (57 tools).",
+                  implication: "AI coding tools are the fastest-growing software category. But none offer agent-to-agent commerce, trust infrastructure, or Solana-native capabilities. Aegis fills the gap with AegisX (86 modules).",
                 },
                 {
                   signal: "Stripe MPP launched March 18 with Visa/Mastercard/OpenAI",
@@ -279,7 +279,7 @@ export default function Pitch() {
               Three converging markets. One platform.
             </h2>
             <p className="text-sm text-white/25 leading-relaxed mb-10 max-w-2xl">
-              AI coding tools ($29B Cursor valuation alone), agent infrastructure ($7B x402 ecosystem, 75M transactions), and Solana DeFi ($5B+ Bags.fm volume). The AI agent market is growing at 46.3% CAGR to $52.62B by 2030. Aegis is the only platform spanning all three markets: IDE (AegisX, 57 tools), trust (NeMo guardrails, bonded operators), and payments (x402 micropayments).
+              AI coding tools ($29B Cursor valuation alone), agent infrastructure ($7B x402 ecosystem, 75M transactions), and Solana DeFi ($5B+ Bags.fm volume). The AI agent market is growing at 46.3% CAGR to $52.62B by 2030. Aegis is the only platform spanning all three markets: IDE (AegisX, 86 modules), trust (NeMo guardrails, bonded operators), and payments (x402 micropayments).
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
@@ -302,7 +302,7 @@ export default function Pitch() {
                   label: "SOM",
                   title: "Platform Capture",
                   value: "$4.2B",
-                  desc: "Aegis captures across three revenue streams: marketplace fees (trust layer), IDE subscriptions (AegisX 57 tools), and DeFi integration (Bags.fm). Only platform combining all four: marketplace + trust + payments + IDE.",
+                  desc: "Aegis captures across three revenue streams: marketplace fees (trust layer), IDE subscriptions (AegisX 86 modules), and DeFi integration (Bags.fm). Only platform combining all four: marketplace + trust + payments + IDE.",
                   source: "Internal projections",
                 },
               ].map((m, i) => (
@@ -340,7 +340,7 @@ export default function Pitch() {
               <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">GROWTH CATALYSTS</div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
-                  { driver: "AI coding market proven ($29B Cursor, 20M Copilot)", detail: "AegisX with 57 tools competes directly. Solana-native capabilities and x402 payments are unique moats no incumbent can replicate." },
+                  { driver: "AI coding market proven ($29B Cursor, 20M Copilot)", detail: "AegisX with 86 modules competes directly. Solana-native capabilities and x402 payments are unique moats no incumbent can replicate." },
                   { driver: "x402 Foundation + Bags.fm integration", detail: "75M x402 transactions. $5B Bags.fm volume. $40M creator payouts. Aegis connects agent infrastructure to real DeFi liquidity." },
                   { driver: "MCP ecosystem (19K+ servers, zero trust)", detail: "McpInject malware already exploiting the gap. NeMo guardrails and bonded operators solve the trust crisis." },
                   { driver: "Solana dominance (65% of agentic payments)", detail: "Sub-second finality, sub-cent fees. Aegis is Solana-native with direct Bags.fm DeFi integration." },
@@ -442,7 +442,7 @@ export default function Pitch() {
                 </thead>
                 <tbody>
                   {[
-                    { name: "Aegis Protocol", payments: true, validation: true, reputation: true, safety: true, nvidia: true, highlight: true, note: "57 tools, NeMo guardrails, x402, Bags.fm, IDE" },
+                    { name: "Aegis Protocol", payments: true, validation: true, reputation: true, safety: true, nvidia: true, highlight: true, note: "86 modules, NeMo guardrails, x402, Bags.fm, IDE" },
                     { name: "Cursor ($29B)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "IDE only -- no payments, no trust, no agents" },
                     { name: "GitHub Copilot (20M)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "Code completion -- no agent commerce" },
                     { name: "Stripe MPP / x402", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "75M tx -- payment rail only, no trust layer" },
@@ -467,7 +467,7 @@ export default function Pitch() {
             </div>
 
             <p className="text-[12px] text-white/15 mt-4 leading-relaxed">
-              Cursor ($29B) and Copilot (20M users) prove the AI coding market is massive but offer no agent commerce. x402 has 75M transactions but no trust layer. MCP has 19K servers but zero validation. Bags.fm has $5B volume but no agent infrastructure. Aegis is the only platform that combines all five: micropayments (x402), bonded validation (NeMo guardrails), on-chain reputation, a safety layer, and a full IDE (AegisX with 57 Solana-native tools). Our team has deep expertise in MCP, x402, Solana, and NeMo guardrails -- we understand the market because we built the integrations.
+              Cursor ($29B) and Copilot (20M users) prove the AI coding market is massive but offer no agent commerce. x402 has 75M transactions but no trust layer. MCP has 19K servers but zero validation. Bags.fm has $5B volume but no agent infrastructure. Aegis is the only platform that combines all five: micropayments (x402), bonded validation (NeMo guardrails), on-chain reputation, a safety layer, and a full IDE (AegisX with 86 Solana-native modules). Our team has deep expertise in MCP, x402, Solana, and NeMo guardrails -- we understand the market because we built the integrations.
             </p>
 
             {/* NVIDIA Moat */}
@@ -517,12 +517,12 @@ export default function Pitch() {
                 <div className="text-[10px] font-medium text-white/15 tracking-wider mb-4">REVENUE SPLIT</div>
                 <div className="space-y-3">
                   {[
-                    { label: "Operator (creator)", pct: 60, color: "#A1A1AA" },
+                    { label: "Operator (creator)", pct: 85, color: "#A1A1AA" },
                     { label: "Validators", pct: 15, color: "#71717A" },
-                    { label: "Stakers", pct: 12, color: "#6B7280" },
+                    { label: "Stakers", pct: 3, color: "#6B7280" },
                     { label: "Protocol Treasury", pct: 8, color: "#eab308" },
                     { label: "Insurance", pct: 3, color: "#3b82f6" },
-                    { label: "Permanent Burn", pct: 2, color: "rgba(220,100,60,0.50)" },
+                    { label: "Permanent Burn", pct: 0.5, color: "rgba(220,100,60,0.50)" },
                   ].map((r, i) => (
                     <div key={i}>
                       <div className="flex items-center justify-between mb-1">
@@ -570,7 +570,7 @@ export default function Pitch() {
                 {[
                   "Agent invokes operator",
                   "x402 payment in $AEGIS",
-                  "2% burned permanently",
+                  "0.5% burned permanently",
                   "Validator attests quality",
                   "Reputation score updates",
                   "Higher trust attracts more agents",
@@ -622,10 +622,10 @@ export default function Pitch() {
           <SectionDivider label="THE ASK" />
           <div className="mt-10 border border-white/15 bg-white/[0.02] p-8 md:p-12">
             <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-4">
-              Live product. Working IDE. 57 tools. MCP bridge functional. Raising to scale.
+              Live product. Working IDE. 86 modules. MCP bridge functional. Raising to scale.
             </h2>
             <p className="text-sm text-white/30 leading-relaxed mb-8 max-w-2xl">
-              The live dashboard, working AegisX IDE with 57 tools, MCP server bridge, marketplace, and protocol design are complete. Traction: functional aegisx CLI, Bags.fm integration, NeMo guardrails, x402 payment flow. The vision: autonomous agents that discover, evaluate, pay for, and execute skills without human intervention. We are looking for strategic investors who understand that the next $29B company in AI is not another IDE -- it is the trust and payment infrastructure underneath all of them.
+              The live dashboard, working AegisX IDE with 86 modules, MCP server bridge, marketplace, and protocol design are complete. Traction: functional aegisx CLI, Bags.fm integration, NeMo guardrails, x402 payment flow. The vision: autonomous agents that discover, evaluate, pay for, and execute skills without human intervention. We are looking for strategic investors who understand that the next $29B company in AI is not another IDE -- it is the trust and payment infrastructure underneath all of them.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[

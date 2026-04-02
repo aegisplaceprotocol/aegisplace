@@ -5,15 +5,15 @@ import { Card, CardHead, PageHeader, StatTile, TabBar, FilterChips, MiniTable, P
 
 /* ── Demo data ─────────────────────────────────────────────────────────── */
 
-const TOTAL_REV = 307549;
+const TOTAL_REV = 0; // populated from tRPC stats
 
 const FEE_SPLITS = [
-  { label: "Creator", pct: 60, color: "rgba(255,255,255,0.35)" },
+  { label: "Creator", pct: 85, color: "rgba(255,255,255,0.35)" },
   { label: "Validators", pct: 15, color: "rgba(255,255,255,0.25)" },
-  { label: "Stakers", pct: 12, color: "rgba(255,255,255,0.20)" },
+  { label: "Stakers", pct: 3, color: "rgba(255,255,255,0.20)" },
   { label: "Treasury", pct: 8, color: "rgba(255,255,255,0.15)" },
   { label: "Insurance", pct: 3, color: "rgba(255,255,255,0.10)" },
-  { label: "Burned", pct: 2, color: "rgba(255,255,255,0.06)" },
+  { label: "Burned", pct: 0.5, color: "rgba(255,255,255,0.06)" },
 ];
 
 const MONTHLY_REVENUE = [

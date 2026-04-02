@@ -34,7 +34,7 @@ const MARKET_VALIDATION = [
 ];
 
 const COMPATIBLE_WITH = [
-  "Claude Code",
+  "AegisX",
   "Codex CLI",
   "ChatGPT",
   "Cursor",

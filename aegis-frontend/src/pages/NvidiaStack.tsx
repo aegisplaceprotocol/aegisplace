@@ -171,7 +171,7 @@ const ARCH_LAYERS = [
   { layer: "Deploy", tool: "NVIDIA NIM", desc: "GPU-optimized inference containers with OpenAI-compatible APIs" },
   { layer: "Guard", tool: "NeMo Guardrails", desc: "Programmable input/output/dialog/retrieval safety rails" },
   { layer: "Optimize", tool: "NeMo RL + Gym", desc: "Reinforcement learning from real invocation feedback" },
-  { layer: "Settle", tool: "Solana + x402", desc: "Sub-second payment settlement with 60/15/12/8/3/2 revenue split" },
+  { layer: "Settle", tool: "Solana + x402", desc: "Sub-second payment settlement with 85/10/3/1.5/0.5 revenue split" },
 ];
 
 export default function NvidiaStack() {

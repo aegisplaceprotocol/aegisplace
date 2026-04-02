@@ -436,7 +436,7 @@ function StepDeploy({
         ] as [string, string][]).map(([k, v], i) => (
           <div key={i} style={s.summaryRow}>
             <span style={{ color: T.text50 }}>{k}</span>
-            <span style={{ color: T.text90, fontWeight: 500, maxWidth: "60%", textAlign: "right", wordBreak: "break-all" }}>{v}</span>
+            <span style={{ color: T.text90, fontWeight: 500, maxWidth: "85%", textAlign: "right", wordBreak: "break-all" }}>{v}</span>
           </div>
         ))}
       </div>

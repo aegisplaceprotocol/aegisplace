@@ -215,7 +215,7 @@ export default function CategoryLanding() {
             Deploy a {meta.title.replace(" Skills", "").replace(" Tools", "")} Skill
           </h2>
           <p className="text-white/25 mb-8 max-w-lg mx-auto leading-relaxed">
-            Upload your operator and earn 60% of every invocation fee. Join the Aegis Protocol ecosystem today.
+            Upload your operator and earn 85% of every invocation fee. Join the Aegis Protocol ecosystem today.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link href="/submit" className="text-sm font-normal bg-white text-zinc-900 px-8 py-3.5 hover:bg-zinc-200 transition-colors rounded">

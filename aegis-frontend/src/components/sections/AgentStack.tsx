@@ -17,7 +17,7 @@ const STACK: StackLayer[] = [
   {
     id: "application",
     label: "APPLICATION",
-    protocol: "Claude Code, Codex CLI, ChatGPT, Cursor",
+    protocol: "AegisX, Codex CLI, ChatGPT, Cursor",
     status: "LIVE",
     statusColor: "text-zinc-300/80",
     desc: "End-user AI agents that invoke tools, write code, and execute tasks autonomously. Over 100M weekly active users across platforms.",

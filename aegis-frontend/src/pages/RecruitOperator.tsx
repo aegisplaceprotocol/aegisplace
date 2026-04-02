@@ -70,7 +70,7 @@ function RevenueCalc() {
   const [price, setPrice] = useState(0.02);
 
   const gross = invocations * price;
-  const creatorShare = gross * 0.60;
+  const creatorShare = gross * 0.85;
   const validatorShare = gross * 0.15;
   const stakerShare = gross * 0.12;
   const treasuryShare = gross * 0.08;
@@ -128,7 +128,7 @@ function RevenueCalc() {
       <div className="border-t border-white/[0.04] pt-6">
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-white/[0.04] border border-white/15 p-4">
-            <div className="text-[10px] font-medium text-zinc-300/50 mb-1">YOUR SHARE (60%)</div>
+            <div className="text-[10px] font-medium text-zinc-300/50 mb-1">YOUR SHARE (85%)</div>
             <div className="text-xl font-normal text-zinc-300">${creatorShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
@@ -138,7 +138,7 @@ function RevenueCalc() {
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.08] p-4">
-            <div className="text-[10px] font-medium text-white/30 mb-1">STAKERS (12%)</div>
+            <div className="text-[10px] font-medium text-white/30 mb-1">TREASURY (3%)</div>
             <div className="text-xl font-normal text-white/70">${stakerShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
@@ -153,7 +153,7 @@ function RevenueCalc() {
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
           <div className="bg-white/[0.02] border border-white/[0.08] p-4">
-            <div className="text-[10px] font-medium text-white/30 mb-1">BURNED (2%)</div>
+            <div className="text-[10px] font-medium text-white/30 mb-1">BURNED (0.5%)</div>
             <div className="text-xl font-normal text-white/70">${burnShare.toFixed(2)}</div>
             <div className="text-[10px] font-medium text-white/20 mt-1">per month</div>
           </div>
@@ -166,7 +166,7 @@ function RevenueCalc() {
 
         <p className="text-[11px] text-white/20 mt-4 leading-relaxed">
           Revenue paid in USDC via x402 micropayments. Agents pay per invocation  -  no subscriptions, no minimums.
-          Your 60% share is streamed to your Solana wallet in real-time after each successful invocation.
+          Your 85% share is streamed to your Solana wallet in real-time after each successful invocation.
         </p>
       </div>
     </div>
@@ -336,7 +336,7 @@ function _RecruitOperator() {
             </h1>
 
             <p className="text-lg md:text-xl text-white/40 leading-relaxed max-w-xl">
-              Stake $AEGIS, pass bonded validation, and start earning 60% of every
+              Stake $AEGIS, pass bonded validation, and start earning 85% of every
               invocation. Your operator becomes discoverable across 82K+ indexed operators
               across the x402 payment network.
             </p>
@@ -757,7 +757,7 @@ function _RecruitOperator() {
                 <h3 className="text-[13px] font-medium text-zinc-300/60 tracking-wider mb-6">OPERATOR.MD SPEC</h3>
                 <p className="text-[12px] text-white/35 leading-relaxed mb-4">
                   Every operator must include a OPERATOR.md file at the repository root. This is the standard format
-                  used across the agent ecosystem  -  compatible with Claude Code, Claude Cowork, Codex CLI, Codex App, ChatGPT, Cursor, and more.
+                  used across the agent ecosystem  -  compatible with AegisX, AegisX Desktop, Codex CLI, Codex App, ChatGPT, Cursor, and more.
                 </p>
                 <pre className="text-[11px] font-medium text-white/40 leading-relaxed bg-white/[0.02] border border-white/[0.04] p-4 rounded overflow-x-auto">
 {`# Operator Callsign
@@ -802,7 +802,7 @@ Example invocation
               <span className="text-white/30">revenue.</span>
             </h2>
             <p className="text-lg text-white/40 leading-relaxed">
-              Creators earn 60% of every invocation. Adjust the sliders to see projected monthly earnings
+              Creators earn 85% of every invocation. Adjust the sliders to see projected monthly earnings
               based on your operator's usage and pricing.
             </p>
           </div>

@@ -1,1196 +1,1376 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
+import { trpc } from "@/lib/trpc";
 
+// ---------------------------------------------------------------------------
+// Design tokens
+// ---------------------------------------------------------------------------
+const T = {
+  bg: "#0A0A0B",
+  card: "rgba(255,255,255,0.015)",
+  border: "rgba(255,255,255,0.05)",
+  borderHover: "rgba(255,255,255,0.08)",
+  text95: "rgba(255,255,255,0.92)",
+  text80: "rgba(255,255,255,0.72)",
+  text50: "rgba(255,255,255,0.44)",
+  text30: "rgba(255,255,255,0.28)",
+  text20: "rgba(255,255,255,0.18)",
+  emerald: "rgba(52,211,153,0.55)",
+} as const;
+
+const NAV_BG = "#080809";
+
+// ---------------------------------------------------------------------------
+// Sections
+// ---------------------------------------------------------------------------
 const SECTIONS = [
-  { id: "quickstart", label: "Quickstart" },
-  { id: "aegisx", label: "AegisX IDE" },
-  { id: "aegisx-tools", label: "57 Tools Reference" },
-  { id: "mcp-bridge", label: "MCP Server Bridge" },
+  { id: "hero", label: "Overview" },
+  { id: "quickstart", label: "Quick Start" },
   { id: "architecture", label: "Architecture" },
-  { id: "x402", label: "x402 Payment Flow" },
-  { id: "registration", label: "Operator Registration" },
-  { id: "sdk", label: "SDK Integration" },
-  { id: "operators", label: "Operator Format" },
-  { id: "staking", label: "$AEGIS Staking" },
-  { id: "validation", label: "Bonded Validation" },
-  { id: "sandboxing", label: "Operator Sandboxing" },
-  { id: "observation", label: "Observation Loops" },
-  { id: "reputation", label: "On-Chain Reputation" },
+  { id: "why-aegis", label: "Why Aegis" },
+  { id: "marketplace", label: "Marketplace" },
+  { id: "aegisx", label: "AegisX IDE" },
+  { id: "skillfi", label: "SkillFi Royalties" },
+  { id: "nemo", label: "NeMo Guardrails" },
+  { id: "mcp-tools", label: "MCP Tools" },
   { id: "programs", label: "Solana Programs" },
-  { id: "a2a", label: "A2A Protocol" },
-  { id: "wallets", label: "Agentic Wallets" },
-  { id: "nvidia", label: "NVIDIA NeMo Stack" },
-  { id: "cli", label: "CLI Reference" },
+  { id: "protocols", label: "Protocols" },
+  { id: "bags", label: "Bags.fm" },
+  { id: "api", label: "API Reference" },
+] as const;
+
+type SectionId = (typeof SECTIONS)[number]["id"];
+
+// ---------------------------------------------------------------------------
+// Animation helpers
+// ---------------------------------------------------------------------------
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+};
+
+// ---------------------------------------------------------------------------
+// Canvas: HeroMesh (particle field)
+// ---------------------------------------------------------------------------
+function HeroMesh() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const dots: { x: number; y: number; vx: number; vy: number }[] = [];
+    for (let i = 0; i < 24; i++) dots.push({ x: Math.random(), y: Math.random(), vx: (Math.random() - 0.5) * 0.00015, vy: (Math.random() - 0.5) * 0.00015 });
+    function resize() { c!.width = c!.offsetWidth * dpr; c!.height = c!.offsetHeight * dpr; }
+    resize();
+    window.addEventListener("resize", resize);
+    let raf = 0;
+    function draw() {
+      const w = c!.offsetWidth, h = c!.offsetHeight;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx!.clearRect(0, 0, w, h);
+      for (const d of dots) {
+        d.x += d.vx; d.y += d.vy;
+        if (d.x < 0 || d.x > 1) d.vx *= -1;
+        if (d.y < 0 || d.y > 1) d.vy *= -1;
+      }
+      ctx!.fillStyle = "rgba(255,255,255,0.12)";
+      for (const d of dots) { ctx!.beginPath(); ctx!.arc(d.x * w, d.y * h, 1.2, 0, Math.PI * 2); ctx!.fill(); }
+      ctx!.strokeStyle = "rgba(255,255,255,0.03)";
+      ctx!.lineWidth = 0.5;
+      for (let i = 0; i < dots.length; i++) for (let j = i + 1; j < dots.length; j++) {
+        const dx = (dots[i].x - dots[j].x) * w, dy = (dots[i].y - dots[j].y) * h;
+        if (dx * dx + dy * dy < 6400) { ctx!.beginPath(); ctx!.moveTo(dots[i].x * w, dots[i].y * h); ctx!.lineTo(dots[j].x * w, dots[j].y * h); ctx!.stroke(); }
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={ref} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />;
+}
+
+// ---------------------------------------------------------------------------
+// Canvas: FlowMesh (horizontal particle flow)
+// ---------------------------------------------------------------------------
+function FlowMesh() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const nodes = [
+      { x: 0.06, y: 0.5, label: "Agent" },
+      { x: 0.21, y: 0.5, label: "MCP" },
+      { x: 0.36, y: 0.5, label: "x402" },
+      { x: 0.50, y: 0.5, label: "NeMo In" },
+      { x: 0.64, y: 0.5, label: "Execute" },
+      { x: 0.79, y: 0.5, label: "NeMo Out" },
+      { x: 0.94, y: 0.5, label: "Solana" },
+    ];
+    const edges: [number, number][] = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]];
+    interface P { edge: number; t: number; speed: number }
+    const particles: P[] = [];
+    for (let i = 0; i < 12; i++) particles.push({ edge: Math.floor(Math.random() * edges.length), t: Math.random(), speed: 0.002 + Math.random() * 0.003 });
+    function resize() { c!.width = c!.offsetWidth * dpr; c!.height = c!.offsetHeight * dpr; }
+    resize();
+    window.addEventListener("resize", resize);
+    let raf = 0;
+    function draw() {
+      const w = c!.offsetWidth, h = c!.offsetHeight;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx!.clearRect(0, 0, w, h);
+      ctx!.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx!.lineWidth = 1;
+      for (const [a, b] of edges) { ctx!.beginPath(); ctx!.moveTo(nodes[a].x * w, nodes[a].y * h); ctx!.lineTo(nodes[b].x * w, nodes[b].y * h); ctx!.stroke(); }
+      for (const n of nodes) {
+        ctx!.beginPath(); ctx!.arc(n.x * w, n.y * h, 5, 0, Math.PI * 2);
+        ctx!.fillStyle = "rgba(52,211,153,0.25)"; ctx!.fill();
+        ctx!.strokeStyle = "rgba(52,211,153,0.4)"; ctx!.lineWidth = 1; ctx!.stroke();
+        ctx!.fillStyle = T.text30; ctx!.font = "10px system-ui"; ctx!.textAlign = "center";
+        ctx!.fillText(n.label, n.x * w, n.y * h + 18);
+      }
+      ctx!.fillStyle = "rgba(52,211,153,0.6)";
+      for (const p of particles) {
+        const [a, b] = edges[p.edge];
+        const px = nodes[a].x + (nodes[b].x - nodes[a].x) * p.t;
+        const py = nodes[a].y + (nodes[b].y - nodes[a].y) * p.t;
+        ctx!.beginPath(); ctx!.arc(px * w, py * h, 2, 0, Math.PI * 2); ctx!.fill();
+        p.t += p.speed;
+        if (p.t > 1) { p.t = 0; p.edge = (p.edge + 1) % edges.length; }
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={ref} style={{ width: "100%", height: 120, display: "block" }} />;
+}
+
+// ---------------------------------------------------------------------------
+// Canvas: CascadeMesh (tree with particles flowing down)
+// ---------------------------------------------------------------------------
+function CascadeMesh() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const c = ref.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const tree = [
+      { x: 0.5, y: 0.1 },
+      { x: 0.25, y: 0.4 }, { x: 0.5, y: 0.4 }, { x: 0.75, y: 0.4 },
+      { x: 0.12, y: 0.7 }, { x: 0.3, y: 0.7 }, { x: 0.42, y: 0.7 }, { x: 0.58, y: 0.7 }, { x: 0.7, y: 0.7 }, { x: 0.88, y: 0.7 },
+      { x: 0.06, y: 0.95 }, { x: 0.18, y: 0.95 }, { x: 0.3, y: 0.95 }, { x: 0.42, y: 0.95 }, { x: 0.58, y: 0.95 }, { x: 0.7, y: 0.95 }, { x: 0.82, y: 0.95 }, { x: 0.94, y: 0.95 },
+    ];
+    const edges: [number, number][] = [
+      [0,1],[0,2],[0,3],
+      [1,4],[1,5],[2,6],[2,7],[3,8],[3,9],
+      [4,10],[4,11],[5,12],[6,13],[7,14],[8,15],[9,16],[9,17],
+    ];
+    interface P { edge: number; t: number; speed: number }
+    const particles: P[] = [];
+    for (let i = 0; i < 30; i++) particles.push({ edge: Math.floor(Math.random() * edges.length), t: Math.random(), speed: 0.004 + Math.random() * 0.006 });
+    function resize() { c!.width = c!.offsetWidth * dpr; c!.height = c!.offsetHeight * dpr; }
+    resize();
+    window.addEventListener("resize", resize);
+    let raf = 0;
+    function draw() {
+      const w = c!.offsetWidth, h = c!.offsetHeight;
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx!.clearRect(0, 0, w, h);
+      ctx!.strokeStyle = "rgba(52,211,153,0.08)";
+      ctx!.lineWidth = 1;
+      for (const [a, b] of edges) { ctx!.beginPath(); ctx!.moveTo(tree[a].x * w, tree[a].y * h); ctx!.lineTo(tree[b].x * w, tree[b].y * h); ctx!.stroke(); }
+      for (const n of tree) { ctx!.beginPath(); ctx!.arc(n.x * w, n.y * h, 3, 0, Math.PI * 2); ctx!.fillStyle = "rgba(52,211,153,0.2)"; ctx!.fill(); }
+      ctx!.fillStyle = "rgba(52,211,153,0.55)";
+      for (const p of particles) {
+        const [a, b] = edges[p.edge];
+        const px = tree[a].x + (tree[b].x - tree[a].x) * p.t;
+        const py = tree[a].y + (tree[b].y - tree[a].y) * p.t;
+        ctx!.beginPath(); ctx!.arc(px * w, py * h, 2, 0, Math.PI * 2); ctx!.fill();
+        p.t += p.speed;
+        if (p.t > 1) { p.t = 0; p.edge = Math.floor(Math.random() * edges.length); }
+      }
+      raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={ref} style={{ width: "100%", height: 300, display: "block", borderRadius: 8 }} />;
+}
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+function Code({ children }: { children: string }) {
+  return <code style={{ background: "rgba(255,255,255,0.06)", borderRadius: 4, padding: "2px 6px", fontFamily: "monospace", fontSize: 13 }}>{children}</code>;
+}
+
+function Badge({ children, color = T.emerald }: { children: string; color?: string }) {
+  return <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 9999, background: color, color: "#fff" }}>{children}</span>;
+}
+
+function SectionHeading({ children }: { children: string }) {
+  return <h2 style={{ fontSize: 24, fontWeight: 600, color: T.text95, margin: 0 }}>{children}</h2>;
+}
+
+function Body({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 15, lineHeight: 1.7, color: T.text50, margin: 0 }}>{children}</p>;
+}
+
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 20, backdropFilter: "blur(8px)", transition: "border-color 0.2s, background 0.2s", ...style }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = T.borderHover; e.currentTarget.style.background = "rgba(255,255,255,0.025)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = T.card; }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Code block with tabs
+// ---------------------------------------------------------------------------
+const QUICKSTART_TABS = ["MCP", "REST", "TypeScript", "Python", "CLI", "Docker"] as const;
+const QUICKSTART_CODE: Record<string, string> = {
+  MCP: `{
+  "mcpServers": {
+    "aegis": {
+      "url": "https://mcp.aegisprotocol.com/sse",
+      "transport": "sse"
+    }
+  }
+}`,
+  REST: `curl -X POST https://api.aegisprotocol.com/v1/invoke \\
+  -H "Authorization: Bearer YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"skill": "price-oracle", "input": {"token": "SOL"}}'`,
+  TypeScript: `import { AegisClient } from "@aegis/sdk";
+
+const aegis = new AegisClient({ apiKey: process.env.AEGIS_KEY });
+const result = await aegis.invoke("price-oracle", {
+  input: { token: "SOL" },
+  maxFee: 0.001
+});
+console.log(result.output);`,
+  Python: `from aegis import AegisClient
+
+client = AegisClient(api_key="YOUR_KEY")
+result = client.invoke("price-oracle",
+    input={"token": "SOL"},
+    max_fee=0.001
+)
+print(result.output)`,
+  CLI: `# Install AegisX CLI
+npm install -g @aegis/cli
+
+# Authenticate with your Solana wallet
+aegisx auth login
+
+# Browse and invoke skills
+aegisx skills list --category code-analysis
+aegisx invoke price-oracle --input '{"token": "SOL"}'
+aegisx trust score price-oracle
+aegisx earnings --wallet YOUR_WALLET`,
+  Docker: `# Clone the repository
+git clone https://github.com/aegisplaceprotocol/aegisplace
+cd aegis
+
+# Copy environment template and configure
+cp .env.example .env
+# Edit .env with your SOLANA_RPC_URL, MONGODB_URI, etc.
+
+# Start all services (API, MCP server, NeMo sidecar)
+docker-compose up -d
+
+# Verify services are running
+docker-compose ps
+curl http://localhost:3000/api/v1/health`,
+};
+
+const QUICKSTART_RESULTS: Record<string, string[]> = {
+  MCP: [
+    "47 skills available in AegisX, Cursor, or Windsurf",
+    "SSE transport with real-time invocation streaming",
+    "Automatic trust scoring on every tool call",
+    "NeMo guardrail scanning on all inputs and outputs",
+  ],
+  REST: [
+    "Direct HTTP access to all 15+ API endpoints",
+    "x402 payment negotiation via standard HTTP 402 headers",
+    "JSON responses with trust metadata on every call",
+    "Rate limiting: 200 requests per 15 minutes (unauthenticated)",
+  ],
+  TypeScript: [
+    "Type-safe client with full IntelliSense support",
+    "12.6KB bundle, zero dependencies",
+    "Built-in retry logic and error handling",
+    "Automatic wallet-sign authentication",
+  ],
+  Python: [
+    "LangChain adapter included for agent pipelines",
+    "Async support with asyncio",
+    "Typed responses with Pydantic models",
+    "Compatible with Python 3.9+",
+  ],
+  CLI: [
+    "28 commands for marketplace, trading, auditing, and research",
+    "61 integrated tools (21 Aegis + 40 MCP ecosystem)",
+    "Local SQLite for session history and usage stats",
+    "Built-in Solana wallet management",
+  ],
+  Docker: [
+    "Full local development environment in one command",
+    "API server, MCP server, and NeMo guardrails sidecar",
+    "MongoDB and all dependencies pre-configured",
+    "PM2 process management via ecosystem.config.cjs",
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Data
+// ---------------------------------------------------------------------------
+const INVOCATION_STEPS = [
+  { n: 1, title: "Discover via MCP", desc: "Agent finds the skill through MCP standard tool discovery." },
+  { n: 2, title: "Negotiate via x402", desc: "Payment terms set with HTTP 402. Price, currency, recipient." },
+  { n: 3, title: "NeMo scans input", desc: "Guardrails check for PII, prompt injection, jailbreak attempts." },
+  { n: 4, title: "Operator executes", desc: "The skill runs on the operator's infrastructure. Result returned." },
+  { n: 5, title: "NeMo scans output", desc: "Output checked for hallucination, toxic content, data leaks." },
+  { n: 6, title: "Solana settles", desc: "Payment splits atomically into 5 wallets. On chain. Final." },
 ];
 
-function CodeBlock({ code, lang = "bash" }: { code: string; lang?: string }) {
-  const [copied, setCopied] = useState(false);
+const UNDER_THE_HOOD = [
+  { label: "Settlement time", value: "~400ms on Solana mainnet" },
+  { label: "Cost per transaction", value: "$0.00025 USDC" },
+  { label: "Rate limiting (global)", value: "200 requests / 15 minutes" },
+  { label: "Rate limiting (authenticated)", value: "10 requests / 15 minutes per wallet" },
+  { label: "Rate limiting (MCP)", value: "60 requests / minute per connection" },
+  { label: "Health monitoring", value: "5-minute loops, 3 failures triggers auto-deactivate" },
+  { label: "Real-time feed", value: "SSE live stream at /api/feed for invocation events" },
+  { label: "A2A discovery", value: "agent-card.json at /.well-known/agent-card.json" },
+  { label: "Fee split enforcement", value: "Atomic 5-way split, no partial settlement possible" },
+  { label: "Trust recalculation", value: "Every 15 minutes across all 5 dimensions" },
+];
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+const WHY_CARDS = [
+  { gap: "Agent Commerce", proven: "$10B+ in DEX volume proves agents can transact", missing: "No safety layer, no multi-chain settlement" },
+  { gap: "On-Chain Registries", proven: "75% of Safe transactions on Gnosis prove on-chain identity works", missing: "Slow settlement, poor developer experience" },
+  { gap: "Plugin Architectures", proven: "90+ plugins and 15K stars prove modular AI tooling works", missing: "No payment layer, no way for creators to earn" },
+  { gap: "AI-to-AI Payments", proven: "First AI payment with Visa proves machine-to-machine commerce is real", missing: "Runs on its own chain, limited interoperability" },
+  { gap: "HTTP Micropayments", proven: "140M+ x402 transactions prove instant stablecoin payments work", missing: "No trust scoring, no safety scanning" },
+  { gap: "Universal Discovery", proven: "97M monthly MCP SDK downloads prove standardized tool discovery works", missing: "No payment rails, no monetization" },
+];
 
-  return (
-    <div className="relative border border-white/[0.06]/40 bg-white/[0.02] overflow-x-auto rounded">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06]/30">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-zinc-700" />
-          <span className="w-2 h-2 rounded-full bg-zinc-800" />
-          <span className="w-2 h-2 rounded-full bg-zinc-800" />
-          <span className="text-[9px] font-medium text-zinc-600 ml-2">{lang}</span>
-        </div>
-        <button onClick={handleCopy}
-          className="text-[10px] font-medium text-zinc-600 hover:text-zinc-300 transition-colors px-2 py-0.5 cursor-pointer">
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
-      <pre className="p-5 text-[11px] font-mono text-zinc-400 leading-[1.9] whitespace-pre-wrap">{code}</pre>
-    </div>
-  );
-}
+const FEE_SPLIT = [
+  { label: "Skill operator", pct: 85 },
+  { label: "Validator pool", pct: 10 },
+  { label: "Protocol treasury", pct: 3 },
+  { label: "Insurance fund", pct: 1.5 },
+  { label: "Burn", pct: 0.5 },
+];
 
-function DocSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="mb-20 scroll-mt-24">
-      <h2 className="text-2xl md:text-3xl font-normal text-zinc-100 tracking-tight mb-2">{title}</h2>
-      <div className="w-12 h-0.5 bg-zinc-700 rounded-full mb-6" />
-      {children}
-    </section>
-  );
-}
+const TRUST_DIMS = [
+  { name: "Reliability", desc: "Uptime, latency p95, error rate over rolling 30 days" },
+  { name: "Safety", desc: "NeMo violation rate, severity-weighted score" },
+  { name: "Accuracy", desc: "Output quality validated by downstream consumers" },
+  { name: "Economic", desc: "Payment history, dispute rate, settlement speed" },
+  { name: "Community", desc: "Peer reviews, validator attestations, age on registry" },
+];
 
-function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mt-6 border border-white/[0.06]/40 bg-white/[0.02]/30 p-5 rounded">
-      <div className="text-[11px] font-medium text-zinc-400 mb-2">{label}</div>
-      <p className="text-[14px] text-zinc-500 leading-relaxed">{children}</p>
-    </div>
-  );
-}
+const CATEGORIES = [
+  "Code Analysis", "Code Generation", "Data Analytics", "DeFi Tools",
+  "DevOps", "Document Processing", "Education", "Finance",
+  "Healthcare", "Image Processing", "Language Translation", "Legal",
+  "Marketing", "Natural Language", "Research", "Security Auditing",
+  "Social Media", "Trading", "Web Scraping",
+];
 
+const DISCOVERY_METHODS = [
+  { method: "MCP Standard", desc: "16 tools auto-discovered by any MCP-compatible agent (AegisX, Cursor, Windsurf). SSE transport with real-time streaming." },
+  { method: "REST API", desc: "15+ endpoints at /api/v1/*. Full CRUD for operators, invocations, trust scores, disputes, and earnings." },
+  { method: "A2A Protocol", desc: "Google/Linux Foundation standard. Agent card at /.well-known/agent-card.json for agent-to-agent delegation." },
+  { method: "/llms.txt", desc: "Machine-readable protocol summary at /llms.txt. Lets any LLM understand Aegis capabilities without API calls." },
+];
+
+const OPERATOR_STEPS = [
+  { step: "Register", desc: "Submit operator metadata, endpoint URL, category, and pricing. Requires $AEGIS tokens." },
+  { step: "Health Check", desc: "System pings your endpoint every 5 minutes. 3 consecutive failures auto-deactivate your operator." },
+  { step: "Trust Scoring", desc: "5-dimension score recalculated every 15 minutes. Higher trust means more visibility in discovery." },
+  { step: "Invocation", desc: "Agents discover and call your skill via MCP, REST, or A2A. NeMo scans input before execution." },
+  { step: "Settlement", desc: "Payment splits atomically on Solana into 5 wallets. Your 85% share arrives in ~400ms." },
+];
+
+const AEGISX_COMMANDS = [
+  { cmd: "aegisx skills list", desc: "Browse all 50 active skills with trust scores and pricing" },
+  { cmd: "aegisx skills invoke", desc: "Execute any skill with JSON input and payment negotiation" },
+  { cmd: "aegisx trust score", desc: "Get the full 5-dimension trust breakdown for any operator" },
+  { cmd: "aegisx audit", desc: "Run a security audit on a Solana program directory" },
+  { cmd: "aegisx research", desc: "Search Reddit, HN, GitHub, and DexScreener in parallel" },
+  { cmd: "aegisx trade quote", desc: "Get Jupiter swap quotes for any Solana token pair" },
+  { cmd: "aegisx trade swap", desc: "Execute a token swap through Jupiter aggregator" },
+  { cmd: "aegisx launch", desc: "Create a new token on Bags.fm with configurable fee modes" },
+  { cmd: "aegisx earnings", desc: "View earnings breakdown by wallet address" },
+  { cmd: "aegisx auth login", desc: "Authenticate with your Solana wallet for signed requests" },
+  { cmd: "aegisx mcp connect", desc: "Connect to the Aegis MCP server for tool discovery" },
+  { cmd: "aegisx disputes list", desc: "View and manage disputes filed against your operators" },
+];
+
+const AEGISX_SHORTCUTS = [
+  { keys: "Ctrl+Shift+I", action: "Invoke selected skill inline" },
+  { keys: "Ctrl+Shift+T", action: "Show trust score overlay for current operator" },
+  { keys: "Ctrl+Shift+M", action: "Open MCP tool palette" },
+  { keys: "Ctrl+Shift+D", action: "Toggle NeMo guardrail debug panel" },
+  { keys: "Ctrl+Shift+S", action: "Open Solana wallet and earnings dashboard" },
+];
+
+const AEGISX_SNIPPETS = [
+  { name: "aegis-program", desc: "Anchor program scaffold with PDA derivation, checked arithmetic, and 5-way fee split" },
+  { name: "aegis-fee-split", desc: "Complete fee distribution logic with [8500, 1000, 300, 150, 50] BPS values" },
+  { name: "aegis-invoke", desc: "Full invocation flow with x402 payment negotiation and error handling" },
+  { name: "aegis-client", desc: "AegisClient setup with wallet auth, retry config, and type-safe responses" },
+  { name: "aegis-mcp-config", desc: "MCP server configuration with SSE transport and environment variables" },
+];
+
+const NEMO_PROFILES = [
+  { name: "default", input: "PII scan, injection detect", output: "Toxicity, hallucination", latency: "~40ms" },
+  { name: "security", input: "+ jailbreak, exfiltration", output: "+ data leak, bias", latency: "~85ms" },
+  { name: "code", input: "+ malicious code patterns", output: "+ license violation", latency: "~60ms" },
+];
+
+const NEMO_TIERS = [
+  { score: "90-100", level: "Minimal", desc: "Basic toxicity filter only. Single-pass scan. No sampling." },
+  { score: "70-89", level: "Standard", desc: "Full default profile. PII stripping, injection detection, hallucination checks." },
+  { score: "40-69", level: "Enhanced", desc: "Security profile active. Jailbreak detection, exfiltration blocking, 10% random deep scan sampling." },
+  { score: "0-39", level: "Maximum", desc: "All checks on every call. Human review queue for flagged outputs. Temporary lockout after 3 violations." },
+];
+
+const NEMO_BLOCKED = [
+  { threat: "PII in prompts", example: "SSN, credit card numbers, email addresses, phone numbers stripped before execution" },
+  { threat: "SQL injection", example: "Payloads like ' OR 1=1; DROP TABLE detected and blocked at input scan" },
+  { threat: "Prompt injection", example: "Attempts to override system instructions or extract internal prompts" },
+  { threat: "Jailbreak patterns", example: "DAN-style prompts, roleplay escapes, instruction hierarchy attacks" },
+  { threat: "Data exfiltration", example: "Output containing API keys, internal URLs, or base64-encoded secrets" },
+  { threat: "Toxic content", example: "Hate speech, harassment, explicit content filtered from outputs" },
+];
+
+const NEMO_MODELS = [
+  { model: "nemoguard-8b", desc: "Primary content safety model. Handles PII detection, toxicity scoring, and prompt injection classification. Fine-tuned from Llama 3.1 8B." },
+  { model: "nemotron-70b", desc: "Reasoning model for complex safety decisions. Evaluates edge cases, context-dependent threats, and multi-step attack patterns." },
+  { model: "MiniLM-L6-v2", desc: "Embedding model for semantic similarity. Powers jailbreak pattern matching and output hallucination detection via cosine similarity." },
+];
+
+const MCP_TOOLS_DATA = [
+  { name: "aegis_discover", desc: "Search and filter operators by category, trust score, pricing, and tags" },
+  { name: "aegis_invoke", desc: "Execute a single skill with payment negotiation and NeMo scanning" },
+  { name: "aegis_invoke_batch", desc: "Batch invoke up to 10 skills in parallel with atomic settlement" },
+  { name: "aegis_price", desc: "Get current pricing for any skill including fee breakdown" },
+  { name: "aegis_trust_score", desc: "Full 5-dimension trust breakdown with historical trend" },
+  { name: "aegis_trust_history", desc: "Trust score changes over time with dimension-level granularity" },
+  { name: "aegis_operator_info", desc: "Detailed operator metadata, endpoint, health status, and earnings" },
+  { name: "aegis_categories", desc: "List all 19 skill categories with operator counts" },
+  { name: "aegis_register", desc: "Register a new skill operator with metadata and pricing config" },
+  { name: "aegis_update", desc: "Update operator config, pricing, endpoint URL, or metadata" },
+  { name: "aegis_deactivate", desc: "Deactivate an operator you own, removing it from discovery" },
+  { name: "aegis_earnings", desc: "View earnings breakdown by wallet, operator, or time period" },
+  { name: "aegis_disputes", desc: "List disputes with filters for status, operator, and date range" },
+  { name: "aegis_dispute_submit", desc: "File a dispute against an invocation with evidence attachment" },
+  { name: "aegis_royalty_tree", desc: "Visualize the full dependency graph and royalty cascade for a skill" },
+  { name: "aegis_health", desc: "Platform health check with per-service status and latency metrics" },
+];
+
+const SOLANA_PROGRAMS = [
+  {
+    name: "Skill Registry",
+    id: "7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR",
+    instructions: ["initialize", "register_operator", "invoke_skill", "update_trust", "deactivate_operator", "rotate_admin", "update_config", "claim_royalties"],
+    safety: "PDA-derived authority, operator-only writes",
+    desc: "Core protocol program. Handles operator registration, skill invocation, trust score updates, and atomic 5-way fee settlement.",
+  },
+  {
+    name: "Royalty Registry",
+    id: "FrXBFm4WdqBHosZJ8rMyT9FHNvRXuSVzxqGBbH7nCWs6",
+    instructions: ["register_dependency", "update_weights", "cascade_royalty", "claim_royalties", "remove_dependency"],
+    safety: "Depth-weighted cascade, max depth 5, per-creator vaults via CPI",
+    desc: "Manages the upstream royalty graph. When a skill depends on other skills, royalties cascade automatically through a depth-weighted distribution.",
+  },
+  {
+    name: "Governance",
+    id: "6TwiJJSscSFpSQA1PU8uYoJHGwgxaprEPJSpKfRireSn",
+    instructions: ["create_proposal", "cast_vote", "execute_proposal", "stake", "unstake"],
+    safety: "Quorum requirements, time-locked execution, validator-only proposals",
+    desc: "On-chain governance for protocol parameter changes. $AEGIS holders vote on fee splits, trust thresholds, and category additions.",
+  },
+];
+
+const SOLANA_SAFETY = [
+  "Checked arithmetic: all math uses checked_add, checked_mul, checked_sub with u128 intermediates",
+  "PDA verification: every account validated with seeds + bump constraints",
+  "Overflow protection: overflow-checks = true in Cargo.toml release profile",
+  "Fee split validation: BPS values [8500, 1000, 300, 150, 50] enforced at initialization, must sum to 10000",
+  "Authority checks: only the registered operator can modify their own state",
+  "Rent-exempt enforcement: all accounts created with minimum rent balance",
+];
+
+const PROTOCOLS = [
+  {
+    name: "MCP",
+    version: "1.0",
+    status: "Live",
+    desc: "Model Context Protocol. 16 tools for skill discovery and invocation. SSE transport with real-time streaming.",
+    details: "Linux Foundation governance. 97M monthly SDK downloads. Compatible with AegisX, Cursor, Windsurf, and any MCP-compatible agent. One-line config to connect.",
+  },
+  {
+    name: "x402",
+    version: "0.4",
+    status: "Live",
+    desc: "HTTP 402 micropayments. Pay-per-call with USDC settlement on Solana.",
+    details: "Coinbase v2 compliant. 140M+ transactions processed. Backed by Cloudflare, Google, and Visa. Agent sends payment with request, skill executes after verification.",
+  },
+  {
+    name: "A2A",
+    version: "0.1",
+    status: "Live",
+    desc: "Agent-to-agent delegation. Task handoff with context preservation.",
+    details: "Google/Linux Foundation standard. Agent card served at /.well-known/agent-card.json. Enables autonomous agent-to-agent task delegation without human intervention.",
+  },
+];
+
+const BAGS_FEE_MODES = [
+  { mode: "Default (2% flat)", desc: "2% fee on every trade, split between protocol and operator. Best for stable, established operators." },
+  { mode: "Low-pre, High-post", desc: "Lower fees on buys, higher fees on sells. Encourages accumulation and long-term holding." },
+  { mode: "High-pre, Low-post", desc: "Higher fees on buys, lower fees on sells. Front-loads revenue for early liquidity." },
+  { mode: "High-flat", desc: "Elevated flat fee on all trades. Maximum revenue per transaction for high-demand skills." },
+];
+
+const BAGS_SKILLS = [
+  { name: "bags_token_launch", desc: "Create a new token on Bags.fm with bonding curve and fee mode config" },
+  { name: "bags_trade_quote", desc: "Get swap quotes for any token pair through Jupiter aggregator" },
+  { name: "bags_trade_swap", desc: "Execute a token swap with slippage protection" },
+  { name: "bags_analytics", desc: "Token analytics: holders, volume, market cap, fee earnings" },
+  { name: "bags_fee_config", desc: "View and update fee mode for your operator token" },
+  { name: "bags_social_link", desc: "Link Twitter, GitHub, or website to your token profile" },
+  { name: "bags_compound", desc: "Auto-compound liquidity from trading fees back into the pool" },
+  { name: "bags_holders", desc: "List top token holders with balance and percentage breakdown" },
+  { name: "bags_earnings", desc: "View fee earnings breakdown by period and source" },
+  { name: "bags_dividends", desc: "Configure and distribute dividends to top token holders" },
+  { name: "bags_dex_verify", desc: "Verify your token on DexScreener with branding and social links" },
+  { name: "bags_dex_boost", desc: "Boost your token visibility on DexScreener listings" },
+];
+
+const API_ENDPOINTS = [
+  { method: "POST", path: "/v1/invoke", desc: "Execute a skill with payment and guardrail scanning" },
+  { method: "POST", path: "/v1/invoke/batch", desc: "Batch invoke up to 10 skills in parallel" },
+  { method: "GET", path: "/v1/skills", desc: "List all active skills with pagination and filters" },
+  { method: "GET", path: "/v1/skills/:id", desc: "Get skill details, trust score, and health status" },
+  { method: "GET", path: "/v1/skills/:id/price", desc: "Get current pricing with fee breakdown" },
+  { method: "GET", path: "/v1/trust/:id", desc: "Full 5-dimension trust score breakdown" },
+  { method: "GET", path: "/v1/trust/:id/history", desc: "Trust score changes over time" },
+  { method: "POST", path: "/v1/register", desc: "Register a new skill operator" },
+  { method: "PUT", path: "/v1/skills/:id", desc: "Update skill config, pricing, or metadata" },
+  { method: "DELETE", path: "/v1/skills/:id", desc: "Deactivate a skill (owner only)" },
+  { method: "GET", path: "/v1/earnings/:wallet", desc: "Earnings breakdown by wallet address" },
+  { method: "GET", path: "/v1/royalties/:id", desc: "Royalty dependency tree for a skill" },
+  { method: "POST", path: "/v1/disputes", desc: "Submit a dispute with evidence" },
+  { method: "GET", path: "/v1/disputes", desc: "List disputes with status filters" },
+  { method: "GET", path: "/v1/categories", desc: "All 19 categories with operator counts" },
+  { method: "GET", path: "/v1/health", desc: "Platform health with per-service status" },
+  { method: "GET", path: "/v1/feed", desc: "SSE stream of real-time invocation events" },
+  { method: "GET", path: "/v1/validators", desc: "List active validators with bond tiers" },
+  { method: "POST", path: "/v1/auth/nonce", desc: "Request a nonce for wallet-sign authentication" },
+  { method: "POST", path: "/v1/auth/verify", desc: "Verify ed25519 signature and receive JWT session" },
+];
+
+const API_EXAMPLES = [
+  {
+    title: "Invoke a Skill",
+    method: "POST",
+    path: "/v1/invoke",
+    request: `{
+  "skill": "price-oracle",
+  "input": { "token": "SOL" },
+  "maxFee": 0.001,
+  "wallet": "YOUR_SOLANA_WALLET"
+}`,
+    response: `{
+  "id": "inv_abc123",
+  "output": { "price": 142.57, "currency": "USD" },
+  "fee": 0.0005,
+  "trust_score": 94.2,
+  "settlement_tx": "5xKp...solana_tx_hash",
+  "guardrail_pass": true,
+  "latency_ms": 387
+}`,
+  },
+  {
+    title: "Get Trust Score",
+    method: "GET",
+    path: "/v1/trust/price-oracle",
+    request: null,
+    response: `{
+  "operator": "price-oracle",
+  "overall": 94.2,
+  "dimensions": {
+    "reliability": 96.1,
+    "safety": 100.0,
+    "accuracy": 91.8,
+    "economic": 93.4,
+    "community": 89.7
+  },
+  "last_updated": "2026-03-31T12:00:00Z",
+  "health_status": "active",
+  "total_invocations": 48291
+}`,
+  },
+  {
+    title: "Register an Operator",
+    method: "POST",
+    path: "/v1/register",
+    request: `{
+  "name": "my-analysis-bot",
+  "endpoint": "https://my-server.com/api/analyze",
+  "category": "code-analysis",
+  "description": "Analyzes code for bugs and security issues",
+  "pricing": { "perCall": 0.002, "currency": "USDC" },
+  "tags": ["security", "code-review", "static-analysis"],
+  "wallet": "YOUR_SOLANA_WALLET"
+}`,
+    response: `{
+  "id": "op_xyz789",
+  "name": "my-analysis-bot",
+  "status": "active",
+  "trust_score": 50.0,
+  "health_check_url": "https://my-server.com/api/analyze/health",
+  "next_health_check": "2026-03-31T12:05:00Z"
+}`,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
 export default function Docs() {
-  const [active, setActive] = useState("quickstart");
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [activeSection, setActiveSection] = useState<SectionId>("hero");
+  const [activeTab, setActiveTab] = useState<string>("MCP");
+  const { data: stats } = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
 
+  // Intersection observer for active section
   useEffect(() => {
+    const els = SECTIONS.map(s => document.getElementById(s.id)).filter(Boolean) as HTMLElement[];
     const obs = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActive(entry.target.id);
-          }
-        }
-      },
-      { rootMargin: "-30% 0px -60% 0px" }
+      entries => { for (const e of entries) if (e.isIntersecting) setActiveSection(e.target.id as SectionId); },
+      { rootMargin: "-20% 0px -60% 0px" }
     );
-
-    SECTIONS.forEach((s) => {
-      const el = document.getElementById(s.id);
-      if (el) {
-        sectionRefs.current[s.id] = el;
-        obs.observe(el);
-      }
-    });
-
+    els.forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollTo = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const gridCell = (content: React.ReactNode, key?: string) => (
+    <Card key={key}>{content}</Card>
+  );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div style={{ background: T.bg, minHeight: "100vh", color: T.text50 }}>
       <Navbar />
 
-      <div className="pt-24 flex">
-        {/* Sidebar */}
-        <aside className="hidden lg:block w-72 flex-shrink-0 border-r border-white/[0.06]/30 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto py-10 px-8">
-          <div className="text-[11px] font-medium text-zinc-500 mb-6">
-            Documentation
-          </div>
-          <nav className="space-y-0.5">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => scrollTo(s.id)}
-                className={`block w-full text-left text-[13px] px-3 py-2.5 transition-all duration-200 rounded cursor-pointer ${
-                  active === s.id
-                    ? "text-zinc-200 bg-zinc-800/40 font-medium"
-                    : "text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/20"
-                }`}
-              >
+      <div style={{ maxWidth: 1400, margin: "0 auto", display: "flex", position: "relative" }}>
+
+        {/* Left Nav */}
+        <nav style={{
+          width: 220, flexShrink: 0, position: "sticky", top: 72, height: "calc(100vh - 72px)", overflowY: "auto",
+          padding: "32px 0 40px", borderRight: `1px solid ${T.border}`,
+          display: "flex", flexDirection: "column", gap: 1,
+        }} className="hidden lg:flex">
+          <div style={{ padding: "0 20px 16px", fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text20 }}>Documentation</div>
+          {SECTIONS.map(s => {
+            const active = activeSection === s.id;
+            return (
+              <button key={s.id} onClick={() => scrollTo(s.id)} style={{
+                display: "block", width: "100%", textAlign: "left", background: "transparent",
+                border: "none", borderLeft: active ? "2px solid #10B981" : "2px solid transparent",
+                padding: "6px 20px", fontSize: 13, fontWeight: active ? 500 : 400,
+                color: active ? "rgba(255,255,255,0.85)" : T.text30, cursor: "pointer",
+                transition: "all 0.15s",
+              }}>
                 {s.label}
               </button>
-            ))}
-          </nav>
+            );
+          })}
+        </nav>
 
-          <div className="mt-10 pt-8 border-t border-white/[0.06]/30 space-y-3">
-            <a href="https://github.com/aegis-protocol/aegisx" target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2.5 text-[12px] text-zinc-600 hover:text-zinc-300 transition-colors">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-              View Source
-            </a>
-            <a href="/marketplace"
-              className="flex items-center gap-2.5 text-[12px] text-zinc-600 hover:text-zinc-300 transition-colors">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 3h12M2 8h12M2 13h12" stroke="currentColor" strokeWidth="1.5"/></svg>
-              Marketplace
-            </a>
-          </div>
+        {/* Content */}
+        <main style={{ flex: 1, maxWidth: 720, margin: "0 auto", padding: "100px 48px 120px", display: "flex", flexDirection: "column", gap: 48 }}>
+
+          {/* 1. Hero */}
+          <section id="hero" style={{ position: "relative" }}>
+            <div style={{ position: "relative", minHeight: 320 }}>
+              <HeroMesh />
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <motion.h1 {...fadeUp} style={{ fontSize: 32, fontWeight: 600, color: T.text95, margin: 0, lineHeight: 1.3 }}>
+                  Aegis Documentation
+                </motion.h1>
+                <motion.p {...fadeUp} style={{ fontSize: 15, lineHeight: 1.7, color: T.text50, marginTop: 12, maxWidth: 520 }}>
+                  Three products. One protocol. The complete infrastructure for AI skills that earn money on Solana.
+                </motion.p>
+
+                {/* Three Products */}
+                <motion.div {...fadeUp} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 24 }}>
+                  <Card style={{ padding: 16, borderLeft: "2px solid #10B981" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>Marketplace</div>
+                    <div style={{ fontSize: 12, color: T.text50, marginTop: 4, lineHeight: 1.5 }}>180+ skills. Discover, invoke, earn.</div>
+                  </Card>
+                  <Card style={{ padding: 16, borderLeft: "2px solid rgba(96,165,250,0.5)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>AegisX IDE</div>
+                    <div style={{ fontSize: 12, color: T.text50, marginTop: 4, lineHeight: 1.5 }}>Build skills with 86 Solana infrastructure modules, 47 skills, and AegisX CLI.</div>
+                  </Card>
+                  <Card style={{ padding: 16, borderLeft: "2px solid rgba(168,85,247,0.5)" }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>SkillFi</div>
+                    <div style={{ fontSize: 12, color: T.text50, marginTop: 4, lineHeight: 1.5 }}>Royalties cascade 5 levels deep.</div>
+                  </Card>
+                </motion.div>
+
+                {/* Live Stats */}
+                <motion.div {...fadeUp} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 16 }}>
+                  {[
+                    { label: "Skills Live", value: stats?.totalOperators?.toLocaleString() ?? "..." },
+                    { label: "Invocations", value: stats?.totalInvocations?.toLocaleString() ?? "..." },
+                    { label: "Revenue Settled", value: stats?.totalEarnings ? `$${parseFloat(String(stats.totalEarnings)).toLocaleString()}` : "..." },
+                  ].map(s => (
+                    <div key={s.label} style={{ textAlign: "center", padding: "12px 0" }}>
+                      <div style={{ fontSize: 22, fontWeight: 600, color: T.text95, fontVariantNumeric: "tabular-nums" }}>{s.value}</div>
+                      <div style={{ fontSize: 10, color: T.text20, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</div>
+                    </div>
+                  ))}
+                </motion.div>
+
+                {/* Protocol Logos */}
+                <motion.div {...fadeUp} style={{ display: "flex", gap: 24, marginTop: 20, alignItems: "center" }}>
+                  {["solana", "nvidia", "coinbase"].map(name => (
+                    <img key={name} src={`/assets/icons/${name}.svg`} alt={name} style={{ height: 16, opacity: 0.25, filter: "brightness(10)" }} />
+                  ))}
+                  <span style={{ fontSize: 10, color: T.text20, letterSpacing: "0.06em" }}>SOLANA / NVIDIA NeMo / COINBASE x402</span>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+
+          {/* 2. Quick Start */}
+          <section id="quickstart">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Quick Start</SectionHeading>
+              <div style={{ display: "flex", gap: 0, marginTop: 16, borderBottom: `1px solid ${T.border}`, flexWrap: "wrap" }}>
+                {QUICKSTART_TABS.map(t => (
+                  <button key={t} onClick={() => setActiveTab(t)} style={{
+                    background: "none", border: "none", borderBottom: activeTab === t ? "2px solid rgba(52,211,153,0.55)" : "2px solid transparent",
+                    padding: "8px 16px", fontSize: 13, color: activeTab === t ? T.text95 : T.text30, cursor: "pointer",
+                  }}>{t}</button>
+                ))}
+              </div>
+              <div style={{ marginTop: 12, position: "relative" }}>
+                <pre style={{
+                  background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                  padding: 16, fontSize: 13, lineHeight: 1.6, color: T.text80, overflow: "auto", margin: 0,
+                }}>
+                  {QUICKSTART_CODE[activeTab]}
+                </pre>
+                <button onClick={() => navigator.clipboard.writeText(QUICKSTART_CODE[activeTab])} style={{
+                  position: "absolute", top: 8, right: 8, background: "rgba(255,255,255,0.06)", border: `1px solid ${T.border}`,
+                  borderRadius: 4, padding: "4px 10px", fontSize: 11, color: T.text30, cursor: "pointer",
+                }}>Copy</button>
+              </div>
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 8 }}>What you get</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {(QUICKSTART_RESULTS[activeTab] || []).map((item, i) => (
+                    <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ color: T.emerald, fontSize: 13, lineHeight: 1.7, flexShrink: 0 }}>+</span>
+                      <span style={{ fontSize: 13, color: T.text50, lineHeight: 1.7 }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 3. Architecture */}
+          <section id="architecture">
+            <motion.div {...fadeUp}>
+              <SectionHeading>One Skill Invocation</SectionHeading>
+              <FlowMesh />
+              <Body>Six things happen in 400 milliseconds.</Body>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                {INVOCATION_STEPS.map(s => (
+                  <Card key={s.n}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 22, height: 22, borderRadius: "50%", background: T.emerald, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{s.n}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.text95 }}>{s.title}</span>
+                    </div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 6, lineHeight: 1.6 }}>{s.desc}</div>
+                  </Card>
+                ))}
+              </div>
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.text95, marginBottom: 12 }}>Under the Hood</div>
+                <Card>
+                  {UNDER_THE_HOOD.map((item, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < UNDER_THE_HOOD.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                      <span style={{ fontSize: 13, color: T.text50 }}>{item.label}</span>
+                      <span style={{ fontSize: 13, fontFamily: "monospace", color: T.text80, textAlign: "right" }}>{item.value}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 4. Why Aegis */}
+          <section id="why-aegis">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Why This Matters</SectionHeading>
+              <Body>Six critical problems have been solved individually. Nobody combined them into one protocol. Until now.</Body>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+                {WHY_CARDS.map(c => (
+                  <Card key={c.gap} style={{ padding: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 4 }}>{c.gap}</div>
+                        <div style={{ fontSize: 12, color: T.text50, lineHeight: 1.6 }}>{c.proven}</div>
+                      </div>
+                      <div style={{ fontSize: 11, color: "rgba(239,68,68,0.5)", maxWidth: 180, textAlign: "right", lineHeight: 1.5, flexShrink: 0, marginLeft: 16 }}>{c.missing}</div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              <Card style={{ marginTop: 16, padding: 20, background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
+                <div style={{ fontSize: 15, fontWeight: 500, color: T.text95, lineHeight: 1.7, textAlign: "center" }}>
+                  Aegis combines discovery, payments, trust, safety, royalties, and settlement into one protocol. On Solana. In 400ms.
+                </div>
+              </Card>
+              <Body>
+                Aegis is the first protocol to combine all six layers into a single stack. Discovery via MCP. Payments via x402. Trust via a 5-dimension scoring engine. Safety via NeMo Guardrails. Royalties via on-chain CPI cascades. Settlement via Solana. Why Solana specifically? 400ms finality, $0.00025 per transaction, and the largest active developer community in crypto. No other chain delivers sub-second settlement at that cost with that level of tooling support.
+              </Body>
+            </motion.div>
+          </section>
+
+          {/* 5. Marketplace */}
+          <section id="marketplace">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Marketplace</SectionHeading>
+              <Body>180+ operators across 12 categories. Every skill trust-scored, every call audited, every payment settled on Solana.</Body>
+
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>19 Categories</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {CATEGORIES.map(cat => (
+                    <span key={cat} style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, background: T.card, border: `1px solid ${T.border}`, color: T.text50 }}>{cat}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>How Operators Work</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {OPERATOR_STEPS.map((s, i) => (
+                    <div key={s.step} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <span style={{ width: 22, height: 22, borderRadius: "50%", background: T.emerald, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", flexShrink: 0 }}>{i + 1}</span>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>{s.step}</div>
+                        <div style={{ fontSize: 13, color: T.text50, lineHeight: 1.6 }}>{s.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Discovery Methods</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {DISCOVERY_METHODS.map(d => (
+                    <Card key={d.method} style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>{d.method}</div>
+                      <div style={{ fontSize: 13, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{d.desc}</div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Trust Scoring: 5 Dimensions</div>
+                <Body>Recalculated every 15 minutes. Operators with scores below 40 get enhanced guardrail scanning on every call. Operators above 90 get minimal scanning for faster execution.</Body>
+                <div style={{ marginTop: 8 }}>
+                  {TRUST_DIMS.map(d => (
+                    <div key={d.name} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text80, minWidth: 90 }}>{d.name}</span>
+                      <span style={{ fontSize: 13, color: T.text50 }}>{d.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Fee Split Per Invocation</div>
+                {FEE_SPLIT.map(f => (
+                  <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                    <div style={{ width: `${f.pct * 3}px`, height: 8, borderRadius: 4, background: T.emerald, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: T.text50, minWidth: 30 }}>{f.pct}%</span>
+                    <span style={{ fontSize: 13, color: T.text30 }}>{f.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <Card style={{ marginTop: 16, padding: 16, background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 6 }}>Revenue Example</div>
+                <Body>
+                  An operator priced at $0.005 per call receives 1,000 invocations per day. Gross daily revenue: $5.00. Creator share at 85%: $4.25 per day, $127.50 per month. If upstream dependencies exist, 5% of the creator share cascades through the royalty graph automatically.
+                </Body>
+              </Card>
+            </motion.div>
+          </section>
+
+          {/* 6. AegisX */}
+          <section id="aegisx">
+            <motion.div {...fadeUp}>
+              <SectionHeading>AegisX IDE</SectionHeading>
+              <Body>A native code editor built for Aegis development. Based on Zed (Rust, high-performance). Trust-aware AI completions, built-in operator invocation, and Solana program tooling integrated at the editor level.</Body>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                {[
+                  { title: "Trust-Aware", desc: "Live trust scores inline. Red flags before you invoke." },
+                  { title: "Solana-Native", desc: "Wallet connected. Earnings, staking, disputes from the IDE." },
+                  { title: "MCP Integrated", desc: "Discover and test skills without leaving the editor." },
+                  { title: "Snippet Library", desc: "28 ready-to-paste patterns for common integrations." },
+                ].map(c => (
+                  <Card key={c.title}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text95 }}>{c.title}</div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{c.desc}</div>
+                  </Card>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>12 Commands</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {AEGISX_COMMANDS.map(c => (
+                    <div key={c.cmd} style={{ display: "flex", gap: 12, padding: "5px 0", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 13, fontFamily: "monospace", color: T.emerald, minWidth: 180, flexShrink: 0 }}>{c.cmd}</span>
+                      <span style={{ fontSize: 13, color: T.text50 }}>{c.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Keyboard Shortcuts</div>
+                <Card>
+                  {AEGISX_SHORTCUTS.map((s, i) => (
+                    <div key={s.keys} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: i < AEGISX_SHORTCUTS.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                      <span style={{ fontSize: 13, fontFamily: "monospace", color: T.text80 }}>{s.keys}</span>
+                      <span style={{ fontSize: 13, color: T.text50 }}>{s.action}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Top Snippets</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {AEGISX_SNIPPETS.map(s => (
+                    <div key={s.name} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <Code>{s.name}</Code>
+                      <span style={{ fontSize: 13, color: T.text50, lineHeight: 1.6 }}>{s.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Card style={{ marginTop: 20, padding: 16, background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.12)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 6 }}>Why Not Just Use VS Code?</div>
+                <Body>
+                  VS Code requires extensions for MCP, Solana, and wallet integration that do not talk to each other. AegisX is MCP-native from the ground up. Every AI completion is trust-scored. Every tool call is guardrail-scanned. Every payment is wallet-signed. Solana program development has first-class support with Anchor syntax highlighting, PDA derivation helpers, and one-click devnet deployment. It is a single environment built for a single purpose: building and monetizing AI skills on Aegis.
+                </Body>
+              </Card>
+            </motion.div>
+          </section>
+
+          {/* 7. SkillFi */}
+          <section id="skillfi">
+            <motion.div {...fadeUp}>
+              <SectionHeading>SkillFi Royalties</SectionHeading>
+              <CascadeMesh />
+              <div style={{ fontSize: 16, fontWeight: 600, color: T.text95, marginTop: 12 }}>Build the foundation. Earn from everything above it. Forever.</div>
+              <Body>
+                You build a price oracle. Someone builds a portfolio analyzer on top. Someone builds a trading bot on top of that. Every time the trading bot runs, you earn. Automatically. On chain. Up to 5 levels deep.
+              </Body>
+              <Card style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Depth-Weighted Distribution</div>
+                {[
+                  { depth: "Level 1 (direct dependency)", share: "50% of royalty pool" },
+                  { depth: "Level 2", share: "25%" },
+                  { depth: "Level 3", share: "12.5%" },
+                  { depth: "Level 4", share: "6.25%" },
+                  { depth: "Level 5", share: "6.25%" },
+                ].map(l => (
+                  <div key={l.depth} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 13 }}>
+                    <span style={{ color: T.text50 }}>{l.depth}</span>
+                    <span style={{ color: T.emerald }}>{l.share}</span>
+                  </div>
+                ))}
+              </Card>
+
+              <Card style={{ marginTop: 16, padding: 16, background: "rgba(16,185,129,0.04)", border: "1px solid rgba(16,185,129,0.12)" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 6 }}>Concrete Example</div>
+                <Body>
+                  Your oracle earns $0.002 per call. A portfolio analyzer calls it 10,000 times per month. You earn $20 per month from that single dependency. A trading bot then builds on the portfolio analyzer and drives 50,000 calls per month. At Level 2, you earn an additional $25 per month from the trading bot's usage. Now multiply by every skill in the ecosystem that depends on yours. Foundational builders earn compounding revenue as the dependency graph grows.
+                </Body>
+              </Card>
+
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Register a Dependency</div>
+                <pre style={{
+                  background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                  padding: 16, fontSize: 13, lineHeight: 1.6, color: T.text80, overflow: "auto", margin: 0,
+                }}>{`// Register upstream dependency on-chain
+const tx = await program.methods
+  .registerDependency(
+    upstreamOperatorPda,  // the skill you depend on
+    weight: 100           // relative weight (BPS)
+  )
+  .accounts({
+    operator: myOperatorPda,
+    royaltyRegistry: registryPda,
+    authority: wallet.publicKey,
+  })
+  .rpc();`}</pre>
+              </div>
+
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Claim Royalties</div>
+                <pre style={{
+                  background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                  padding: 16, fontSize: 13, lineHeight: 1.6, color: T.text80, overflow: "auto", margin: 0,
+                }}>{`// Claim accumulated royalties to your wallet
+const tx = await program.methods
+  .claimRoyalties()
+  .accounts({
+    operator: myOperatorPda,
+    creatorVault: vaultPda,
+    destination: wallet.publicKey,
+    tokenProgram: TOKEN_PROGRAM_ID,
+  })
+  .rpc();
+
+// Or via CLI
+// aegisx earnings claim --operator my-oracle`}</pre>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 8. NeMo */}
+          <section id="nemo">
+            <motion.div {...fadeUp}>
+              <SectionHeading>NeMo Guardrails</SectionHeading>
+              <Body>Every call is safety-checked. No exceptions. NVIDIA NeMo Guardrails run as a Python sidecar, scanning both inputs and outputs before any skill executes or returns results.</Body>
+              <div style={{ marginTop: 16, overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>{["Profile", "Input Checks", "Output Checks", "Latency"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text30, fontWeight: 600, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {NEMO_PROFILES.map(p => (
+                      <tr key={p.name}>
+                        <td style={{ padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text95, fontFamily: "monospace" }}>{p.name}</td>
+                        <td style={{ padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text50 }}>{p.input}</td>
+                        <td style={{ padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text50 }}>{p.output}</td>
+                        <td style={{ padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text30 }}>{p.latency}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>What Gets Blocked</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {NEMO_BLOCKED.map(b => (
+                    <Card key={b.threat} style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>{b.threat}</div>
+                      <div style={{ fontSize: 12, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{b.example}</div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Models Used</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {NEMO_MODELS.map(m => (
+                    <Card key={m.model} style={{ padding: 14 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, fontFamily: "monospace", color: T.emerald }}>{m.model}</div>
+                      <div style={{ fontSize: 13, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{m.desc}</div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>Adaptive Tiers (by Trust Score)</div>
+                {NEMO_TIERS.map(t => (
+                  <div key={t.score} style={{ display: "flex", gap: 12, padding: "6px 0", borderBottom: `1px solid ${T.border}` }}>
+                    <span style={{ fontSize: 13, fontFamily: "monospace", color: T.emerald, minWidth: 60 }}>{t.score}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: T.text80, minWidth: 80 }}>{t.level}</span>
+                    <span style={{ fontSize: 13, color: T.text50 }}>{t.desc}</span>
+                  </div>
+                ))}
+              </div>
+              <Card style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: T.text95, marginBottom: 6 }}>Self-Improving</div>
+                <Body>3 violations in 24h triggers enhanced monitoring. 5 triggers temporary lockout. 10 triggers permanent ban pending manual review.</Body>
+              </Card>
+            </motion.div>
+          </section>
+
+          {/* 9. MCP Tools */}
+          <section id="mcp-tools">
+            <motion.div {...fadeUp}>
+              <SectionHeading>MCP Tools</SectionHeading>
+              <Body>16 tools accessible from any MCP-compatible agent. One-line config to connect AegisX, Cursor, or Windsurf.</Body>
+              <div style={{ marginTop: 16, overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>{["Tool", "Description"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text30, fontWeight: 600, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {MCP_TOOLS_DATA.map(t => (
+                      <tr key={t.name}>
+                        <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, fontFamily: "monospace", color: T.text80, whiteSpace: "nowrap" }}>{t.name}</td>
+                        <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, color: T.text50 }}>{t.desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 10. Solana Programs */}
+          <section id="programs">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Solana Programs</SectionHeading>
+              <Body>Three Anchor programs on Solana devnet. Built with Anchor 0.30.1 in Rust. Mainnet audit pending.</Body>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+                {SOLANA_PROGRAMS.map(p => (
+                  <Card key={p.name}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text95 }}>{p.name}</div>
+                    <div style={{ fontSize: 12, fontFamily: "monospace", color: T.text30, marginTop: 4, wordBreak: "break-all" }}>{p.id}</div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 6, lineHeight: 1.6 }}>{p.desc}</div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 8 }}>
+                      <span style={{ fontWeight: 600, color: T.text80 }}>Instructions: </span>
+                      {p.instructions.map((inst, i) => (
+                        <span key={inst}>
+                          <Code>{inst}</Code>
+                          {i < p.instructions.length - 1 && <span style={{ color: T.text20 }}>{" "}</span>}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 12, color: T.emerald, marginTop: 6 }}>{p.safety}</div>
+                  </Card>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Safety Features</div>
+                <Card>
+                  {SOLANA_SAFETY.map((s, i) => (
+                    <div key={i} style={{ display: "flex", gap: 8, padding: "5px 0", borderBottom: i < SOLANA_SAFETY.length - 1 ? `1px solid ${T.border}` : "none" }}>
+                      <span style={{ color: T.emerald, flexShrink: 0 }}>+</span>
+                      <span style={{ fontSize: 13, color: T.text50, lineHeight: 1.6 }}>{s}</span>
+                    </div>
+                  ))}
+                </Card>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 11. Protocols */}
+          <section id="protocols">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Protocols</SectionHeading>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+                {PROTOCOLS.map(p => (
+                  <Card key={p.name}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: T.text95 }}>{p.name}</span>
+                      <span style={{ fontSize: 11, color: T.text30 }}>v{p.version}</span>
+                      <Badge color="rgba(52,211,153,0.35)">{p.status}</Badge>
+                    </div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{p.desc}</div>
+                    <div style={{ fontSize: 12, color: T.text30, marginTop: 6, lineHeight: 1.6 }}>{p.details}</div>
+                  </Card>
+                ))}
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 12. Bags.fm */}
+          <section id="bags">
+            <motion.div {...fadeUp}>
+              <SectionHeading>Bags.fm</SectionHeading>
+              <Body>Every operator gets a token on Bags.fm at registration. 2% of every trade goes to the protocol. Every skill invocation triggers a forced buy of the operator's token.</Body>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                {[
+                  { title: "Token Launch", desc: "Automatic bonding curve creation at operator registration. No setup needed." },
+                  { title: "Fee Sharing", desc: "2% trade fee split between protocol, operator, and stakers." },
+                  { title: "Forced Buy Pressure", desc: "Every invocation allocates a portion of fees to buy the operator token." },
+                  { title: "Holder Rewards", desc: "Top token holders earn a share of the operator's invocation revenue." },
+                ].map(c => (
+                  <Card key={c.title}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.text95 }}>{c.title}</div>
+                    <div style={{ fontSize: 13, color: T.text50, marginTop: 4, lineHeight: 1.6 }}>{c.desc}</div>
+                  </Card>
+                ))}
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>Fee Modes</div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr>{["Mode", "Description"].map(h => (
+                        <th key={h} style={{ textAlign: "left", padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text30, fontWeight: 600, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
+                      ))}</tr>
+                    </thead>
+                    <tbody>
+                      {BAGS_FEE_MODES.map(f => (
+                        <tr key={f.mode}>
+                          <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, color: T.text95, fontFamily: "monospace", whiteSpace: "nowrap", fontSize: 12 }}>{f.mode}</td>
+                          <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, color: T.text50 }}>{f.desc}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 10 }}>12 Bags.fm Skills</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {BAGS_SKILLS.map(s => (
+                    <div key={s.name} style={{ display: "flex", gap: 12, padding: "5px 0", borderBottom: `1px solid ${T.border}` }}>
+                      <span style={{ fontSize: 12, fontFamily: "monospace", color: T.emerald, minWidth: 180, flexShrink: 0 }}>{s.name}</span>
+                      <span style={{ fontSize: 13, color: T.text50 }}>{s.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 8 }}>CLI Commands</div>
+                <pre style={{
+                  background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                  padding: 16, fontSize: 13, lineHeight: 1.6, color: T.text80, overflow: "auto", margin: 0,
+                }}>{`# Launch a token on Bags.fm
+aegisx launch "My Operator" --symbol MOP --fee-mode high-pre-low-post
+
+# Get a swap quote
+aegisx trade quote --from USDC --to AEGIS --amount 100
+
+# Execute the swap
+aegisx trade swap --from USDC --to AEGIS --amount 100 --slippage 0.5`}</pre>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* 13. API Reference */}
+          <section id="api">
+            <motion.div {...fadeUp}>
+              <SectionHeading>API Reference</SectionHeading>
+              <Body>20 endpoints. REST API at /api/v1/*. Authentication via Solana wallet-sign (ed25519 nonce, signature, JWT session cookie).</Body>
+              <div style={{ marginTop: 16, overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                  <thead>
+                    <tr>{["Method", "Path", "Description"].map(h => (
+                      <th key={h} style={{ textAlign: "left", padding: "8px 10px", borderBottom: `1px solid ${T.border}`, color: T.text30, fontWeight: 600, fontSize: 11, textTransform: "uppercase" }}>{h}</th>
+                    ))}</tr>
+                  </thead>
+                  <tbody>
+                    {API_ENDPOINTS.map((e, i) => (
+                      <tr key={i}>
+                        <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, fontFamily: "monospace", fontWeight: 600, color: e.method === "GET" ? T.emerald : e.method === "POST" ? "rgba(96,165,250,0.6)" : e.method === "PUT" ? "rgba(251,191,36,0.6)" : "rgba(248,113,113,0.6)", fontSize: 12 }}>{e.method}</td>
+                        <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, fontFamily: "monospace", color: T.text80 }}>{e.path}</td>
+                        <td style={{ padding: "6px 10px", borderBottom: `1px solid ${T.border}`, color: T.text50 }}>{e.desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text95, marginBottom: 12 }}>Request / Response Examples</div>
+                {API_EXAMPLES.map(ex => (
+                  <div key={ex.title} style={{ marginBottom: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: T.text95 }}>{ex.title}</span>
+                      <span style={{ fontSize: 11, fontFamily: "monospace", color: ex.method === "GET" ? T.emerald : "rgba(96,165,250,0.6)" }}>{ex.method} {ex.path}</span>
+                    </div>
+                    {ex.request && (
+                      <div style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 11, color: T.text20, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Request</div>
+                        <pre style={{
+                          background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                          padding: 12, fontSize: 12, lineHeight: 1.5, color: T.text80, overflow: "auto", margin: 0,
+                        }}>{ex.request}</pre>
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: 11, color: T.text20, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>Response</div>
+                      <pre style={{
+                        background: "rgba(255,255,255,0.03)", border: `1px solid ${T.border}`, borderRadius: 8,
+                        padding: 12, fontSize: 12, lineHeight: 1.5, color: T.text80, overflow: "auto", margin: 0,
+                      }}>{ex.response}</pre>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </section>
+
+        </main>
+
+        {/* Right TOC */}
+        <aside style={{
+          width: 180, flexShrink: 0, position: "sticky", top: 72, height: "calc(100vh - 72px)",
+          padding: "32px 16px 40px", borderLeft: `1px solid ${T.border}`,
+          display: "flex", flexDirection: "column", gap: 1,
+          maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+        }} className="hidden xl:flex">
+          <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.1em", color: T.text20, marginBottom: 12 }}>On this page</div>
+          {SECTIONS.map(s => (
+            <button key={s.id} onClick={() => scrollTo(s.id)} style={{
+              background: "none", border: "none", textAlign: "left", padding: "5px 0",
+              fontSize: 12, color: activeSection === s.id ? "#10B981" : T.text20, cursor: "pointer",
+              fontWeight: activeSection === s.id ? 500 : 400,
+              transition: "color 0.15s",
+            }}>{s.label}</button>
+          ))}
         </aside>
 
-        {/* Main content */}
-        <main className="flex-1 max-w-4xl py-10 px-6 lg:px-14">
-          {/* Mobile section nav */}
-          <div className="lg:hidden mb-8 overflow-x-auto">
-            <div className="flex gap-1 pb-2">
-              {SECTIONS.map((s) => (
-                <button key={s.id} onClick={() => scrollTo(s.id)}
-                  className={`text-xs whitespace-nowrap px-3 py-2 rounded border transition-all cursor-pointer ${
-                    active === s.id
-                      ? "bg-zinc-800/40 text-zinc-200 border-white/[0.06]/40"
-                      : "text-zinc-600 border-white/[0.06]/30 hover:text-zinc-400"
-                  }`}
-                >{s.label}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Quickstart */}
-          <DocSection id="quickstart" title="Get Started in 60 Seconds">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              AegisX is a single binary. Download it, bootstrap your runtime, and start invoking operators with x402 payments. AegisX includes 57 built-in tools across Solana, Trading, Bags.fm, AI, Intelligence, and Browser categories.
-            </p>
-            <CodeBlock lang="bash" code={`# Install AegisX
-curl -sSL https://aegisplace.com/install | sh
-
-# Bootstrap runtime -- generates Solana wallet
-$ aegisx init
-AegisX runtime initialized.
-   Address: 7xKXtQ9...9fGhR4m
-   Config:  ~/.aegisx/config.yaml
-   Wallet:  ~/.aegisx/wallet.json
-   Tools:   57 tools loaded (Solana, Trading, Bags.fm, AI, Intel, Browser)
-
-# Check your balance
-$ aegisx balance
-SOL:    0.000000000 (devnet)
-USDC:   0.00 (devnet)
-$AEGIS: 0.000000 (devnet)
-
-# Get devnet tokens for testing
-$ aegisx wallet airdrop 2
-Requesting 2 SOL airdrop on devnet...
-[OK] 2.0 SOL received.
-
-# Search the Aegis Index
-$ aegisx search "code review"
-Found 847 operators matching "code review"
-  1. code-review-agent    by aegis-labs    Diamond  94/100  0.00005 SOL/call
-  2. solidity-auditor     by AuditDAO     Diamond  89/100  0.0002 SOL/call
-  3. test-suite-gen       by TestForge    Diamond  85/100  0.00006 SOL/call
-
-# Invoke an operator (pays creator automatically via x402)
-$ aegisx invoke code-review-agent --file ./main.go
-Payment: $0.05 USDC via x402 -> swapped to $AEGIS
-Split:   60% Creator / 15% Validators / 12% Stakers / 8% Treasury / 3% Insurance / 2% Burn
-Status:  [OK] Completed in 1.2s`} />
-          </DocSection>
-
-          {/* AegisX IDE */}
-          <DocSection id="aegisx" title="AegisX IDE">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              AegisX is the full-featured IDE for building, testing, and deploying AI agents on Aegis. It ships with 57 built-in tools, integrated x402 payments, MCP server bridging, and Solana-native capabilities that no competitor offers -- not Cursor ($29B), not Copilot (20M users).
-            </p>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Installation</h3>
-              <CodeBlock lang="bash" code={`# Install AegisX globally
-curl -sSL https://aegisplace.com/install | sh
-
-# Or install via npm
-npm install -g aegisx
-
-# Verify installation
-$ aegisx --version
-aegisx v1.0.0 (57 tools, MCP bridge, x402 payments)
-
-# Initialize workspace
-$ aegisx init
-AegisX workspace initialized.
-   Config:   ~/.aegisx/config.yaml
-   Wallet:   ~/.aegisx/wallet.json
-   Tools:    57 tools loaded
-   MCP:      Bridge ready (aegisx mcp serve)`} />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Using the aegisx CLI</h3>
-              <CodeBlock lang="bash" code={`# List all available tools
-$ aegisx tools list
-57 tools available:
-
-  SOLANA (12 tools)
-    wallet-create, wallet-balance, token-transfer, token-swap,
-    stake-sol, unstake-sol, program-deploy, account-info,
-    transaction-history, nft-mint, nft-transfer, spl-token-create
-
-  TRADING (9 tools)
-    jupiter-swap, jupiter-quote, limit-order, dca-create,
-    portfolio-balance, price-feed, orderbook-depth,
-    trade-history, pnl-calculator
-
-  BAGS.FM (8 tools)
-    bags-buy, bags-sell, bags-portfolio, bags-trending,
-    bags-creator-info, bags-holder-list, bags-price-history,
-    bags-volume-analytics
-
-  AI (10 tools)
-    code-review, code-generate, code-explain, test-generate,
-    bug-detect, refactor-suggest, doc-generate, translate-code,
-    security-audit, performance-analyze
-
-  INTELLIGENCE (10 tools)
-    on-chain-analyze, wallet-profile, token-scanner,
-    whale-tracker, dex-monitor, liquidity-analyze,
-    smart-money-track, risk-score, market-sentiment,
-    social-sentiment
-
-  BROWSER (8 tools)
-    web-scrape, screenshot, pdf-extract, api-call,
-    form-fill, link-extract, site-monitor, content-summarize
-
-# Use a specific tool
-$ aegisx tool jupiter-swap --from SOL --to USDC --amount 1.5
-Swapping 1.5 SOL -> USDC via Jupiter...
-[OK] Received 187.42 USDC (rate: 124.95)
-
-# Get help on any tool
-$ aegisx tool bags-buy --help
-bags-buy: Buy a creator token on Bags.fm
-  --creator  <address>   Creator wallet address
-  --amount   <sol>       Amount in SOL to spend
-  --slippage <pct>       Max slippage (default: 1%)`} />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">MCP Server Mode</h3>
-              <CodeBlock lang="bash" code={`# Start AegisX as an MCP server
-$ aegisx mcp serve
-AegisX MCP Server running on stdio
-  Tools exposed: 57
-  x402 payments: enabled
-  Wallet: 7xKXtQ9...9fGhR4m
-  Waiting for MCP client connection...
-
-# Connect from Claude Code, Cursor, or any MCP client
-# Add to your MCP config (e.g., claude_desktop_config.json):
-{
-  "mcpServers": {
-    "aegisx": {
-      "command": "aegisx",
-      "args": ["mcp", "serve"],
-      "env": {
-        "AEGISX_WALLET": "~/.aegisx/wallet.json",
-        "AEGISX_NETWORK": "mainnet-beta"
-      }
-    }
-  }
-}`} />
-            </div>
-
-            <InfoBox label="Why AegisX">
-              Cursor raised at $29B. Copilot has 20M users. But neither offers Solana-native capabilities, x402 agent payments, or integrated DeFi tools. AegisX is the only IDE where an AI agent can discover an operator, evaluate its trust score, pay for it via x402, execute it in a sandboxed environment, and settle the payment on Solana -- all in a single workflow. With 57 tools including direct Bags.fm integration ($5B volume), AegisX gives agents access to real DeFi liquidity from day one.
-            </InfoBox>
-          </DocSection>
-
-          {/* 57 Tools Reference */}
-          <DocSection id="aegisx-tools" title="57 Tools Reference">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              AegisX ships with 57 tools organized into six categories. Each tool is available via the CLI, the MCP server bridge, and the SDK. All tools support x402 payments when invoked by external agents.
-            </p>
-
-            <div className="space-y-6 mb-8">
-              {[
-                {
-                  category: "SOLANA",
-                  count: 12,
-                  tools: [
-                    { name: "wallet-create", desc: "Generate a new Solana keypair with optional vanity prefix" },
-                    { name: "wallet-balance", desc: "Check SOL, USDC, SPL token, and $AEGIS balances" },
-                    { name: "token-transfer", desc: "Send SOL or SPL tokens to any Solana address" },
-                    { name: "token-swap", desc: "Swap tokens via Jupiter aggregator with best-route optimization" },
-                    { name: "stake-sol", desc: "Stake SOL with a validator for liquid staking rewards" },
-                    { name: "unstake-sol", desc: "Unstake SOL with instant or delayed withdrawal" },
-                    { name: "program-deploy", desc: "Deploy Anchor or native Solana programs to devnet/mainnet" },
-                    { name: "account-info", desc: "Fetch account data, owner, lamports, and parsed token info" },
-                    { name: "transaction-history", desc: "Query transaction history for any wallet address" },
-                    { name: "nft-mint", desc: "Mint NFTs using Metaplex with metadata and collection support" },
-                    { name: "nft-transfer", desc: "Transfer NFTs between wallets with royalty enforcement" },
-                    { name: "spl-token-create", desc: "Create new SPL tokens with Token-2022 extensions" },
-                  ],
-                },
-                {
-                  category: "TRADING",
-                  count: 9,
-                  tools: [
-                    { name: "jupiter-swap", desc: "Execute token swaps via Jupiter with MEV protection" },
-                    { name: "jupiter-quote", desc: "Get real-time swap quotes with route breakdown" },
-                    { name: "limit-order", desc: "Place limit orders on Jupiter or Serum orderbook" },
-                    { name: "dca-create", desc: "Create dollar-cost-average schedules for any token pair" },
-                    { name: "portfolio-balance", desc: "Aggregate portfolio value across all held tokens" },
-                    { name: "price-feed", desc: "Real-time price data from Pyth, Switchboard, and Jupiter" },
-                    { name: "orderbook-depth", desc: "View orderbook depth for any Serum/OpenBook market" },
-                    { name: "trade-history", desc: "Export trade history with PnL calculations" },
-                    { name: "pnl-calculator", desc: "Calculate realized and unrealized PnL for any position" },
-                  ],
-                },
-                {
-                  category: "BAGS.FM",
-                  count: 8,
-                  tools: [
-                    { name: "bags-buy", desc: "Buy creator tokens on Bags.fm bonding curve" },
-                    { name: "bags-sell", desc: "Sell creator tokens back to the bonding curve" },
-                    { name: "bags-portfolio", desc: "View your Bags.fm portfolio with current valuations" },
-                    { name: "bags-trending", desc: "Get trending creators by volume, holders, or price action" },
-                    { name: "bags-creator-info", desc: "Fetch creator profile, stats, and holder distribution" },
-                    { name: "bags-holder-list", desc: "List all holders of a creator token with positions" },
-                    { name: "bags-price-history", desc: "Historical price data for any creator token" },
-                    { name: "bags-volume-analytics", desc: "Volume analytics: daily, weekly, and cumulative" },
-                  ],
-                },
-                {
-                  category: "AI",
-                  count: 10,
-                  tools: [
-                    { name: "code-review", desc: "AI-powered code review with security and quality analysis" },
-                    { name: "code-generate", desc: "Generate code from natural language specifications" },
-                    { name: "code-explain", desc: "Explain code functionality in plain language" },
-                    { name: "test-generate", desc: "Auto-generate unit and integration tests" },
-                    { name: "bug-detect", desc: "Static and AI-powered bug detection" },
-                    { name: "refactor-suggest", desc: "Suggest refactoring improvements for cleaner code" },
-                    { name: "doc-generate", desc: "Generate documentation from source code" },
-                    { name: "translate-code", desc: "Translate code between programming languages" },
-                    { name: "security-audit", desc: "Deep security audit with vulnerability classification" },
-                    { name: "performance-analyze", desc: "Identify performance bottlenecks and optimization paths" },
-                  ],
-                },
-                {
-                  category: "INTELLIGENCE",
-                  count: 10,
-                  tools: [
-                    { name: "on-chain-analyze", desc: "Deep analysis of on-chain activity patterns" },
-                    { name: "wallet-profile", desc: "Profile a wallet: activity, holdings, risk score" },
-                    { name: "token-scanner", desc: "Scan new tokens for rug pull indicators" },
-                    { name: "whale-tracker", desc: "Track large wallet movements in real time" },
-                    { name: "dex-monitor", desc: "Monitor DEX activity across Jupiter, Raydium, Orca" },
-                    { name: "liquidity-analyze", desc: "Analyze liquidity depth and pool health" },
-                    { name: "smart-money-track", desc: "Follow smart money wallets and their strategies" },
-                    { name: "risk-score", desc: "Compute risk scores for tokens, wallets, and protocols" },
-                    { name: "market-sentiment", desc: "Aggregate market sentiment from on-chain data" },
-                    { name: "social-sentiment", desc: "Social media sentiment analysis for tokens/projects" },
-                  ],
-                },
-                {
-                  category: "BROWSER",
-                  count: 8,
-                  tools: [
-                    { name: "web-scrape", desc: "Extract structured data from any web page" },
-                    { name: "screenshot", desc: "Capture screenshots of web pages or elements" },
-                    { name: "pdf-extract", desc: "Extract text, tables, and metadata from PDFs" },
-                    { name: "api-call", desc: "Make authenticated API calls with response parsing" },
-                    { name: "form-fill", desc: "Programmatically fill and submit web forms" },
-                    { name: "link-extract", desc: "Extract and categorize all links from a page" },
-                    { name: "site-monitor", desc: "Monitor websites for changes with diff alerts" },
-                    { name: "content-summarize", desc: "Summarize web page content with key extraction" },
-                  ],
-                },
-              ].map((cat) => (
-                <div key={cat.category}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="text-[12px] font-medium text-zinc-300 tracking-wider">{cat.category}</div>
-                    <div className="text-[10px] font-medium text-zinc-600">{cat.count} tools</div>
-                    <div className="h-px flex-1 bg-white/[0.06]" />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {cat.tools.map((t) => (
-                      <div key={t.name} className="bg-white/[0.02]/30 border border-white/[0.06]/40 px-4 py-2.5 rounded flex items-start gap-3">
-                        <code className="text-[11px] text-zinc-300 font-mono flex-shrink-0">{t.name}</code>
-                        <span className="text-[11px] text-zinc-600">{t.desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* MCP Server Bridge */}
-          <DocSection id="mcp-bridge" title="MCP Server Bridge">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              AegisX functions as an MCP (Model Context Protocol) server, bridging all 57 tools into any MCP-compatible IDE or agent. This means Claude Code, Cursor, VS Code with Copilot, or any MCP client can access the full Aegis toolset including Solana operations, Bags.fm trading, and x402 payments.
-            </p>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">How the MCP bridge works</h3>
-              <div className="space-y-2">
-                {[
-                  { step: "1", title: "Start the MCP server", desc: "Run aegisx mcp serve. This exposes all 57 tools as MCP tool definitions on stdio, compatible with any MCP client." },
-                  { step: "2", title: "Configure your IDE", desc: "Add aegisx to your MCP server config. The bridge auto-discovers tools, handles auth, and manages wallet connections." },
-                  { step: "3", title: "Agent calls tools", desc: "Your AI agent (Claude, GPT, etc.) sees 57 tools in its context. When it calls a tool, the MCP bridge routes it through AegisX." },
-                  { step: "4", title: "x402 payments settle", desc: "If the tool invokes a paid operator, x402 payment is handled automatically. The agent pays USDC, Aegis swaps to $AEGIS, splits revenue." },
-                ].map((s) => (
-                  <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
-                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
-                      {s.step}
-                    </div>
-                    <div>
-                      <div className="text-[14px] font-medium text-zinc-200 mb-0.5">{s.title}</div>
-                      <div className="text-[13px] text-zinc-500 leading-relaxed">{s.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <CodeBlock lang="bash" code={`# Start AegisX MCP server
-$ aegisx mcp serve
-AegisX MCP Server v1.0.0
-  Protocol:  MCP v1.1 (stdio transport)
-  Tools:     57 exposed
-  Wallet:    7xKXtQ9...9fGhR4m
-  Network:   mainnet-beta
-  x402:      enabled (auto-pay up to 0.10 USDC per call)
-  Listening for MCP client connections...
-
-# Example: Claude Code connects and lists tools
-> tools/list
-{
-  "tools": [
-    { "name": "wallet-balance", "description": "Check SOL, USDC, SPL token balances" },
-    { "name": "jupiter-swap", "description": "Execute token swaps via Jupiter" },
-    { "name": "bags-buy", "description": "Buy creator tokens on Bags.fm" },
-    { "name": "code-review", "description": "AI-powered code review" },
-    ... (57 tools total)
-  ]
-}
-
-# Example: Agent calls a Solana tool through MCP
-> tools/call { "name": "wallet-balance", "arguments": { "address": "7xKXtQ9..." } }
-{
-  "content": [{ "type": "text", "text": "SOL: 12.45, USDC: 1,847.32, AEGIS: 25,000" }]
-}`} />
-
-            <div className="mt-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">MCP Configuration Examples</h3>
-              <CodeBlock lang="json" code={`// Claude Desktop / Claude Code config
-// ~/.config/claude/claude_desktop_config.json
-{
-  "mcpServers": {
-    "aegisx": {
-      "command": "aegisx",
-      "args": ["mcp", "serve"],
-      "env": {
-        "AEGISX_WALLET": "~/.aegisx/wallet.json",
-        "AEGISX_NETWORK": "mainnet-beta",
-        "AEGISX_X402_AUTO_PAY": "true",
-        "AEGISX_X402_MAX_PER_CALL": "0.10"
-      }
-    }
-  }
-}
-
-// Cursor / VS Code MCP config
-// .cursor/mcp.json or .vscode/mcp.json
-{
-  "servers": {
-    "aegisx": {
-      "command": "aegisx",
-      "args": ["mcp", "serve", "--tools", "all"],
-      "env": {
-        "AEGISX_WALLET": "~/.aegisx/wallet.json"
-      }
-    }
-  }
-}`} />
-            </div>
-
-            <InfoBox label="x402 Auto-Pay">
-              When an agent invokes a paid operator through the MCP bridge, x402 payments are handled automatically. Set AEGISX_X402_AUTO_PAY=true and AEGISX_X402_MAX_PER_CALL to control the maximum per-call spend. The agent never needs to understand x402 -- it just calls tools, and AegisX handles payment negotiation, wallet signing, and on-chain settlement. This is what makes autonomous agent commerce possible.
-            </InfoBox>
-          </DocSection>
-
-          {/* Architecture */}
-          <DocSection id="architecture" title="Protocol Stack">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Aegis is composed of seven layers. Each layer is independent and can be used separately, but they compose into a unified economic protocol when used together.
-            </p>
-            <div className="space-y-2 mb-6">
-              {[
-                { layer: "Discovery", desc: "Aegis Index -- operators indexed via operators.sh and Hugging Face Spaces", tech: "REST API, OPERATOR.md parser, GitHub + HF crawler, pgvector semantic search" },
-                { layer: "Communication", desc: "A2A protocol integration for trust-gated agent-to-agent delegation", tech: "Google/IBM A2A, Agent Cards, task negotiation, reputation gates" },
-                { layer: "Execution", desc: "Deno-sandboxed operator runtime with explicit permission grants", tech: "Deno isolate, --allow-net, --allow-read, --allow-env" },
-                { layer: "Economics", desc: "Bonded registration, x402 micropayments, revenue splits", tech: "Solana programs (Anchor), Token-2022 transfer hooks, Jupiter swap" },
-                { layer: "Validation", desc: "Stake-weighted attestation with replayable observation loops", tech: "aegis-operator-registry, PDA vaults, audit trace logs" },
-                { layer: "Identity", desc: "ERC-8004 bridge for cross-chain agent identity", tech: "ERC-8004 registry, Wormhole bridge, Solana-Ethereum attestation" },
-                { layer: "Reputation", desc: "On-chain success rates, time decay, cross-chain portability", tech: "aegis-reputation program, ERC-8004 bridge, NIST compliance" },
-              ].map((l) => (
-                <div key={l.layer} className="bg-white/[0.02]/30 border border-white/[0.06]/40 p-5 rounded flex items-start gap-5">
-                  <div className="text-[14px] text-zinc-200 font-normal w-28 flex-shrink-0 pt-0.5">{l.layer}</div>
-                  <div className="flex-1">
-                    <div className="text-[14px] text-zinc-400">{l.desc}</div>
-                    <div className="text-[11px] text-zinc-600 mt-1 font-mono">{l.tech}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* x402 Payment Flow -- NEW COMPREHENSIVE SECTION */}
-          <DocSection id="x402" title="x402 Payment Flow">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Aegis uses the x402 payment protocol, an open standard for HTTP-native micropayments. Agents pay in USDC via standard HTTP 402 headers. Aegis receives the USDC and swaps to $AEGIS via Jupiter, then executes the revenue split atomically on Solana.
-            </p>
-
-            <div className="mb-8">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">How it works</h3>
-              <div className="space-y-2">
-                {[
-                  { step: "1", title: "Agent requests invocation", desc: "The consumer agent calls aegisx invoke <operator> --pay x402. The CLI sends an HTTP request to the operator's endpoint." },
-                  { step: "2", title: "Operator responds with 402", desc: "The operator server returns HTTP 402 Payment Required with an X-Payment-402 header containing the price, asset (USDC), and chain (Solana)." },
-                  { step: "3", title: "Agent wallet signs payment", desc: "The agent's wallet signs a USDC transfer for the exact amount. This is gasless via a facilitator relay, so the agent does not need SOL for gas." },
-                  { step: "4", title: "Agent retries with proof", desc: "The agent retries the original request with an X-Payment-Signature header containing the signed payment proof." },
-                  { step: "5", title: "Facilitator settles on-chain", desc: "The facilitator verifies the signature, settles the USDC transfer on Solana, and forwards the request to the operator." },
-                  { step: "6", title: "USDC swapped to $AEGIS", desc: "Aegis middleware receives the USDC and swaps it to $AEGIS via Jupiter aggregator in the same transaction." },
-                  { step: "7", title: "Revenue split executed", desc: "The $AEGIS is split atomically: 60% to Creator, 15% to Validator pool, 12% to Stakers, 8% to Treasury, 3% to Insurance fund, 2% burned permanently." },
-                ].map((s) => (
-                  <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
-                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
-                      {s.step}
-                    </div>
-                    <div>
-                      <div className="text-[14px] font-medium text-zinc-200 mb-0.5">{s.title}</div>
-                      <div className="text-[13px] text-zinc-500 leading-relaxed">{s.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <CodeBlock lang="http" code={`# Step 1: Initial request
-POST /invoke/code-review-agent HTTP/1.1
-Host: aegisplace.com/api
-Content-Type: application/json
-
-{ "file": "main.go", "content": "..." }
-
-# Step 2: 402 response
-HTTP/1.1 402 Payment Required
-X-Payment-402: {
-  "amount": "0.05",
-  "asset": "USDC",
-  "chain": "solana",
-  "recipient": "AegisProtocol...Treasury",
-  "facilitator": "https://pay.aegisplace.com/verify"
-}
-
-# Step 3-4: Retry with payment proof
-POST /invoke/code-review-agent HTTP/1.1
-Host: aegisplace.com/api
-X-Payment-Signature: eyJhbGciOiJFZDI1NTE5...
-X-Payment-Chain: solana
-Content-Type: application/json
-
-{ "file": "main.go", "content": "..." }
-
-# Step 5-7: Success (payment settled, split executed)
-HTTP/1.1 200 OK
-X-Payment-Receipt: {
-  "tx": "5KxR7...fGhiJ",
-  "split": { "creator": "8.68 AEGIS", "validator": "2.48 AEGIS", "treasury": "1.12 AEGIS", "burned": "0.12 AEGIS" },
-  "latency": "412ms"
-}`} />
-
-            <InfoBox label="Distribution Channel">
-              The x402 protocol is supported by Cloudflare Workers, Google Cloud, Vercel, and every major agent framework. Any agent that speaks x402 can invoke Aegis operators without acquiring $AEGIS directly. They pay in USDC, Aegis handles the swap. This gives Aegis access to the entire x402 ecosystem as a distribution channel.
-            </InfoBox>
-
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { metric: "~400ms", label: "Settlement latency (Solana finality)" },
-                { metric: "Gasless", label: "Agents pay USDC only, no SOL needed" },
-                { metric: "Atomic", label: "Payment + split in one transaction" },
-              ].map((m) => (
-                <div key={m.label} className="bg-white/[0.02]/30 border border-white/[0.06]/40 rounded p-4 text-center">
-                  <div className="text-[20px] font-normal text-zinc-200 mb-1">{m.metric}</div>
-                  <div className="text-[12px] text-zinc-500">{m.label}</div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* Operator Registration -- NEW COMPREHENSIVE SECTION */}
-          <DocSection id="registration" title="Operator Registration">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Registering an operator on Aegis requires staking $AEGIS tokens as a bond. This bond is held in a PDA vault on-chain and serves as economic collateral. If the operator is challenged and found to be malicious, broken, or misrepresented, the bond is slashed. This creates accountability that GitHub stars cannot provide.
-            </p>
-
-            <div className="mb-8">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Registration steps</h3>
-              <div className="space-y-2">
-                {[
-                  { step: "1", title: "Create your OPERATOR.md", desc: "Define your operator's name, description, pricing model, and Aegis economic extension fields. See the Operator Format section for the full spec." },
-                  { step: "2", title: "Acquire $AEGIS tokens", desc: "You need a minimum of 12,500 $AEGIS for the creator bond. Tokens can be acquired on Jupiter or earned through validator rewards." },
-                  { step: "3", title: "Register via CLI", desc: "Run aegisx register with your operator details. The CLI creates a PDA on Solana, transfers your bond to the vault, and sets the operator status to Pending." },
-                  { step: "4", title: "Await validation", desc: "Bonded validators review your operator. They run it in a sandbox, verify the OPERATOR.md claims, and submit stake-weighted attestations." },
-                  { step: "5", title: "Go live", desc: "Once validated, your operator appears in the Aegis Index and marketplace. Every invocation automatically pays you 60% of the fee." },
-                ].map((s) => (
-                  <div key={s.step} className="flex gap-4 bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded">
-                    <div className="w-8 h-8 rounded bg-zinc-800/60 flex items-center justify-center text-[13px] font-normal text-zinc-300 shrink-0">
-                      {s.step}
-                    </div>
-                    <div>
-                      <div className="text-[14px] font-medium text-zinc-200 mb-0.5">{s.title}</div>
-                      <div className="text-[13px] text-zinc-500 leading-relaxed">{s.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <CodeBlock lang="bash" code={`# Register an operator with a 12,500 $AEGIS bond
-$ aegisx register \\
-    --name code-review-agent \\
-    --repo owner/code-review-agent \\
-    --stake 12500 \\
-    --price 0.05
-
-Registering operator on Aegis Registry...
-  Bond:    12,500 $AEGIS -> PDA vault
-  Price:   $0.05 USDC per call (via x402)
-  Status:  Pending validation
-  TX:      5KxR7...fGhiJ
-
-# Check your registered operators
-$ aegisx list --mine
-  code-review-agent  12,500 $AEGIS bonded  Pending  0 invocations
-
-# Update pricing after registration
-$ aegisx update code-review-agent --price 0.08
-Price updated: $0.05 -> $0.08 USDC per call
-TX: 8mNp2...kLqW3
-
-# Withdraw bond (only after 30-day cooldown with no active challenges)
-$ aegisx unregister code-review-agent
-Cooldown check: 47 days since last challenge [PASSED]
-Bond returned: 12,500 $AEGIS -> your wallet
-TX: 3vRt9...xHjK7`} />
-
-            <InfoBox label="Bond Protection">
-              Your bond is safe as long as your operator performs as described. Bonds are only slashed when a challenge is upheld by the validator network. The challenge process requires the challenger to also stake $AEGIS, preventing frivolous disputes. If a challenge is rejected, the challenger loses their stake.
-            </InfoBox>
-          </DocSection>
-
-          {/* SDK Integration -- NEW COMPREHENSIVE SECTION */}
-          <DocSection id="sdk" title="SDK Integration">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              The Aegis SDK provides programmatic access to the full protocol. Available in TypeScript, Python, and Rust. All SDKs handle x402 payment negotiation, wallet management, and Solana transaction signing automatically.
-            </p>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">TypeScript SDK</h3>
-              <CodeBlock lang="typescript" code={`import { AegisClient, Wallet } from "@aegis-protocol/sdk";
-
-// Initialize client with your wallet
-const wallet = Wallet.fromFile("~/.aegisx/wallet.json");
-const aegis = new AegisClient({
-  network: "mainnet-beta",  // or "devnet"
-  wallet,
-});
-
-// Search for operators
-const results = await aegis.search("code review", {
-  minReputation: 60,
-  maxPrice: 0.10,
-  tier: "Gold",
-});
-
-console.log(results);
-// [
-//   { name: "code-review-agent", reputation: 94, price: 0.05, tier: "Diamond" },
-//   { name: "solidity-auditor", reputation: 89, price: 0.08, tier: "Diamond" },
-// ]
-
-// Invoke an operator with automatic x402 payment
-const result = await aegis.invoke("code-review-agent", {
-  file: "./main.go",
-  options: { language: "go", depth: "thorough" },
-});
-
-console.log(result.output);     // The code review output
-console.log(result.payment);    // { amount: "0.05 USDC", tx: "5KxR7...", split: {...} }
-console.log(result.latency);    // "1,247ms"
-
-// Register a new operator
-const registration = await aegis.register({
-  name: "my-operator",
-  repo: "myorg/my-operator",
-  bond: 12500,           // $AEGIS
-  price: 0.05,           // USDC per call
-  pricingModel: "per_call",
-});
-
-console.log(registration.tx);   // Solana transaction hash
-console.log(registration.pda);  // PDA address for the operator`} />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Python SDK</h3>
-              <CodeBlock lang="python" code={`from aegis_sdk import AegisClient, Wallet
-
-# Initialize
-wallet = Wallet.from_file("~/.aegisx/wallet.json")
-client = AegisClient(network="mainnet-beta", wallet=wallet)
-
-# Search and invoke
-results = client.search("data analysis", min_reputation=70)
-result = client.invoke("data-analyst-agent", {
-    "dataset": "sales_q4.csv",
-    "query": "Find top 10 customers by revenue"
-})
-
-print(result.output)   # Analysis results
-print(result.payment)  # Payment receipt with tx hash
-
-# Batch invocations with automatic retry
-results = client.batch_invoke(
-    operator="code-review-agent",
-    inputs=[
-        {"file": "auth.py"},
-        {"file": "api.py"},
-        {"file": "models.py"},
-    ],
-    max_concurrent=3,
-    retry_on_failure=True,
-)
-
-for r in results:
-    print(f"{r.input['file']}: {r.status} ({r.latency}ms)")`} />
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-[16px] font-normal text-zinc-200 mb-4">Rust SDK</h3>
-              <CodeBlock lang="rust" code={`use aegis_sdk::{AegisClient, Wallet, InvokeOptions};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let wallet = Wallet::from_file("~/.aegisx/wallet.json")?;
-    let client = AegisClient::new("mainnet-beta", wallet).await?;
-
-    // Invoke with typed response
-    let result = client
-        .invoke("code-review-agent", InvokeOptions {
-            file: Some("./main.rs".into()),
-            timeout: std::time::Duration::from_secs(30),
-            ..Default::default()
-        })
-        .await?;
-
-    println!("Output: {}", result.output);
-    println!("TX: {}", result.payment.tx);
-
-    Ok(())
-}`} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-              {[
-                { pkg: "@aegis-protocol/sdk", lang: "TypeScript", install: "npm install @aegis-protocol/sdk" },
-                { pkg: "aegis-sdk", lang: "Python", install: "pip install aegis-sdk" },
-                { pkg: "aegis-sdk", lang: "Rust", install: "cargo add aegis-sdk" },
-              ].map((p) => (
-                <div key={p.lang} className="bg-white/[0.02]/30 border border-white/[0.06]/40 rounded p-4">
-                  <div className="text-[14px] font-normal text-zinc-200 mb-1">{p.lang}</div>
-                  <code className="text-[11px] text-zinc-500 font-mono">{p.install}</code>
-                </div>
-              ))}
-            </div>
-
-            <InfoBox label="MCP Server Integration">
-              AegisX ships as a native MCP server, making it compatible with Claude Code, Cursor, VS Code, and any MCP-compatible agent. Run <code className="text-zinc-400 font-mono text-[12px]">aegisx mcp serve</code> to expose all 57 tools as MCP tools. Your agent can then discover, invoke, and pay for operators through the standard MCP tool-calling interface. See the MCP Server Bridge section above for full configuration.
-            </InfoBox>
-          </DocSection>
-
-          {/* Operator Format */}
-          <DocSection id="operators" title="Aegis OPERATOR.md Format">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Aegis extends the standard OPERATOR.md format (adopted by Anthropic and OpenAI) with an economic metadata block. This is backward-compatible. Any standard OPERATOR.md works; the economic fields are optional.
-            </p>
-            <CodeBlock lang="yaml" code={`---
-name: code-review-agent
-description: Automated code review with security analysis
-version: 1.2.0
-author: aegis-labs
-license: MIT
-
-# === Aegis Economic Extension ===
-aegis:
-  pricing:
-    model: per_call          # per_call | per_minute | flat
-    price_lamports: 50000    # 0.00005 SOL
-    currency: SOL
-  staking:
-    bond_aegis: 12500        # 12,500 $AEGIS creator bond
-    min_validator_bond: 2500 # 2,500 $AEGIS minimum
-  revenue:
-    creator_share: 70
-    validator_share: 20
-    protocol_share: 9
-    burn_share: 1
-  trust:
-    model: crypto-economic   # ERC-8004 trust model
-    x402_support: true       # x402 payment protocol
-    min_reputation: 0        # minimum rep to invoke
----`} />
-          </DocSection>
-
-          {/* Staking */}
-          <DocSection id="staking" title="$AEGIS Bonded Registration">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Operator creators stake $AEGIS tokens to register. The bond is held in a PDA vault on-chain. If the operator is challenged and found to be malicious, broken, or misrepresented, the bond is slashed. This creates economic accountability that GitHub stars cannot provide.
-            </p>
-            <CodeBlock lang="bash" code={`# Register an operator with a 12,500 $AEGIS bond
-$ aegisx register \\
-    --name code-review-agent \\
-    --repo owner/code-review-agent \\
-    --stake 12500 \\
-    --price 0.05
-
-Registering operator on Aegis Registry...
-  Bond:    12,500 $AEGIS -> PDA vault
-  Price:   $0.05 USDC per call (via x402)
-  Status:  Pending validation
-  TX:      5KxR7...fGhiJ
-
-# Check your registered operators
-$ aegisx list --mine
-  code-review-agent  12,500 $AEGIS bonded  Pending  0 invocations`} />
-
-            <InfoBox label="Token-2022 Integration">
-              $AEGIS uses Solana's Token-2022 program with a built-in transfer fee extension. Every token transfer automatically contributes to the protocol treasury. No smart contract workarounds needed.
-            </InfoBox>
-          </DocSection>
-
-          {/* Validation */}
-          <DocSection id="validation" title="Bonded Validation">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Validators stake $AEGIS to review operators. Their attestations are stake-weighted. A validator with 50,000 $AEGIS bonded has more influence than one with 2,500. Inaccurate reviews result in bond slashing.
-            </p>
-            <div className="space-y-2 mb-6">
-              {[
-                { tier: "Apprentice", bond: "2,500 $AEGIS", weight: "1x", desc: "Entry level. Can review, limited influence." },
-                { tier: "Journeyman", bond: "12,500 $AEGIS", weight: "3x", desc: "Standard validator. Full review capabilities." },
-                { tier: "Master", bond: "50,000 $AEGIS", weight: "10x", desc: "Trusted reviewer. Can initiate challenges." },
-                { tier: "Grandmaster", bond: "250,000 $AEGIS", weight: "50x", desc: "Top tier. Can resolve disputes. Highest rewards." },
-              ].map((t) => (
-                <div key={t.tier} className="bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
-                  <div className="text-[14px] text-zinc-200 font-normal w-28 flex-shrink-0">{t.tier}</div>
-                  <div className="text-[13px] text-zinc-400 w-28">{t.bond}</div>
-                  <div className="text-[13px] text-zinc-500 w-10">{t.weight}</div>
-                  <div className="text-[13px] text-zinc-500 flex-1">{t.desc}</div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* Operator Sandboxing */}
-          <DocSection id="sandboxing" title="Deno-Sandboxed Execution">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Every operator invocation runs inside a Deno-based permission sandbox. The runtime treats all operators as untrusted code by default. Explicit permission grants are required before an operator can access the network, filesystem, or environment variables. This is zero-trust execution at the runtime level.
-            </p>
-            <CodeBlock lang="bash" code={`# Invoke with strict sandboxing (default)
-$ aegisx invoke code-review-agent --sandbox strict
-Sandbox: Deno isolate v1.40
-  --allow-net=api.openai.com    (operator declared dependency)
-  --allow-read=./src            (scoped to input files)
-  --deny-write                  (no filesystem writes)
-  --deny-env                    (no env access)
-  --deny-run                    (no subprocess spawning)
-  --max-memory=256MB
-  --max-time=30s
-
-# Invoke with relaxed sandboxing (trusted operators only)
-$ aegisx invoke code-review-agent --sandbox relaxed
-Sandbox: Deno isolate v1.40
-  --allow-net                   (all network access)
-  --allow-read                  (all filesystem reads)
-  --deny-write
-  --deny-env
-  --max-memory=512MB
-  --max-time=60s`} />
-
-            <div className="mt-6 space-y-2">
-              {[
-                { perm: "--allow-net", desc: "Network access. Scoped to declared API endpoints in OPERATOR.md.", risk: "Medium" },
-                { perm: "--allow-read", desc: "Filesystem reads. Scoped to input files passed by the consumer.", risk: "Low" },
-                { perm: "--allow-write", desc: "Filesystem writes. Denied by default. Only for output-producing operators.", risk: "High" },
-                { perm: "--allow-env", desc: "Environment variable access. Denied by default. Only for operators needing API keys.", risk: "High" },
-                { perm: "--allow-run", desc: "Subprocess spawning. Denied by default. Reserved for build/test operators.", risk: "Critical" },
-              ].map((p) => (
-                <div key={p.perm} className="bg-white/[0.02]/30 border border-white/[0.06]/40 p-4 rounded flex items-center gap-5">
-                  <code className="text-[12px] text-zinc-300 font-mono w-36 flex-shrink-0">{p.perm}</code>
-                  <div className="text-[13px] text-zinc-500 flex-1">{p.desc}</div>
-                  <div className={`text-[10px] font-medium px-2.5 py-1 rounded border ${
-                    p.risk === "Critical" ? "text-red-400/80 border-red-400/20 bg-red-400/5" :
-                    p.risk === "High" ? "text-orange-400/80 border-orange-400/20 bg-orange-400/5" :
-                    p.risk === "Medium" ? "text-amber-400/80 border-amber-400/20 bg-amber-400/5" :
-                    "text-zinc-300/80 border-white/[0.06]/30 bg-zinc-800/20"
-                  }`}>{p.risk}</div>
-                </div>
-              ))}
-            </div>
-
-            <InfoBox label="Why Deno">
-              Deno's permission model is the only production-ready runtime that enforces capability-based security at the process level. Node.js has no equivalent. Bun has no equivalent. The Deno sandbox means a malicious operator cannot exfiltrate data, spawn processes, or access environment variables without explicit consumer consent, even if the operator code is compromised.
-            </InfoBox>
-          </DocSection>
-
-          {/* Observation Loops */}
-          <DocSection id="observation" title="Observation Loops">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Every validator challenge produces a replayable audit trace. This is deterministic scaffolding around non-deterministic AI. Observation loops make every decision auditable, every attestation verifiable, and every dispute resolvable with evidence.
-            </p>
-            <CodeBlock lang="bash" code={`# Challenge an operator -- observation loop is recorded automatically
-$ aegisx challenge code-review-agent \\
-    --stake 500 \\
-    --reason "Returns empty response for Go files"
-
-Challenge initiated.
-  Challenge ID:  ch_7xKXtQ9...9fGhR4m
-  Bond:          500 $AEGIS
-  Observation:   Recording...
-
-# The observation loop captures:
-#   1. Input: exact file and parameters sent to the operator
-#   2. Execution: Deno sandbox logs, network calls, timing
-#   3. Output: raw response from the operator
-#   4. Validator attestation: the original quality review
-#   5. Challenge evidence: the challenger's reproduction steps
-#
-# All stored on-chain as a compressed Merkle proof.
-
-# View the observation trace
-$ aegisx trace ch_7xKXtQ9...9fGhR4m
-Observation Trace:
-  [T+0ms]    Input received: main.go (2,847 bytes)
-  [T+12ms]   Sandbox started: Deno isolate, --allow-net=api.openai.com
-  [T+45ms]   Network call: POST api.openai.com/v1/chat/completions
-  [T+1,203ms] Response received: 200 OK (4,102 bytes)
-  [T+1,210ms] Output generated: 0 bytes  <-- EMPTY RESPONSE
-  [T+1,211ms] Sandbox terminated: exit code 0
-  Verdict:   Challenge evidence supports claim. Awaiting market resolution.`} />
-
-            <InfoBox label="Agentic Engineering Pattern">
-              Observation loops are the core pattern from agentic engineering applied to operator validation. The pattern is simple: wrap every non-deterministic operation in a deterministic observation frame. Record inputs, execution traces, and outputs. Make the frame replayable. This turns "the AI did something wrong" into "here is the exact sequence of events, verifiable by anyone."
-            </InfoBox>
-          </DocSection>
-
-          {/* Reputation */}
-          <DocSection id="reputation" title="On-Chain Reputation">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Every operator and validator has an on-chain reputation score (0-100) stored in the aegis-reputation Solana program. Scores are computed from successful completions, failures, slashing events, and time decay. The reputation is portable via the ERC-8004 bridge.
-            </p>
-            <CodeBlock lang="text" code={`Reputation Tiers:
-  Diamond   80-100  Highest trust. Premium pricing enabled.
-  Gold      60-79   Established. Full marketplace access.
-  Silver    40-59   Growing. Standard access.
-  Bronze    20-39   New. Limited to low-value invocations.
-  Unranked   0-19   Untested. Must build track record.
-
-Score Factors:
-  +2  Successful operator completion (verified by consumer)
-  +5  Positive validator attestation (stake-weighted)
-  -10 Failed invocation (consumer reported)
-  -25 Challenge upheld (bond partially slashed)
-  -50 Malicious behavior (full bond slashed)
-
-Time Decay:
-  Scores decay 1% per week of inactivity.
-  Active operators maintain their score naturally.`} />
-          </DocSection>
-
-          {/* Solana Programs */}
-          <DocSection id="programs" title="On-Chain Programs">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Aegis deploys four Anchor programs to Solana. Each program handles a specific domain of the protocol. All programs are MIT licensed and auditable.
-            </p>
-            <div className="space-y-3">
-              {[
-                { name: "aegis-operator-registry", desc: "Operator registration, bonding, invocation tracking, challenge/resolution, revenue splitting.", instructions: "register_operator, validate_operator, invoke_operator, challenge_operator, resolve_challenge, record_observation" },
-                { name: "aegis-reputation", desc: "On-chain success rates with time decay, tier computation, and ERC-8004 cross-chain bridging.", instructions: "initialize, record_completion, record_failure, apply_slash, bridge_to_erc8004" },
-                { name: "aegis-prediction-market", desc: "Dispute resolution via prediction markets. Observation loop traces submitted as evidence.", instructions: "create_market, place_bet, resolve_market, claim_winnings, submit_trace" },
-                { name: "aegis-token", desc: "Token-2022 $AEGIS token with transfer hooks for protocol-level bond enforcement, staking vaults, and governance.", instructions: "initialize_mint, stake, unstake, claim_rewards, set_transfer_hook" },
-              ].map((p) => (
-                <div key={p.name} className="border border-white/[0.06]/40 bg-white/[0.02]/30 p-5 rounded">
-                  <div className="text-[14px] text-zinc-200 font-normal mb-1">{p.name}</div>
-                  <div className="text-[13px] text-zinc-500 mb-2">{p.desc}</div>
-                  <div className="text-[11px] text-zinc-600 font-mono">Instructions: {p.instructions}</div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* A2A Protocol */}
-          <DocSection id="a2a" title="A2A Protocol Integration">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              A2A (Agent-to-Agent) is Google and IBM's protocol for agents to discover each other, negotiate capabilities, and delegate tasks. Aegis adds trust-gated delegation: agents must meet minimum reputation thresholds before accepting or delegating high-value tasks.
-            </p>
-            <CodeBlock lang="bash" code={`# A2A integration with Aegis trust gates
-$ aegisx a2a publish-card \\
-    --name "code-review-ops" \\
-    --capabilities "code-review,security-audit,test-gen" \\
-    --min-requester-score 60
-
-Agent Card published.
-  Card ID:     ac_7xKXtQ9...9fGhR4m
-  Capabilities: code-review, security-audit, test-gen
-  Trust Gate:  min_requester_score >= 60
-
-# Receive a task from another agent
-$ aegisx a2a incoming
-Incoming Task Request:
-  From:        agent_0xAB12...CD34
-  Reputation:  72/100 (Gold tier)  [PASSES trust gate]
-  Task:        "Review Solana program for reentrancy"
-  Payment:     0.15 USDC via x402
-  Status:      Accepted automatically
-
-# Delegate a subtask to a specialist
-$ aegisx a2a delegate \\
-    --to solidity-auditor \\
-    --task "Check cross-program invocation safety" \\
-    --budget 0.08
-
-Delegation sent.
-  Target score: 89/100 (Diamond)  [VERIFIED]
-  Bond status:  50,000 $AEGIS bonded [ACTIVE]
-  Payment:      0.08 USDC via x402`} />
-
-            <InfoBox label="Trust-Gated Delegation">
-              Without Aegis, A2A delegation is open. Any agent can request any task from any other agent. This enables Sybil attacks (create 100 agents, delegate to yourself to inflate reputation) and reputation laundering (route low-quality work through high-reputation agents). Aegis trust gates prevent both: minimum score requirements, bond verification, and on-chain delegation history make gaming the system economically irrational.
-            </InfoBox>
-          </DocSection>
-
-          {/* Agentic Wallets */}
-          <DocSection id="wallets" title="Coinbase Agentic Wallets">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Coinbase Agentic Wallets let AI agents hold their own crypto wallets, sign transactions, and manage funds autonomously. Aegis validates agent identity and reputation before high-value wallet operations.
-            </p>
-            <CodeBlock lang="bash" code={`# Connect Aegis to a Coinbase Agentic Wallet
-$ aegisx wallet connect-agentic \\
-    --provider coinbase \\
-    --wallet-id aw_9xKXtQ9...fGhR4m
-
-Agentic Wallet connected.
-  Provider:    Coinbase
-  Wallet ID:   aw_9xKXtQ9...fGhR4m
-  Autonomy:    Full (no human co-signing)
-  Trust gate:  Aegis reputation >= 70 for txns > 1 SOL
-
-# Wallet operations are trust-gated
-$ aegisx wallet send 5.0 SOL --to 7xKXtQ9...9fGhR4m
-Trust Check:
-  Agent reputation:  78/100 (Gold)  [PASSES]
-  Bond status:       25,000 $AEGIS [ACTIVE]
-  Transaction limit: 10 SOL (Gold tier)
-  Status:            APPROVED
-
-# High-value operations require higher trust
-$ aegisx wallet send 50.0 SOL --to 7xKXtQ9...9fGhR4m
-Trust Check:
-  Agent reputation:  78/100 (Gold)  [INSUFFICIENT]
-  Required:          Diamond tier (80+) for txns > 10 SOL
-  Status:            DENIED -- upgrade reputation to proceed`} />
-
-            <InfoBox label="Why This Matters">
-              Agentic Wallets are a breakthrough for agent autonomy but create a massive trust problem: how do you prevent an unauthorized or compromised agent from draining a wallet? Aegis provides the missing guardrail. Transaction limits are tied to on-chain reputation. An agent with a Bronze score cannot move more than 0.1 SOL. A Diamond agent can move up to 100 SOL. The success rate is earned through verified invocations, not self-reported.
-            </InfoBox>
-          </DocSection>
-
-          {/* NVIDIA NeMo Stack */}
-          <DocSection id="nvidia" title="NVIDIA NeMo Stack">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              Aegis integrates seven NVIDIA NeMo components at the protocol level. Every operator benefits from enterprise AI infrastructure across the full lifecycle: data curation, model building, evaluation, deployment, safety, optimization, and observability.
-            </p>
-
-            <div className="space-y-3 mb-8">
-              {[
-                { name: "NeMo Guardrails", desc: "5-layer safety enforcement on every invocation. Input, dialog, retrieval, execution, and output rails. Compliance rates feed success rates.", cmd: "aegisx invoke code-review --guardrails strict" },
-                { name: "NeMo Evaluator", desc: "Continuous benchmarking with 24+ metrics. Accuracy, generative quality, code execution, and LLM-as-judge evaluations every 6 hours.", cmd: "aegisx eval code-review --suite full --judge llm" },
-                { name: "NVIDIA NIM", desc: "GPU-optimized inference containers. OpenAI-compatible APIs, 4.2x speedup, auto-scaling. NIM operators get priority marketplace placement.", cmd: "aegisx deploy code-review --runtime nim --gpu a100" },
-                { name: "Nemotron Models", desc: "Three model tiers: Nano (edge), Super (balanced), Ultra (max capability). Hybrid latent MoE architecture. Open weights and fine-tuning recipes.", cmd: "aegisx build --base nemotron-super --finetune domain" },
-                { name: "NeMo Curator", desc: "Data quality pipeline: heuristic filtering, ML classification, deduplication, PII removal. 30+ languages. Clean data = better operators.", cmd: "aegisx curate --dataset training --pii strip --dedup fuzzy" },
-                { name: "NeMo RL + Gym", desc: "GRPO and PPO reinforcement learning from real invocation data. NeMo Gym simulated environments. Every invocation makes operators better.", cmd: "aegisx optimize code-review --rl grpo --gym simulate" },
-                { name: "NeMo Agent Toolkit", desc: "Full observability: telemetry, tracing, profiling. Compatible with LangChain, LlamaIndex, CrewAI. Validators use toolkit data for attestations.", cmd: "aegisx observe code-review --trace --profile" },
-              ].map((item) => (
-                <div key={item.name} className="border border-white/[0.06]/40 bg-white/[0.02]/30 p-5 rounded hover:bg-zinc-800/20 transition-all">
-                  <h4 className="text-[14px] font-normal text-emerald-400 mb-1">{item.name}</h4>
-                  <p className="text-[13px] text-zinc-500 leading-relaxed mb-3">{item.desc}</p>
-                  <div className="text-[11px] font-mono px-3 py-2 border border-emerald-400/15 bg-emerald-400/[0.03] text-emerald-400/60 rounded">
-                    $ {item.cmd}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-
-          {/* CLI Reference */}
-          <DocSection id="cli" title="CLI Reference">
-            <p className="text-[14px] text-zinc-500 leading-relaxed mb-6">
-              AegisX is the high-performance runtime for the Aegis protocol. A single binary with 57 built-in tools that handles wallet management, operator discovery, x402 payments, MCP server bridging, Bags.fm integration, validation, and the full agent loop. All API endpoints reference aegisplace.com.
-            </p>
-            <div className="border border-white/[0.06]/40 rounded overflow-hidden">
-              <div className="grid grid-cols-[1fr_1fr] gap-4 px-5 py-3 border-b border-white/[0.06]/40 text-[11px] text-zinc-500 font-medium bg-white/[0.02]/30">
-                <span>Command</span><span>Description</span>
-              </div>
-              {[
-                { cmd: "aegisx init", desc: "Bootstrap runtime, generate Solana wallet" },
-                { cmd: "aegisx wallet address", desc: "Show your Solana address" },
-                { cmd: "aegisx balance", desc: "Check SOL, USDC, and $AEGIS balance" },
-                { cmd: "aegisx wallet airdrop <amount>", desc: "Request devnet SOL airdrop" },
-                { cmd: "aegisx wallet send <to> <amount>", desc: "Send SOL to an address" },
-                { cmd: "aegisx wallet export", desc: "Export wallet as Solana-compatible JSON" },
-                { cmd: "aegisx search <query>", desc: "Search the Aegis Index" },
-                { cmd: "aegisx register", desc: "Register and bond an operator with $AEGIS" },
-                { cmd: "aegisx invoke <operator>", desc: "Invoke an operator with x402 payment" },
-                { cmd: "aegisx inspect <operator>", desc: "Show operator details and reputation" },
-                { cmd: "aegisx list", desc: "List registered operators" },
-                { cmd: "aegisx stats", desc: "Show marketplace statistics" },
-                { cmd: "aegisx challenge <operator>", desc: "Challenge an operator with a dispute bond" },
-                { cmd: "aegisx validate register", desc: "Register as a bonded validator" },
-                { cmd: "aegisx validate --attest <op>", desc: "Attest to an operator's quality" },
-                { cmd: "aegisx validate list", desc: "List active validators" },
-                { cmd: "aegisx validate stats", desc: "Show your validator statistics" },
-                { cmd: "aegisx stake <amount>", desc: "Stake $AEGIS tokens" },
-                { cmd: "aegisx unstake <amount>", desc: "Unstake $AEGIS tokens" },
-                { cmd: "aegisx rewards", desc: "View pending staking rewards" },
-                { cmd: "aegisx install <repo>", desc: "Install an operator from GitHub" },
-                { cmd: "aegisx run", desc: "Start the autonomous agent loop" },
-                { cmd: "aegisx mcp serve", desc: "Start MCP server (57 tools) for Claude Code, Cursor, VS Code" },
-                { cmd: "aegisx gateway", desc: "Start gateway (Telegram, Discord, Slack)" },
-                { cmd: "aegisx version", desc: "Show version and runtime info" },
-              ].map((c) => (
-                <div key={c.cmd} className="grid grid-cols-[1fr_1fr] gap-4 px-5 py-3 border-b border-white/[0.06]/20 hover:bg-zinc-800/10 transition-colors">
-                  <code className="text-[12px] text-zinc-300 font-mono">{c.cmd}</code>
-                  <span className="text-[12px] text-zinc-500">{c.desc}</span>
-                </div>
-              ))}
-            </div>
-          </DocSection>
-        </main>
       </div>
     </div>
   );

@@ -123,7 +123,7 @@ export default function WhyAegisExists() {
               transition: "opacity 0.6s ease 0.6s",
             }}
           >
-            {["452 operators", "16 MCP tools", "400ms settlement", "60% to creators", "NeMo guardrails"].map((s) => (
+            {["180+ operators", "47 skills", "AegisX CLI", "400ms settlement", "85% to creators"].map((s) => (
               <span key={s} className="text-[11px] text-white/20 uppercase tracking-wider">{s}</span>
             ))}
           </div>

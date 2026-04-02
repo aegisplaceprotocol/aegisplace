@@ -85,14 +85,14 @@ const pipeline = await aegis.delegate({
 // pipeline.totalCost -> $0.0067`,
   },
   {
-    label: "Claude Code MCP",
+    label: "AegisX MCP",
     lang: "JSON",
     filename: "aegis_mcp.json",
     endpoints: [
       { method: "MCP", path: "aegis mcp-server" },
       { method: "GET", path: "/v1/discover" },
     ],
-    code: `// Add to your Claude Code MCP config
+    code: `// Add to your AegisX MCP config
 // ~/.config/aegis/mcp.json
 
 {
@@ -105,10 +105,10 @@ const pipeline = await aegis.delegate({
   }
 }
 
-// Now in Claude Code or Claude Cowork:
+// Now in AegisX or AegisX Desktop:
 // "Use the code-review operator to audit this file"
 // Claude discovers it via MCP, pays via x402, returns result.
-// Works with Claude Remote Control from mobile too.`,
+// Works with AegisX Remote from mobile too.`,
   },
   {
     label: "Codex CLI",

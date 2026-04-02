@@ -1,8 +1,8 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { apiUrl } from "@/lib/api";
 import { useWalletModal } from "@/components/WalletModal";
 import { trpc } from "@/lib/trpc";
-import { withApiBase } from "@/lib/api";
 import { toast } from "sonner";
 import bs58 from "bs58";
 
@@ -34,7 +34,9 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
       try {
         const wallet = publicKey.toBase58();
         // Step 1: Get nonce
-        const nonceRes = await fetch(withApiBase(`/api/auth/nonce?wallet=${wallet}`));
+        const nonceRes = await fetch(apiUrl(`/api/auth/nonce?wallet=${wallet}`), {
+          credentials: "include",
+        });
         if (!nonceRes.ok) throw new Error("Failed to get nonce");
         const { nonce } = await nonceRes.json();
 
@@ -44,7 +46,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
         const sig = await signMessage(encoded);
 
         // Step 3: Verify
-        const verifyRes = await fetch(withApiBase("/api/auth/verify"), {
+        const verifyRes = await fetch(apiUrl("/api/auth/verify"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

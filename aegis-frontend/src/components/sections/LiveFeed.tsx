@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import SectionLabel from "@/components/SectionLabel";
 import { useInView } from "@/hooks/useInView";
 import { useLiveFeed, type LiveFeedEvent } from "@/hooks/useLiveFeed";
@@ -15,39 +15,6 @@ interface Invocation {
   timestamp: number;
 }
 
-const OPERATORS = [
-  "gpt4-code-review", "aegis-translate-es", "whisper-transcribe",
-  "stable-diff-gen", "sentiment-v3", "pdf-extract-pro",
-  "code-explain-v2", "sql-optimize", "image-caption",
-  "text-summarize", "entity-extract", "tone-analyzer",
-  "grammar-fix-en", "data-clean-csv", "chart-gen-v4",
-  "voice-clone-v2", "ocr-handwrite", "latex-to-html",
-  "api-test-suite", "regex-builder", "json-validate",
-  "markdown-render", "css-optimize", "a11y-audit",
-];
-
-const CALLERS = [
-  "agent-7f3a", "bot-c91e", "agent-2d8b", "svc-f4a2",
-  "agent-e6c1", "bot-a3f9", "agent-8b2d", "svc-d1e7",
-  "agent-4c9f", "bot-b7a3", "agent-1e5d", "svc-9f2c",
-];
-
-const rand = (min: number, max: number) => Math.random() * (max - min) + min;
-const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-
-function generateInvocation(): Invocation {
-  const statuses: Invocation["status"][] = ["settled", "settled", "settled", "settled", "validating", "pending"];
-  return {
-    id: Math.random().toString(36).slice(2, 10),
-    operator: pick(OPERATORS),
-    caller: pick(CALLERS),
-    amount: `$${rand(0.001, 0.05).toFixed(4)}`,
-    latency: `${Math.round(rand(80, 450))}ms`,
-    status: pick(statuses),
-    reputation: Math.round(rand(72, 99)),
-    timestamp: Date.now(),
-  };
-}
 
 function StatusDot({ status }: { status: Invocation["status"] }) {
   const colors = {
@@ -111,14 +78,16 @@ function sseToInvocation(evt: LiveFeedEvent): Invocation | null {
 
 export default function LiveFeed() {
   const { data: stats } = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
+  const { data: recentData } = trpc.invoke.recent.useQuery(
+    { limit: 15 },
+    { staleTime: 30_000, refetchInterval: 30_000 },
+  );
   const { ref, inView } = useInView(0.05);
   const { events: sseEvents, connected: sseConnected } = useLiveFeed();
-  const [simInvocations, setSimInvocations] = useState<Invocation[]>([]);
   const [newestId, setNewestId] = useState<string>("");
   const [totalCount, setTotalCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
   const statsInitialized = useRef(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   // Seed counters from live stats once available
   useEffect(() => {
@@ -137,21 +106,29 @@ export default function LiveFeed() {
       .slice(0, 15);
   }, [sseEvents]);
 
-  // Use SSE data when available, fall back to simulated data
-  const hasSSEData = sseInvocations.length > 0;
-  const invocations = hasSSEData ? sseInvocations : simInvocations;
-
-  const addInvocation = useCallback(() => {
-    const inv = generateInvocation();
-    setNewestId(inv.id);
-    setTotalCount((c: number) => c + 1);
-    setTotalVolume((v: number) => v + parseFloat(inv.amount.slice(1)));
-    setSimInvocations((prev: Invocation[]) => {
-      const next = [inv, ...prev];
-      if (next.length > 15) next.pop();
-      return next;
+  // Convert trpc.invoke.recent to invocation display format as fallback
+  const recentInvocations = useMemo((): Invocation[] => {
+    if (!recentData) return [];
+    return (recentData as any[]).map((row: any, i: number) => {
+      const inv = row.invocation ?? row;
+      return {
+        id: String(inv.id ?? inv._id ?? i),
+        operator: row.operatorSlug ?? row.operatorName ?? inv.operatorSlug ?? "unknown",
+        caller: inv.callerWallet
+          ? `${String(inv.callerWallet).slice(0, 6)}...${String(inv.callerWallet).slice(-4)}`
+          : "anon",
+        amount: `$${parseFloat(inv.amountPaid || "0").toFixed(4)}`,
+        latency: `${inv.responseMs || 0}ms`,
+        status: (inv.success ? "settled" : inv.responseMs === 0 ? "pending" : "validating") as Invocation["status"],
+        reputation: Math.max(0, Math.min(100, Math.round((inv.trustScore ?? 75)))),
+        timestamp: inv.createdAt ? new Date(inv.createdAt).getTime() : Date.now() - i * 3000,
+      };
     });
-  }, []);
+  }, [recentData]);
+
+  // SSE is primary; fall back to tRPC recent data
+  const hasSSEData = sseInvocations.length > 0;
+  const invocations = hasSSEData ? sseInvocations : recentInvocations;
 
   // Track newest SSE event for highlight
   useEffect(() => {
@@ -161,24 +138,10 @@ export default function LiveFeed() {
   }, [sseInvocations]);
 
   useEffect(() => {
-    // Seed initial simulated rows
-    const initial: Invocation[] = [];
-    for (let i = 0; i < 8; i++) {
-      const inv = generateInvocation();
-      inv.timestamp = Date.now() - (i * 3000);
-      initial.push(inv);
+    if (recentInvocations.length > 0 && !hasSSEData) {
+      setNewestId(recentInvocations[0].id);
     }
-    setSimInvocations(initial);
-  }, []);
-
-  // Only run simulated feed when in view AND no SSE data
-  useEffect(() => {
-    if (!inView || hasSSEData) return;
-    intervalRef.current = setInterval(() => {
-      addInvocation();
-    }, 2500 + Math.random() * 2000);
-    return () => clearInterval(intervalRef.current);
-  }, [inView, addInvocation, hasSSEData]);
+  }, [recentInvocations, hasSSEData]);
 
   return (
     <section id="live-feed" className="py-16 sm:py-32 lg:py-40 border-t border-white/[0.04]" ref={ref}>

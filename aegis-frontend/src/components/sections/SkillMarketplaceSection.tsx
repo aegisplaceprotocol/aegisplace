@@ -127,7 +127,7 @@ export default function SkillMarketplaceSection() {
             {/* Key Numbers */}
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="border border-white/[0.04] p-4">
-                <div className="text-xl font-normal text-zinc-300 ">60%</div>
+                <div className="text-xl font-normal text-zinc-300 ">85%</div>
                 <div className="text-[10px] text-white/25 mt-1">goes to you</div>
               </div>
               <div className="border border-white/[0.04] p-4">

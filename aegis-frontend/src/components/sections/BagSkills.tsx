@@ -143,7 +143,7 @@ export default function BagSkills() {
             </h3>
             <p className="text-[14px] text-zinc-400 leading-relaxed mb-6">
               Every Bag Skill invocation pays in USDC. That USDC buys $AEGIS on Jupiter.
-              The $AEGIS splits six ways. creator earns 60%, and 2% is burned forever.
+              Every fee splits five ways on Solana. Creator earns 85%, validators 10%, treasury 3%, insurance 1.5%, and 0.5% is burned forever.
               But here's the part that matters for Bags:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -160,7 +160,7 @@ export default function BagSkills() {
                 <div className="text-[13px] font-normal text-white mb-1">Trading fees compound</div>
                 <div className="text-[12px] text-zinc-500 leading-relaxed">
                   Operator tokens trade on Bags. Trading fees accrue to the creator.
-                  So creators earn from invocations (60%) AND from their token's trading volume. Two revenue streams.
+                  So creators earn from invocations (85%) AND from their token's trading volume. Two revenue streams.
                 </div>
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function BagSkills() {
         </motion.div>
 
         <div className="mt-12 flex items-center justify-center gap-3">
-          <img src="/BagsFMLogo.png" alt="Bags.fm" className="h-6 w-auto opacity-80" />
+          <img src="/BagsFMLogo.png" alt="Bags" className="w-6 h-6 opacity-60" />
           <span className="text-[12px] text-white/20 font-light">Powered by Bags.fm</span>
         </div>
       </div>

@@ -14,19 +14,6 @@ import {
   MonoValue,
 } from "./primitives";
 
-/* ── Demo data ────────────────────────────────────────────────────────── */
-
-const OPERATORS = [
-  "GPT-4o Router", "Claude Analyst", "Mistral Coder", "Gemini Vision",
-  "Llama Guard", "DeepSeek Math", "Cohere Summarizer", "Phi-3 Classifier",
-  "Whisper Transcribe", "DALL-E Renderer", "Stable Diffusion XL", "CodeLlama Debug",
-];
-
-const CALLERS = [
-  "0x7a3B...f291", "0x1eC4...83d0", "0xbF92...44a1", "0x3dA1...c7e8",
-  "0x92F6...1b3c", "0xd4E7...9f02", "0x5cB8...62d4", "0xaA31...7e5f",
-];
-
 type RowStatus = "Success" | "Failed" | "Pending";
 
 interface FeedRow {
@@ -41,47 +28,14 @@ interface FeedRow {
   guardrails: string[];
 }
 
-function generateRows(): FeedRow[] {
-  const statuses: RowStatus[] = ["Success", "Success", "Success", "Success", "Success", "Success", "Success", "Success", "Failed", "Pending"];
-  const amounts = ["$0.012", "$0.034", "$0.008", "$0.156", "$0.042", "$0.003", "$0.087", "$0.021", "$0.064", "$0.005", "$0.119", "$0.028"];
-  const latencies = ["89ms", "142ms", "203ms", "67ms", "312ms", "45ms", "178ms", "94ms", "256ms", "118ms", "73ms", "391ms"];
-  const guardrailSets = [
-    ["PII Filter: Pass", "Rate Limit: Pass", "Token Budget: Pass"],
-    ["PII Filter: Pass", "Content Safety: Pass"],
-    ["Rate Limit: Pass", "Schema Validation: Pass", "Auth Check: Pass"],
-    ["Content Safety: Flagged", "PII Filter: Pass"],
-    ["Token Budget: Exceeded", "Rate Limit: Pass"],
-  ];
-
-  const rows: FeedRow[] = [];
-  const baseMinutes = 14;
-  for (let i = 0; i < 25; i++) {
-    const mins = baseMinutes - Math.floor(i * 0.6);
-    const secs = (59 - (i * 7) % 60 + 60) % 60;
-    rows.push({
-      id: `inv-${(900000 + 25 - i).toString(16)}`,
-      time: `${mins >= 0 ? mins : 0}:${secs.toString().padStart(2, "0")}:${((i * 13) % 60).toString().padStart(2, "0")}`,
-      operator: OPERATORS[i % OPERATORS.length],
-      caller: CALLERS[i % CALLERS.length],
-      amount: amounts[i % amounts.length],
-      latency: latencies[i % latencies.length],
-      status: statuses[i % statuses.length],
-      traceId: `trace-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 6)}`,
-      guardrails: guardrailSets[i % guardrailSets.length],
-    });
-  }
-  return rows;
-}
-
-const DEMO_ROWS = generateRows();
 
 const FEE_BREAKDOWN = [
-  { label: "Creator", pct: "60%", color: T.positive },
+  { label: "Creator", pct: "85%", color: T.positive },
   { label: "Validators", pct: "15%", color: T.text50 },
-  { label: "Stakers", pct: "12%", color: T.text30 },
+  { label: "Stakers", pct: "3%", color: T.text30 },
   { label: "Treasury", pct: "8%", color: T.text50 },
   { label: "Insurance", pct: "3%", color: T.text50 },
-  { label: "Burned", pct: "2%", color: T.negative },
+  { label: "Burned", pct: "0.5%", color: T.negative },
 ];
 
 const TOP_OPERATORS = [
@@ -121,22 +75,25 @@ export default function LiveFeedPanel() {
   );
   const { events: liveEvents, connected: liveConnected } = useLiveFeed();
 
-  // Map API data to local shape, falling back to demo data
+  // Map API data to local shape — API returns { invocation, operatorName, operatorSlug }[]
   const feedRows: FeedRow[] = recentQuery.data
-    ? (recentQuery.data as any[]).map((inv: any, i: number) => ({
-        id: `inv-${inv.id ?? i}`,
-        time: inv.createdAt ? new Date(inv.createdAt).toLocaleTimeString() : "",
-        operator: inv.operatorName ?? inv.operatorSlug ?? `operator-${inv.operatorId ?? "?"}`,
-        caller: inv.callerWallet ? `${inv.callerWallet.slice(0, 6)}...${inv.callerWallet.slice(-4)}` : "anonymous",
-        amount: inv.amountPaid ? `$${Number(inv.amountPaid).toFixed(3)}` : "$0.000",
-        latency: inv.responseMs != null ? `${inv.responseMs}ms` : "--",
-        status: (inv.success ? "Success" : inv.responseMs === 0 ? "Pending" : "Failed") as RowStatus,
-        traceId: `trace-${inv.id ?? i}`,
-        guardrails: inv.guardrailViolations?.length
-          ? inv.guardrailViolations.map((v: string) => `${v}: Flagged`)
-          : ["PII Filter: Pass", "Rate Limit: Pass"],
-      }))
-    : DEMO_ROWS;
+    ? (recentQuery.data as any[]).map((row: any, i: number) => {
+        const inv = row.invocation ?? row;
+        return {
+          id: `inv-${inv.id ?? inv._id ?? i}`,
+          time: inv.createdAt ? new Date(inv.createdAt).toLocaleTimeString() : "",
+          operator: row.operatorName ?? row.operatorSlug ?? inv.operatorName ?? inv.operatorSlug ?? `operator-${inv.operatorId ?? "?"}`,
+          caller: inv.callerWallet ? `${String(inv.callerWallet).slice(0, 6)}...${String(inv.callerWallet).slice(-4)}` : "anonymous",
+          amount: inv.amountPaid ? `$${Number(inv.amountPaid).toFixed(3)}` : "$0.000",
+          latency: inv.responseMs != null ? `${inv.responseMs}ms` : "--",
+          status: (inv.success ? "Success" : inv.responseMs === 0 ? "Pending" : "Failed") as RowStatus,
+          traceId: `trace-${inv.id ?? inv._id ?? i}`,
+          guardrails: inv.guardrailViolations?.length
+            ? inv.guardrailViolations.map((v: string) => `${v}: Flagged`)
+            : ["PII Filter: Pass", "Rate Limit: Pass"],
+        };
+      })
+    : [];
 
   // Merge live SSE events on top when available
   const allRows = liveConnected && liveEvents.length > 0

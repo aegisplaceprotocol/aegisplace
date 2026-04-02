@@ -33,7 +33,7 @@ export const AEGIS_ICON = "M3208.07,3796.37l-2615.76-.32c-48.09,0-93.08-23.88-12
 export const AGENTS = ["SENTINEL", "WATCHDOG", "OVERWATCH", "REACTOR", "ARSENAL", "CIPHER-9", "FORGE-12", "GHOST-3", "PHANTOM", "VANGUARD", "RECON-7", "IRONCLAD"];
 
 export const FEE_SPLIT = [
-  { pct: 60, label: "Creator", dollar: 0.60 },
+  { pct: 85, label: "Creator", dollar: 0.60 },
   { pct: 15, label: "Validators", dollar: 0.15 },
   { pct: 12, label: "Stakers", dollar: 0.12 },
   { pct: 8, label: "Treasury", dollar: 0.08 },

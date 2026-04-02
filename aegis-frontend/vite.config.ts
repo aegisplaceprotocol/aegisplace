@@ -1,51 +1,41 @@
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
-const plugins = [react(), tailwindcss(), jsxLocPlugin()];
 
 export default defineConfig({
-  plugins,
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
-      "@shared": path.resolve(import.meta.dirname, "..", "shared"),
+      "@shared": path.resolve(import.meta.dirname, "../shared"),
       buffer: "buffer/",
     },
   },
-  envDir: path.resolve(import.meta.dirname),
-  root: path.resolve(import.meta.dirname),
-  publicDir: path.resolve(import.meta.dirname, "public"),
   define: {
     "process.env": {},
     global: "globalThis",
   },
+  server: {
+    host: true,
+    port: 5173,
+  },
+  preview: {
+    host: true,
+    port: 4173,
+  },
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist"),
+    outDir: "dist",
     emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-solana': ['@solana/web3.js', '@solana/wallet-adapter-react', '@solana/wallet-adapter-base'],
-          'vendor-motion': ['framer-motion'],
-          'vendor-trpc': ['@trpc/client', '@trpc/react-query', '@tanstack/react-query'],
-        }
-      }
-    }
-  },
-  server: {
-    host: true,
-    allowedHosts: true,
-    proxy: {
-      "/api": "http://localhost:3000",
-      "/metrics": "http://localhost:3000",
-      "/.well-known": "http://localhost:3000",
-    },
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
+          "vendor-react": ["react", "react-dom"],
+          "vendor-solana": ["@solana/web3.js", "@solana/wallet-adapter-react", "@solana/wallet-adapter-base"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-trpc": ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
+        },
+      },
     },
   },
 });

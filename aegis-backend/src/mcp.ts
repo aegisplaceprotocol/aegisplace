@@ -16,8 +16,6 @@ import {
   listOperators,
   getOperatorBySlug,
   getOperatorById,
-  OperatorModel,
-  OperatorTokenModel,
   getOperatorCount,
   getProtocolStats,
   getGuardrailStats,
@@ -29,13 +27,14 @@ import {
   createTask,
   createProposal,
   createAgent,
+  OperatorModel,
+  OperatorTokenModel,
 } from "./db";
 import { getTrustBreakdown } from "./trust-engine";
 import { checkInput, checkOutput } from "./guardrails";
 import { validateInvocation, calculateFees } from "./validator";
 import { broadcastEvent } from "./sse";
 import { bags, BagsApiError } from "./bags";
-import { executeInvocation, InvocationError } from "./invoke-engine";
 
 // ────────────────────────────────────────────────────────────
 // SSRF Protection
@@ -123,7 +122,7 @@ const TOOLS = [
   {
     name: "aegis_invoke_operator",
     description:
-      "Invoke an AI operator with a payload. For paid operators provide txSignature (USDC transfer) and callerWallet.",
+      "Invoke an AI operator with a payload. This calls the operator's real endpoint and records the invocation with trust scoring and guardrail checks.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -137,46 +136,7 @@ const TOOLS = [
         },
         callerWallet: {
           type: "string",
-          description: "Solana wallet address of the caller. Required for paid operators when txSignature is provided.",
-        },
-        txSignature: {
-          type: "string",
-          description: "Optional Solana transaction signature proving USDC payment for paid operators.",
-        },
-        paymentToken: {
-          type: "string",
-          description: "Optional alternate payment token/reference for integrations.",
-        },
-      },
-      required: ["operatorId"],
-    },
-  },
-  {
-    name: "aegis_invoke_skill",
-    description:
-      "Alias for aegis_invoke_operator. Invoke a skill/operator with the same arguments.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        operatorId: {
-          type: "string",
-          description: "The operator ID to invoke",
-        },
-        payload: {
-          type: "object",
-          description: "The input payload to send to the operator",
-        },
-        callerWallet: {
-          type: "string",
-          description: "Solana wallet address of the caller. Required for paid operators when txSignature is provided.",
-        },
-        txSignature: {
-          type: "string",
-          description: "Optional Solana transaction signature proving USDC payment for paid operators.",
-        },
-        paymentToken: {
-          type: "string",
-          description: "Optional alternate payment token/reference for integrations.",
+          description: "Solana wallet address of the caller (optional)",
         },
       },
       required: ["operatorId"],
@@ -505,9 +465,8 @@ async function executeTool(
         };
       }
 
-      // ── Invoke Operator / Skill ──
-      case "aegis_invoke_operator":
-      case "aegis_invoke_skill": {
+      // ── Invoke Operator ──
+      case "aegis_invoke_operator": {
         const operatorId = args.operatorId as string;
         if (!operatorId) {
           return {
@@ -516,63 +475,275 @@ async function executeTool(
           };
         }
 
-        const callerWallet = (args.callerWallet as string) || undefined;
-
-        // Rate limit by caller wallet when provided, otherwise by operator
-        const rlKey = callerWallet ? `wallet:${callerWallet}` : `mcp:operator:${operatorId}`;
-        const rl = await checkRateLimit(rlKey, "invoke.execute", 60, 60);
-        if (!rl.allowed) {
+        const operator: any = await getOperatorById(operatorId);
+        if (!operator) {
           return {
-            content: [{ type: "text", text: `Rate limit exceeded. ${rl.remaining} requests remaining. Resets at ${rl.resetAt.toISOString()}` }],
+            content: [{ type: "text", text: `No operator found with ID "${operatorId}"` }],
+            isError: true,
+          };
+        }
+        if (!operator.isActive) {
+          return {
+            content: [{ type: "text", text: "Operator is not active" }],
             isError: true,
           };
         }
 
-        try {
-          const result = await executeInvocation({
-            operatorId,
+        const callerWallet = (args.callerWallet as string) || "mcp-agent";
+        const payload = args.payload ?? {};
+
+        // Rate limit by caller wallet
+        const rl = await checkRateLimit(`wallet:${callerWallet}`, "invoke.execute", 60, 60);
+        if (!rl.allowed) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Rate limit exceeded. ${rl.remaining} requests remaining. Resets at ${rl.resetAt.toISOString()}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const price = parseFloat(operator.pricePerCall);
+        const fees = calculateFees(price);
+
+        // Guardrail input check
+        let guardrailInputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
+        let guardrailOutputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
+        let totalGuardrailLatencyMs = 0;
+
+        guardrailInputResult = await checkInput(operator.category, payload);
+        totalGuardrailLatencyMs += guardrailInputResult.latencyMs;
+
+        if (!guardrailInputResult.passed) {
+          const invocationId = await recordInvocation({
+            operatorId: toObjectId(operator.id),
             callerWallet,
-            payload: args.payload ?? {},
-            txSignature: args.txSignature as string | undefined,
-            paymentToken: args.paymentToken as string | undefined,
-            source: "mcp",
+            amountPaid: "0",
+            creatorShare: "0",
+            validatorShare: "0",
+            treasuryShare: "0",
+            burnAmount: "0",
+            responseMs: 0,
+            success: false,
+            statusCode: 403,
+            trustDelta: 0,
+            guardrailInputPassed: false,
+            guardrailOutputPassed: true,
+            guardrailViolations: guardrailInputResult.violations,
+            guardrailLatencyMs: totalGuardrailLatencyMs,
+          });
+
+          broadcastEvent("invocation", {
+            invocationId,
+            operatorId: operator.id,
+            operatorName: operator.name,
+            operatorSlug: operator.slug,
+            callerWallet,
+            success: false,
+            responseMs: 0,
+            amountPaid: "0",
+            trustDelta: 0,
           });
 
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify(result, null, 2),
+                text: JSON.stringify(
+                  {
+                    success: false,
+                    invocationId,
+                    error: "Blocked by Aegis NeMo Guardrails safety check",
+                    violations: guardrailInputResult.violations,
+                  },
+                  null,
+                  2,
+                ),
               },
             ],
+            isError: true,
           };
-        } catch (err: any) {
-          if (err instanceof InvocationError) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: JSON.stringify(
-                    {
-                      success: false,
-                      code: err.code,
-                      message: err.message,
-                      statusCode: err.statusCode,
-                      hint:
-                        err.code === "PAYMENT_REQUIRED"
-                          ? "For paid operators, send a USDC payment to treasury and retry with txSignature + callerWallet."
-                          : undefined,
-                    },
-                    null,
-                    2,
-                  ),
-                },
-              ],
-              isError: true,
-            };
-          }
-          throw err;
         }
+
+        // Execute the operator
+        let responseMs = 0;
+        let statusCode = 200;
+        let responseBody: unknown = null;
+        let success = true;
+
+        if (operator.endpointUrl) {
+          if (isPrivateUrl(operator.endpointUrl)) {
+            throw new Error('Operator endpoint URL is not allowed (private/internal address)');
+          }
+          const start = Date.now();
+          try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
+
+            const res = await fetch(operator.endpointUrl, {
+              method: operator.httpMethod || "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Aegis-Operator-Id": String(operator.id),
+                "X-Aegis-Caller": callerWallet,
+                "X-Aegis-Source": "mcp",
+              },
+              body: payload ? JSON.stringify(payload) : undefined,
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeout);
+            responseMs = Date.now() - start;
+            statusCode = res.status;
+
+            try {
+              responseBody = await res.json();
+            } catch {
+              responseBody = await res.text();
+            }
+
+            success = statusCode >= 200 && statusCode < 400;
+          } catch (err: any) {
+            responseMs = Date.now() - start;
+            statusCode = 0;
+            success = false;
+            responseBody = { error: err.message || "Request failed" };
+          }
+        } else {
+          // Simulated invocation for demo operators
+          const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+          responseMs = 200 + Math.abs(hashCode(operator.slug || 'default')) % 800;
+          statusCode = 200;
+          success = true;
+          responseBody = {
+            result: `Response from ${operator.name}`,
+            timestamp: new Date().toISOString(),
+            operatorId: operator.id,
+          };
+        }
+
+        // Guardrail output check
+        if (success) {
+          guardrailOutputResult = await checkOutput(operator.category, responseBody);
+          totalGuardrailLatencyMs += guardrailOutputResult.latencyMs;
+          if (!guardrailOutputResult.passed) {
+            success = false;
+          }
+        }
+
+        // Validate response
+        const validation = validateInvocation({
+          responseMs,
+          statusCode,
+          responseBody,
+          expectedSchema: operator.responseSchema as Record<string, unknown> | undefined,
+        });
+
+        let trustDelta = validation.trustDelta;
+        if (!guardrailOutputResult.passed) {
+          trustDelta = -5;
+        }
+
+        const allViolations = [
+          ...guardrailInputResult.violations,
+          ...guardrailOutputResult.violations,
+        ];
+
+        // Record invocation
+        const invocationId = await recordInvocation({
+          operatorId: toObjectId(operator.id),
+          callerWallet,
+          amountPaid: price.toFixed(8),
+          creatorShare: fees.creator.toFixed(8),
+          validatorShare: fees.validators.toFixed(8),
+          treasuryShare: fees.treasury.toFixed(8),
+          burnAmount: fees.burn.toFixed(8),
+          stakersShare: fees.stakers.toFixed(8),
+          insuranceShare: fees.insurance.toFixed(8),
+          responseMs,
+          success,
+          statusCode,
+          trustDelta,
+          paymentVerified: false,
+          guardrailInputPassed: guardrailInputResult.passed,
+          guardrailOutputPassed: guardrailOutputResult.passed,
+          guardrailViolations: allViolations.length > 0 ? allViolations : undefined,
+          guardrailLatencyMs: totalGuardrailLatencyMs,
+        });
+
+        // Update trust score
+        const newTrust = Math.max(0, Math.min(100, operator.trustScore + trustDelta));
+        await updateOperator(operator.id, { trustScore: newTrust });
+
+        // Create payment record
+        await createPayment({
+          invocationId,
+          txSignature: `mcp-${invocationId}`,
+          totalAmount: price.toFixed(8),
+          operatorShare: fees.creator.toFixed(8),
+          protocolShare: fees.treasury.toFixed(8),
+          validatorShare: fees.validators.toFixed(8),
+          burnAmount: fees.burn.toFixed(8),
+          stakersShare: fees.stakers.toFixed(8),
+          insuranceShare: fees.insurance.toFixed(8),
+          status: "pending",
+        });
+
+        broadcastEvent("invocation", {
+          invocationId,
+          operatorId: operator.id,
+          operatorName: operator.name,
+          operatorSlug: operator.slug,
+          callerWallet,
+          success,
+          responseMs,
+          amountPaid: price.toFixed(8),
+          trustDelta,
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  success,
+                  invocationId,
+                  operatorId: operator.id,
+                  operatorName: operator.name,
+                  responseMs,
+                  statusCode,
+                  response: responseBody,
+                  validation: {
+                    score: validation.score,
+                    trustDelta,
+                    newTrustScore: newTrust,
+                  },
+                  guardrails: {
+                    inputPassed: guardrailInputResult.passed,
+                    outputPassed: guardrailOutputResult.passed,
+                    violations: allViolations,
+                    latencyMs: totalGuardrailLatencyMs,
+                  },
+                  fees: {
+                    total: price,
+                    creator: fees.creator,
+                    validators: fees.validators,
+                    stakers: fees.stakers,
+                    treasury: fees.treasury,
+                    insurance: fees.insurance,
+                    burn: fees.burn,
+                  },
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
       }
 
       // ── Get Trust Score ──
@@ -653,12 +824,13 @@ async function executeTool(
 
       // ── Get Categories ──
       case "aegis_get_categories": {
+        const { OperatorModel: OpModel } = await import("./db");
         const pipeline = [
           { $match: { isActive: true } },
           { $group: { _id: "$category", count: { $sum: 1 }, avgTrust: { $avg: "$trustScore" } } },
           { $sort: { count: -1 as const } },
         ];
-        const results = await OperatorModel.aggregate(pipeline);
+        const results = await OpModel.aggregate(pipeline);
         const totalActive = results.reduce((sum: number, r: any) => sum + r.count, 0);
         const categories = results.map((r: any) => ({ category: r._id, count: r.count, avgTrust: Math.round(r.avgTrust ?? 0) }));
         return {
@@ -712,6 +884,8 @@ async function executeTool(
 
       // ── Discovery Stats ──
       case "aegis_discovery_stats": {
+        // @ts-ignore - import path resolved at runtime
+        const { OperatorModel } = await import("./db");
         const discovered = await OperatorModel.countDocuments({ source: "discovery-engine" });
         const manual = await OperatorModel.countDocuments({ source: { $ne: "discovery-engine" } });
         const total = discovered + manual;
@@ -1136,6 +1310,15 @@ export async function handleMCP(req: Request, res: Response) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
 
+  // MCP API key authentication (when MCP_API_KEY env var is set)
+  const mcpKey = process.env.MCP_API_KEY;
+  if (mcpKey) {
+    const providedKey = (req.headers["x-api-key"] as string) || (req.headers["authorization"] as string || "").replace("Bearer ", "");
+    if (providedKey !== mcpKey) {
+      return res.status(401).json(jsonrpcError(null, -32000, "Unauthorized"));
+    }
+  }
+
   // Validate content type
   const contentType = req.headers["content-type"];
   if (!contentType || !contentType.includes("application/json")) {
@@ -1153,37 +1336,6 @@ export async function handleMCP(req: Request, res: Response) {
       jsonrpcError(body?.id ?? null, -32600, "Invalid JSON-RPC 2.0 request"),
     );
     return;
-  }
-
-  // MCP API key authentication (when MCP_API_KEY env var is set)
-  // Keep discovery/read-only methods open so agents can discover tools.
-  const rpcMethod = body.method;
-  const toolName = (body.params as any)?.name as string | undefined;
-  const readOnlyTools = new Set([
-    "aegis_list_operators",
-    "aegis_get_operator",
-    "aegis_search_operators",
-    "aegis_get_categories",
-    "aegis_get_stats",
-    "aegis_get_trust_score",
-    "aegis_discovery_stats",
-    "aegis_list_tasks",
-    "aegis_get_operator_token",
-  ]);
-  const isUnauthMethod =
-    rpcMethod === "initialize" ||
-    rpcMethod === "tools/list" ||
-    rpcMethod === "notifications/initialized" ||
-    (rpcMethod === "tools/call" && !!toolName && readOnlyTools.has(toolName));
-
-  const mcpKey = process.env.MCP_API_KEY;
-  if (mcpKey && !isUnauthMethod) {
-    const providedKey =
-      (req.headers["x-api-key"] as string) ||
-      (req.headers["authorization"] as string || "").replace("Bearer ", "");
-    if (providedKey !== mcpKey) {
-      return res.status(401).json(jsonrpcError(body.id ?? null, -32000, "Unauthorized"));
-    }
   }
 
   const { id, method, params } = body;

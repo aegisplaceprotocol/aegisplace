@@ -203,7 +203,7 @@ export const Architecture: React.FC = () => {
           transform: `translateY(${(1 - pEarn) * 8}px)`,
         }}>
           <div style={{ fontFamily: f.family, fontWeight: f.weight.regular, fontSize: 20, color: c.text.primary, marginBottom: 8 }}>
-            Creator earns 60%
+            Creator earns 85%
           </div>
           <div style={{ fontFamily: f.family, fontWeight: f.weight.regular, fontSize: 12, color: c.text.muted }}>
             Settled in USDC · 400ms · No invoices

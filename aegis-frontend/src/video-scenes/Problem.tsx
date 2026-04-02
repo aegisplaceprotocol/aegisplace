@@ -15,7 +15,7 @@ import {
 const STATS = [
   { value: "$4.8T", desc: "AI agent market by 2030", sub: "Every agent needs skills to function" },
   { value: "1B+", desc: "Agents making calls daily by 2028", sub: "Each call is a potential payment" },
-  { value: "60%", desc: "Of every fee goes to the creator", sub: "Settled on Solana in 400ms" },
+  { value: "85%", desc: "Of every fee goes to the creator", sub: "Settled on Solana in 400ms" },
 ];
 
 /** Scene 2: THE PROBLEM. 4.5s (135 frames) */

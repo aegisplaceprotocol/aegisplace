@@ -9,7 +9,7 @@
  * Signature is verified with tweetnacl / ed25519.
  */
 
-import { COOKIE_NAME, ONE_YEAR_MS } from "../../../shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import { nanoid } from "nanoid";

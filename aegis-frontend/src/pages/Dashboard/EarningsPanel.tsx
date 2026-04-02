@@ -10,9 +10,18 @@ import { DEMO_SPARKLINE, DEMO_REVENUE, FEE_SPLIT } from "./constants";
 
 export default function EarningsPanel() {
   const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
+  const creatorQuery = trpc.creator.earnings.useQuery(undefined, { staleTime: 300_000 });
   const rawStats = statsQuery.data as Record<string, unknown> | undefined;
-  const totalEarnings = rawStats?.totalEarnings ? parseFloat(String(rawStats.totalEarnings)) : 0;
+  const creatorEarnings = creatorQuery.data;
+
+  // Use creator.earnings for time-windowed breakdown; fall back to stats.overview total
+  const totalEarnings = creatorEarnings?.total
+    ? parseFloat(creatorEarnings.total)
+    : rawStats?.totalEarnings ? parseFloat(String(rawStats.totalEarnings)) : 0;
   const totalInvocations: number = (rawStats?.totalInvocations as number) ?? 0;
+
+  const last30d = creatorEarnings?.last30d ? parseFloat(creatorEarnings.last30d) : null;
+  const last7d = creatorEarnings?.last7d ? parseFloat(creatorEarnings.last7d) : null;
 
   const earningsData = useMemo(() => {
     if (totalEarnings === 0) return DEMO_REVENUE.map((_, i) => ({ date: new Date(Date.now() - (27 - i) * 86400000), value: 0 }));
@@ -23,8 +32,6 @@ export default function EarningsPanel() {
     }));
   }, [totalEarnings]);
 
-  const thisMonth = totalEarnings * 0.22;
-  const thisWeek = totalEarnings * 0.055;
   const avgPerCall = totalInvocations > 0 ? totalEarnings / totalInvocations : 0;
 
   return (
@@ -33,9 +40,9 @@ export default function EarningsPanel() {
 
       {/* 4 stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}>
-        <StatTile label="Total Revenue" value={`$${Math.floor(totalEarnings).toLocaleString()}`} delta="+$2,847 today" sub="USDC settled on Solana" />
-        <StatTile label="This Month" value={`$${Math.floor(thisMonth).toLocaleString()}`} delta="+22% of total" sub="30-day rolling window" />
-        <StatTile label="This Week" value={`$${Math.floor(thisWeek).toLocaleString()}`} delta="+$3,102 vs prior" sub="7-day window" />
+        <StatTile label="Total Revenue" value={`$${Math.floor(totalEarnings).toLocaleString()}`} delta="all-time" sub="USDC settled on Solana" />
+        <StatTile label="Last 30 Days" value={last30d !== null ? `$${Math.floor(last30d).toLocaleString()}` : "—"} delta="30-day window" sub="rolling period" />
+        <StatTile label="Last 7 Days" value={last7d !== null ? `$${Math.floor(last7d).toLocaleString()}` : "—"} delta="7-day window" sub="rolling period" />
         <StatTile label="Avg / Invocation" value={`$${avgPerCall.toFixed(4)}`} delta="blended rate" sub={`${totalInvocations.toLocaleString()} total calls`} />
       </div>
 
@@ -95,7 +102,7 @@ export default function EarningsPanel() {
             {[
               { label: "Total Invocations", value: totalInvocations.toLocaleString(), sub: "all-time skill calls" },
               { label: "Avg Price / Call", value: `$${avgPerCall.toFixed(4)}`, sub: "blended across all skills" },
-              { label: "Burn Rate (est.)", value: `$${Math.floor(totalEarnings * 0.02).toLocaleString()} USDC`, sub: "2% of all protocol fees" },
+              { label: "Burn Rate (est.)", value: `$${Math.floor(totalEarnings * 0.005).toLocaleString()} USDC`, sub: "0.5% of all protocol fees" },
             ].map((m) => (
               <div key={m.label}>
                 <div style={{ fontSize: 11, letterSpacing: "0.04em", fontWeight: 500, color: T.text20, marginBottom: 6 }}>{m.label}</div>

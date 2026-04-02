@@ -1,5 +1,5 @@
+import { apiUrl } from "@/lib/api";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { withApiBase } from "@/lib/api";
 
 export type SSEEventType = "invocation" | "registration" | "dispute" | "validator_join";
 
@@ -33,7 +33,7 @@ export function useLiveFeed() {
       esRef.current = null;
     }
 
-    const es = new EventSource(withApiBase("/api/feed"));
+    const es = new EventSource(apiUrl("/api/feed"), { withCredentials: true });
     esRef.current = es;
 
     es.onopen = () => {

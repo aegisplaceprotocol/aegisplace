@@ -132,7 +132,7 @@ export default function SkillFi() {
                 Powered by Bags
               </p>
               <div className="flex items-center justify-center gap-3 mb-6">
-                <img src="/assets/icons/bags.svg" alt="Bags" className="w-10 h-10 opacity-70" />
+                <img src="/BagsFMLogo.png" alt="Bags" className="w-10 h-10 opacity-70" />
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-light text-white leading-[1.1]">
                   Every AI skill is a<br />
                   tradeable asset
@@ -174,7 +174,7 @@ export default function SkillFi() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
             <motion.div {...fadeInView} className="flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <img src="/assets/icons/bags.svg" alt="Bags" className="w-8 h-8 opacity-50" />
+                <img src="/BagsFMLogo.png" alt="Bags" className="w-8 h-8 opacity-50" />
                 <div>
                   <div className="text-[13px] text-white/70 font-light">$AEGIS token on Bags</div>
                   <div className="text-[11px] text-white/20 font-mono mt-1 break-all">
@@ -201,7 +201,7 @@ export default function SkillFi() {
               {[
                 {
                   label: "Operators",
-                  value: stats?.totalOperators?.toLocaleString() ?? "452",
+                  value: stats?.totalOperators?.toLocaleString() ?? "180+",
                 },
                 {
                   label: "Total Invocations",
@@ -288,11 +288,11 @@ export default function SkillFi() {
                   Invocation Fees
                 </h3>
                 <p className="text-[13px] text-white/35 leading-relaxed mb-4">
-                  Agents pay per call. 60% goes to the creator, 15% to
-                  validators, 2% burned, rest to treasury.
+                  Agents pay per call. 85% goes to the creator, 10% to
+                  validators, 0.5% burned, rest to treasury.
                 </p>
                 <div className="text-[11px] text-white/20 font-light">
-                  Creator: 60% | Validator: 15% | Burn: 2%
+                  Creator: 85% | Validator: 10% | Burn: 0.5%
                 </div>
               </motion.div>
               <motion.div {...fadeInView} className="bg-background p-8 sm:p-10">
@@ -337,7 +337,7 @@ export default function SkillFi() {
                 <FlywheelArrow />
                 <div className="text-center px-4 py-3">
                   <div className="text-[13px] text-white/70 font-light mb-1">Fees split 6 ways</div>
-                  <div className="text-[11px] text-white/25">Creator gets 60%</div>
+                  <div className="text-[11px] text-white/25">Creator gets 85%</div>
                 </div>
                 <FlywheelArrow />
                 <div className="text-center px-4 py-3">
@@ -357,7 +357,7 @@ export default function SkillFi() {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
                     <path d="M12 8v4l3 3" />
                   </svg>
-                  <span>Cycle repeats with every invocation. 2% burned each loop.</span>
+                  <span>Cycle repeats with every invocation. 0.5% burned each loop.</span>
                 </div>
               </div>
             </motion.div>

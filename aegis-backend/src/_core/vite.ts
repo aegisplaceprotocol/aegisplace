@@ -4,7 +4,7 @@ import { type Server } from "http";
 import { nanoid } from "nanoid";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import viteConfig from "../../../aegis-frontend/vite.config";
+import viteConfig from "../../../vite.config";
 import logger from "../logger";
 
 export async function setupVite(app: Express, server: Server) {
@@ -49,12 +49,10 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const candidatePaths = [
-    path.resolve(import.meta.dirname, "../../..", "aegis-frontend", "dist"),
-    path.resolve(import.meta.dirname, "../..", "dist"),
-    path.resolve(import.meta.dirname, "public"),
-  ];
-  const distPath = candidatePaths.find((p) => fs.existsSync(p)) || candidatePaths[0];
+  const distPath =
+    process.env.NODE_ENV === "development"
+      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
+      : path.resolve(import.meta.dirname, "public");
   if (!fs.existsSync(distPath)) {
     logger.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`

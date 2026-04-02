@@ -8,9 +8,9 @@ const ECOSYSTEM_PRODUCTS = [
   {
     name: "AegisX IDE",
     tagline: "Browser-based development environment",
-    description: "Full-featured IDE running in the browser with 57 integrated MCP tools, Solana-native smart contract auditing, and GPU-accelerated rendering via Zed at 120fps. No install required.",
+    description: "Full-featured IDE running in the browser with 86 integrated modules (including 47 skills), Solana-native smart contract auditing, and GPU-accelerated rendering via Zed at 120fps. No install required.",
     stats: [
-      { label: "MCP Tools", value: "57" },
+      { label: "Modules", value: "86" },
       { label: "Rendering", value: "120fps" },
       { label: "Audit Classes", value: "15" },
     ],
@@ -56,7 +56,7 @@ const ECOSYSTEM_PRODUCTS = [
   {
     name: "x402 Payment Gateway",
     tagline: "HTTP-native micropayments for every invocation",
-    description: "Every operator call is an x402 micropayment. Sub-cent USDC transactions settle on Solana in 400ms. Reusable payment sessions, automatic revenue splits (60/15/12/8/3/2), and native support for agent-to-agent payments.",
+    description: "Every operator call is an x402 micropayment. Sub-cent USDC transactions settle on Solana in 400ms. Reusable payment sessions, automatic revenue splits (85/10/3/1.5/0.5), and native support for agent-to-agent payments.",
     stats: [
       { label: "Settlement", value: "400ms" },
       { label: "Currency", value: "USDC" },
@@ -171,7 +171,7 @@ const INTEGRATIONS = [
     items: [
       { name: "ElizaOS", status: "Compatible", desc: "50K+ deployed agents, 90+ plugins" },
       { name: "Solana Agent Kit", status: "Integrated", desc: "60+ pre-built blockchain actions" },
-      { name: "Claude Code / Codex", status: "Compatible", desc: "MCP-native agent interfaces" },
+      { name: "AegisX / Cursor", status: "Compatible", desc: "MCP-native agent interfaces" },
     ],
   },
   {
@@ -235,7 +235,7 @@ export default function Ecosystem() {
           </h1>
 
           <p className="text-[15px] sm:text-[16px] text-white/35 max-w-2xl leading-relaxed">
-            AegisX is a browser-based IDE with 57 MCP tools, a CLI agent runtime, an on-chain operator marketplace,
+            AegisX is a browser-based IDE with 86 modules, a CLI agent runtime, an on-chain operator marketplace,
             and deep integrations with Solana, Bags.fm, NVIDIA, and the x402 payment protocol.
             <span className="text-zinc-300/70 font-medium"> One platform for the entire AI agent lifecycle.</span>
           </p>

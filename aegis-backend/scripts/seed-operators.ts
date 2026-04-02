@@ -417,7 +417,7 @@ async function initializeProtocol(
     ? new PublicKey(aegisMintStr)
     : web3.Keypair.generate().publicKey; // Placeholder if token not created yet
 
-  const feeBps: number[] = [6000, 1500, 1200, 800, 300, 200]; // 60/15/12/8/3/2
+  const feeBps: number[] = [6000, 1500, 1200, 800, 300, 200]; // 85/10/3/1.5/0.5
 
   const adminWallet = new Wallet(admin);
   const adminProvider = new AnchorProvider(

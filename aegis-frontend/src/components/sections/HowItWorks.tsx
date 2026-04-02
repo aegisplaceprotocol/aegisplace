@@ -11,12 +11,12 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 sm:py-32 border-t border-white/[0.04]">
+    <section id="how-it-works" className="py-16 sm:py-20 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
         </motion.div>
 
-        <motion.div {...fadeInView} className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-20">
+        <motion.div {...fadeInView} className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-12">
           <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
             One skill invocation.
             <br />
@@ -28,8 +28,8 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        {/* 6-step flow cards */}
-        <motion.div {...fadeInView} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-16 sm:mb-20">
+        {/* 4-step flow cards */}
+        <motion.div {...fadeInView} className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
           {STEPS.map((step) => (
             <div key={step.num} className="rounded border border-zinc-800 bg-zinc-900/40 p-5">
               <div className="text-[11px] font-normal text-white/50 mb-2">{step.num}</div>
@@ -156,12 +156,11 @@ export default function HowItWorks() {
             {/* REVENUE SPLIT box (highlighted) */}
             <rect x="960" y="316" width="280" height="195" rx="12" stroke="rgba(161,161,170,0.5)" strokeWidth="1.5" fill="rgba(161,161,170,0.04)" />
             <text x="1100" y="350" textAnchor="middle" fill="rgba(161,161,170,0.9)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="16" fontWeight="700">Revenue Split</text>
-            <text x="1100" y="378" textAnchor="middle" fill="rgba(161,161,170,0.75)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="14" fontWeight="500">60% Creator</text>
-            <text x="1100" y="400" textAnchor="middle" fill="rgba(161,161,170,0.75)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="14" fontWeight="500">15% Validators</text>
-            <text x="1100" y="422" textAnchor="middle" fill="rgba(255,255,255,0.30)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">12% Stakers</text>
-            <text x="1100" y="442" textAnchor="middle" fill="rgba(255,255,255,0.30)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">8% Treasury</text>
-            <text x="1100" y="462" textAnchor="middle" fill="rgba(255,255,255,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">3% Insurance</text>
-            <text x="1100" y="482" textAnchor="middle" fill="rgba(255,255,255,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">2% Burned</text>
+            <text x="1100" y="378" textAnchor="middle" fill="rgba(161,161,170,0.75)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="14" fontWeight="500">85% Creator</text>
+            <text x="1100" y="400" textAnchor="middle" fill="rgba(161,161,170,0.75)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="14" fontWeight="500">10% Validators</text>
+            <text x="1100" y="422" textAnchor="middle" fill="rgba(255,255,255,0.30)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">3% Treasury</text>
+            <text x="1100" y="442" textAnchor="middle" fill="rgba(255,255,255,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">1.5% Insurance</text>
+            <text x="1100" y="462" textAnchor="middle" fill="rgba(255,255,255,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">0.5% Burned</text>
 
             {/* x402 payment flow label */}
             <rect x="960" y="520" width="280" height="52" rx="8" stroke="rgba(161,161,170,0.15)" strokeWidth="1" strokeDasharray="4 3" fill="rgba(161,161,170,0.02)" />
@@ -206,7 +205,7 @@ export default function HowItWorks() {
             { label: "Aegis Registry", desc: "On-chain Solana program that indexes and validates all operators", accent: true },
             { label: "Consumer Agent", desc: "Discovers and invokes skills, pays USDC via x402 micropayments", accent: false },
             { label: "Bonded Validator", desc: "Stakes $AEGIS to attest operator quality using NeMo Evaluator", accent: true },
-            { label: "Revenue Split", desc: "60% creator, 15% validators, 12% stakers, 8% treasury, 3% insurance, 2% burned", accent: true },
+            { label: "Revenue Split", desc: "85% creator, 10% validators, 3% treasury, 1.5% insurance, 0.5% burned", accent: true },
             { label: "Dispute Resolution", desc: "Stake-weighted prediction market with replayable audit trace", accent: false },
           ].map((node, i, arr) => (
             <div key={node.label}>

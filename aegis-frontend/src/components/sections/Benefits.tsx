@@ -125,7 +125,7 @@ export default function Benefits() {
             <span className="text-white/35 font-normal">Everyone earns. Everyone has skin in the game.</span>
           </h2>
           <p className={`text-[14px] text-white/30 max-w-md leading-relaxed lg:text-right`}>
-            The 60/15/12/8/3/2 revenue split executes in a single Solana instruction.
+            The 85/10/3/1.5/0.5 revenue split executes in a single Solana instruction.
             No invoices. No net-30. No payment disputes. Just code.
           </p>
         </div>

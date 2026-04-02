@@ -1,7 +1,7 @@
 /**
  * Aegis Dashboard. Overview Panel
  */
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
@@ -9,7 +9,7 @@ import { PremiumAreaChart } from "@/components/PremiumAreaChart";
 import { T } from "./theme";
 import { SIcon, BrandIcon, Spark } from "./icons";
 import {
-  type LiveTx, makeTx, computeNetworkHealth,
+  type LiveTx, formatInvocationAsTx, computeNetworkHealth,
   DEMO_SPARKLINE, DEMO_REVENUE, DEMO_OPS, FEE_SPLIT,
 } from "./constants";
 
@@ -45,11 +45,12 @@ function CardHead({ title }: { title: string }) {
 /* ── OverviewPanel ─────────────────────────────────────────────────────── */
 
 export default function OverviewPanel() {
-  const [feed, setFeed] = useState<LiveTx[]>(() => Array.from({ length: 14 }, (_, i) => makeTx(i)));
-  const feedId = useRef(14);
-
   const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
   const opsQuery = trpc.operator.list.useQuery({ limit: 8, sortBy: "invocations" }, { staleTime: 300_000 });
+  const recentQuery = trpc.invoke.recent.useQuery(
+    { limit: 14 },
+    { staleTime: 30_000, refetchInterval: 30_000 },
+  );
 
   const stats = statsQuery.data as Record<string, unknown> | undefined;
   const realOps: Record<string, unknown>[] = ((opsQuery.data as Record<string, unknown>)?.operators as Record<string, unknown>[]) ?? [];
@@ -60,12 +61,10 @@ export default function OverviewPanel() {
   const realOperators: number = (stats?.realOperators as number) ?? 0;
   const guardrailStatus: string = ((stats?.guardrails as Record<string, unknown>)?.serverStatus as string) ?? "standby";
 
-  useEffect(() => {
-    const iv = setInterval(() => {
-      setFeed((prev) => [makeTx(feedId.current++), ...prev].slice(0, 14));
-    }, 3500);
-    return () => clearInterval(iv);
-  }, []);
+  const feed = useMemo<LiveTx[]>(() => {
+    if (!recentQuery.data) return [];
+    return (recentQuery.data as any[]).map((row, i) => formatInvocationAsTx(row, i));
+  }, [recentQuery.data]);
 
   const revenueData = useMemo(() => {
     const scale = totalEarnings / (DEMO_REVENUE.reduce((a, b) => a + b, 0) * 100 / DEMO_REVENUE.length);
@@ -284,7 +283,7 @@ export default function OverviewPanel() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ color: T.text30 }}>Total burned (est.)</span>
-                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * 0.02).toLocaleString()} USDC</span>
+                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * 0.005).toLocaleString()} USDC</span>
               </div>
             </div>
           </div>

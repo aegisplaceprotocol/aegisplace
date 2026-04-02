@@ -117,7 +117,7 @@ function StatCard({
 
 /* -- Fallback demo data ------------------------------------------------- */
 
-const DEMO_GROWTH = [120, 145, 168, 195, 224, 258, 289, 312, 340, 362, 385, 402, 418, 435, 452];
+const DEMO_GROWTH = [20, 35, 52, 68, 85, 95, 110, 125, 140, 155, 165, 172, 178, 182, 183];
 const DEMO_REVENUE_DAILY = [320, 380, 410, 450, 520, 560, 610, 640, 700, 720, 780, 820, 880, 920, 980, 1020, 1060, 1120, 1180, 1240, 1280, 1340, 1380, 1420, 1480, 1520, 1580, 1640];
 const DEMO_INVOCATIONS_DAILY = [2400, 2800, 3100, 3600, 4200, 4800, 5200, 5600, 6100, 6400, 6800, 7200, 7600, 8100, 8500, 8900, 9200, 9600, 10100, 10400, 10800, 11200, 11600, 12000, 12400, 12800, 13200, 13600];
 
@@ -142,12 +142,12 @@ const TRUST_DISTRIBUTION = [
 ];
 
 const FEE_DISTRIBUTION = [
-  { label: "Creator (60%)", pct: 60, color: "#A1A1AA" },
+  { label: "Creator (85%)", pct: 85, color: "#A1A1AA" },
   { label: "Validators (15%)", pct: 15, color: "#71717A" },
-  { label: "Stakers (12%)", pct: 12, color: "#8B5CF6" },
+  { label: "Treasury (3%)", pct: 3, color: "#8B5CF6" },
   { label: "Treasury (8%)", pct: 8, color: "#4A7A82" },
   { label: "Insurance (3%)", pct: 3, color: "#06B6D4" },
-  { label: "Burned (2%)", pct: 2, color: "rgba(220,100,60,0.50)" },
+  { label: "Burned (0.5%)", pct: 0.5, color: "rgba(220,100,60,0.50)" },
 ];
 
 /* -- Page --------------------------------------------------------------- */
@@ -189,7 +189,7 @@ export default function Analytics() {
     }
   }
 
-  const totalOperators = stats?.totalOperators ?? 452;
+  const totalOperators = stats?.totalOperators ?? 183;
   const totalInvocations = stats?.totalInvocations ?? 124350;
   const totalRevenue = (stats as any)?.totalEarned ?? "18420";
   const avgTrust = (stats as any)?.avgTrustScore ?? 91.4;

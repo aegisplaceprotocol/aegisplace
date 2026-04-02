@@ -285,12 +285,12 @@ export default function LiveFeedPage() {
                 <h3 className="text-[13px] font-medium text-zinc-300/60 tracking-wider mb-4">FEE DISTRIBUTION</h3>
                 <div className="space-y-3">
                   {[
-                    { label: "Creator (60%)", pct: 60, color: "#A1A1AA" },
+                    { label: "Creator (85%)", pct: 85, color: "#A1A1AA" },
                     { label: "Validators (15%)", pct: 15, color: "#71717A" },
-                    { label: "Stakers (12%)", pct: 12, color: "#9CA3AF" },
+                    { label: "Treasury (3%)", pct: 3, color: "#9CA3AF" },
                     { label: "Treasury (8%)", pct: 8, color: "#4A7A82" },
                     { label: "Insurance (3%)", pct: 3, color: "#6B7280" },
-                    { label: "Burned (2%)", pct: 2, color: "rgba(220,100,60,0.50)" },
+                    { label: "Burned (0.5%)", pct: 0.5, color: "rgba(220,100,60,0.50)" },
                   ].map(item => (
                     <div key={item.label}>
                       <div className="flex justify-between text-[11px] mb-1">

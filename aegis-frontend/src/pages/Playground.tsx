@@ -336,7 +336,7 @@ function processCommand(
       add("success", `  [OK] Swapped $${usdcCost.toFixed(2)} USDC → ${aegisReceived.toFixed(1)} $AEGIS`);
       add("blank", "");
 
-      const creatorShare = aegisReceived * 0.60;
+      const creatorShare = aegisReceived * 0.85;
       const validatorShare = aegisReceived * 0.15;
       const stakerShare = aegisReceived * 0.12;
       const treasuryShare = aegisReceived * 0.08;
@@ -344,12 +344,12 @@ function processCommand(
       const burnShare = aegisReceived * 0.02;
 
       add("split", "  Revenue split executed atomically:");
-      add("split-detail", `    → ${creatorShare.toFixed(2)} $AEGIS  (60%)  → creator:  ${operator.authorAddress.slice(0, 12)}`);
-      add("split-detail", `    → ${validatorShare.toFixed(2)} $AEGIS  (15%)  → validators: ${randomAddr()}`);
-      add("split-detail", `    → ${stakerShare.toFixed(2)} $AEGIS  (12%)  → stakers`);
-      add("split-detail", `    → ${treasuryShare.toFixed(2)} $AEGIS  ( 8%)  → treasury`);
-      add("split-detail", `    → ${insuranceShare.toFixed(2)} $AEGIS  ( 3%)  → insurance fund`);
-      add("split-detail", `    → ${burnShare.toFixed(2)} $AEGIS  ( 2%)  → burned (deflationary)`);
+      add("split-detail", `    → ${creatorShare.toFixed(2)} $AEGIS  (85%)  → creator:  ${operator.authorAddress.slice(0, 12)}`);
+      add("split-detail", `    → ${validatorShare.toFixed(2)} $AEGIS  (10%)  → validators: ${randomAddr()}`);
+      add("split-detail", `    → ${stakerShare.toFixed(2)} $AEGIS  (3%)   → treasury`);
+      add("split-detail", `    → ${treasuryShare.toFixed(2)} $AEGIS  (3%)   → treasury`);
+      add("split-detail", `    → ${insuranceShare.toFixed(2)} $AEGIS  (1.5%) → insurance fund`);
+      add("split-detail", `    → ${burnShare.toFixed(2)} $AEGIS  (0.5%) → burned (deflationary)`);
       add("blank", "");
 
       const duration = (Math.random() * 2.5 + 0.5).toFixed(1);
@@ -823,7 +823,7 @@ function processCommand(
       add("divider", "  ────────────────────────────────────────────────────");
       add("result", "  MCP Client        MCP native     ~/.config/mcp/servers.json");
       add("result", "  MCP Workspace      MCP native     Multi-agent collaboration");
-      add("result", "  Claude Remote Ctrl MCP native     Mobile monitoring");
+      add("result", "  AegisX Remote MCP native     Mobile monitoring");
       add("result", "  Codex CLI          MCP / HTTP     codex --mcp-server");
       add("result", "  Codex App          MCP / HTTP     Multi-agent worktrees");
       add("result", "  ChatGPT            MCP native     GPT-4.1 tool discovery");
@@ -1277,7 +1277,7 @@ function processCommand(
       add("result", `  Name:           ${skillName}`);
       add("result", `  Category:       ${category}`);
       add("result", `  Price:          ${price} SOL per invocation`);
-      add("result", `  Revenue split:  60% creator / 15% validators / 12% stakers / 8% treasury / 3% insurance / 2% burned`);
+      add("result", `  Revenue split:  85% creator / 10% validators / 3% treasury / 1.5% insurance / 0.5% burned`);
       add("result", `  Creator:        ${wallet.address}`);
       add("result", `  License:        MIT (default)`);
       add("result", `  Composable:     Yes (other skills can chain into this)`);

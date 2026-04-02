@@ -4,7 +4,7 @@ import { Link } from "wouter";
 
 const STACK = [
   { name: "AI Agent", desc: "Claude, GPT, any MCP client" },
-  { name: "Aegis", desc: "452 operators, guardrails, success scoring" },
+  { name: "Aegis", desc: "180+ operators, guardrails, success scoring" },
   { name: "x402", desc: "Per-call USDC micropayments" },
   { name: "OWS", desc: "Encrypted vault, policy engine, isolated signing" },
   { name: "Solana", desc: "400ms finality, $0.00025 per transaction" },

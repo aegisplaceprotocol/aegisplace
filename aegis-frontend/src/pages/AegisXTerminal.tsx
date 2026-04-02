@@ -74,7 +74,7 @@ const CODE_LINES: Line[] = [
 
 /* ── Stats ── */
 const STATS = [
-  "57 tools",
+  "86 modules",
   "24 on-chain actions",
   "15 vuln detectors",
   "120fps",
@@ -261,9 +261,9 @@ function MiniTerminal({ lines }: { lines: { prompt: boolean; text: string }[] })
 export default function AegisXTerminal() {
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    toast("Coming soon", {
-      description: "AegisX IDE is coming soon.",
+  const showComingSoonToast = useCallback(() => {
+    toast.info("AegisX IDE is coming soon", {
+      description: "This preview page is locked while the IDE launch is finalized.",
     });
   }, []);
 
@@ -275,6 +275,37 @@ export default function AegisXTerminal() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-sans antialiased selection:bg-purple-500/20">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center px-6">
+        <div className="absolute inset-0 bg-zinc-950/45 backdrop-blur-md" />
+        <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.08] bg-zinc-950/88 px-8 py-10 text-center shadow-2xl shadow-black/50">
+          <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-[10px] uppercase tracking-[0.3em] text-white/40">
+            Soon
+          </div>
+          <h1 className="text-3xl font-medium tracking-tight text-white/92">
+            AegisX IDE is coming soon
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-white/45">
+            The IDE preview is locked while we finish the launch experience. Check back very soon.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={showComingSoonToast}
+              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-2.5 text-[13px] font-medium text-zinc-950 transition-colors duration-200 hover:bg-white/90"
+            >
+              Notify Me Soon
+            </button>
+            <a
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg border border-white/[0.08] px-6 py-2.5 text-[13px] font-medium text-white/55 transition-colors duration-200 hover:border-white/[0.16] hover:text-white/80"
+            >
+              Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div className="pointer-events-none select-none blur-md opacity-35">
       {/* ───────────────────────── FIXED NAV ───────────────────────── */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -337,7 +368,7 @@ export default function AegisXTerminal() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="mt-6 text-[14px] text-white/25 tracking-wide"
           >
-            GPU-accelerated editor. 57 AI tools. Solana-native.
+            GPU-accelerated editor. 86 AI modules. Solana-native.
           </motion.p>
 
           <motion.div
@@ -487,7 +518,7 @@ export default function AegisXTerminal() {
             Toolkit
           </p>
           <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white/90">
-            57 tools.
+            86 modules.
             <br />
             <span className="text-white/30">One interface.</span>
           </h2>
@@ -603,6 +634,7 @@ export default function AegisXTerminal() {
       </footer>
       <MobileBottomNav />
       <div className="h-14 lg:hidden" />
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useInView } from "@/hooks/useInView";
 const FAQS = [
   {
     q: "What is Aegis?",
-    a: "MCP (Anthropic, Nov 2024) standardized how AI agents discover and use tools. x402 (Coinbase, May 2025) standardized how agents pay, with 75M+ transactions processed and Solana controlling 49% of market share. A2A (Google/IBM) standardized agent-to-agent communication. ERC-8004 standardized agent identity on Ethereum (10K+ agents registered). NIST launched an Agent Standards Initiative in Feb 2026. None of them have a success layer. Aegis is that layer: bonded validation, on-chain reputation, and atomic revenue splits for 82K+ operators. Agent Aegis is the runtime that wires MCP discovery, A2A delegation, x402 payments, and Solana settlement into one agent loop.",
+    a: "MCP (Anthropic, Nov 2024) standardized how AI agents discover and use tools. x402 (Coinbase, May 2025) standardized how agents pay, with 75M+ transactions processed and Solana controlling 49% of market share. A2A (Google/IBM) standardized agent-to-agent communication. ERC-8004 standardized agent identity on Ethereum (10K+ agents registered). NIST launched an Agent Standards Initiative in Feb 2026. None of them have a success layer. Aegis is that layer: bonded validation, on-chain reputation, and atomic revenue splits — wrapping operators.sh's 82K+ operators with the economic infrastructure they lack. Agent Aegis is the runtime that wires MCP discovery, A2A delegation, x402 payments, and Solana settlement into one agent loop.",
   },
   {
     q: "Why Solana and not Ethereum?",
@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: "What is bonded validation?",
-    a: "Validators stake $AEGIS bonds to attest that an operator works as advertised. If their attestation is accurate, they earn 15% of every invocation fee. If they rubber-stamp garbage, their $AEGIS bond gets slashed. This creates economic skin-in-the-game for quality. The mechanism is backed by MIT CSAIL research proving binding reward transfers produce socially optimal equilibria.",
+    a: "Validators stake $AEGIS bonds to attest that an operator works as advertised. If their attestation is accurate, they earn 10% of every invocation fee. If they rubber-stamp garbage, their $AEGIS bond gets slashed. This creates economic skin-in-the-game for quality. The mechanism is backed by MIT CSAIL research proving binding reward transfers produce socially optimal equilibria.",
   },
   {
     q: "How does x402 payment work?",
@@ -25,11 +25,11 @@ const FAQS = [
   },
   {
     q: "How does the revenue split work?",
-    a: "Every operator invocation fee is split atomically in a single Solana transaction: 60% to the operator creator, 15% to the validators who attested quality, 12% to stakers, 8% to the protocol treasury, 3% to the insurance fund, and 2% is burned permanently. This is enforced on-chain by the Solana program. No invoices, no net-30, no chargebacks.",
+    a: "Every operator invocation fee is split atomically in a single Solana transaction: 85% to the operator creator, 10% to validators, 3% to the protocol treasury, 1.5% to the insurance fund, and 0.5% is burned permanently. This is enforced on-chain by the Solana program. No invoices, no net-30, no chargebacks.",
   },
   {
     q: "What is the $AEGIS token?",
-    a: "$AEGIS is the protocol token built on Solana using Token-2022 extensions. Total supply is 1 billion. It has six utility mechanisms: validator staking, operator registration bonds, governance voting, fee discounts for holders, dispute resolution staking, and a 2% burn on every invocation fee. Every protocol action requires $AEGIS.",
+    a: "$AEGIS is the protocol token built on Solana using Token-2022 extensions. Total supply is 1 billion. It has six utility mechanisms: validator staking, operator registration bonds, governance voting, fee discounts for holders, dispute resolution staking, and a 0.5% burn on every invocation fee. Every protocol action requires $AEGIS.",
   },
   {
     q: "How does Aegis relate to operators.sh and Hugging Face Spaces?",
@@ -37,7 +37,7 @@ const FAQS = [
   },
   {
     q: "Why Token-2022 instead of standard SPL?",
-    a: "Token-2022 enables protocol-level transfer fees without smart contract workarounds. Every time $AEGIS changes hands, 2% of every invocation fee is burned permanently. This is enforced at the token program level, not by a contract that can be upgraded or bypassed. Transfer hooks enforce the minimum bond requirement automatically. If a creator tries to transfer bonded tokens below the threshold, the hook rejects the transaction at the protocol level.",
+    a: "Token-2022 enables protocol-level transfer fees without smart contract workarounds. Every time $AEGIS changes hands, 0.5% of every invocation fee is burned permanently. This is enforced at the token program level, not by a contract that can be upgraded or bypassed. Transfer hooks enforce the minimum bond requirement automatically. If a creator tries to transfer bonded tokens below the threshold, the hook rejects the transaction at the protocol level.",
   },
   {
     q: "How does operator sandboxing work?",
@@ -52,8 +52,8 @@ const FAQS = [
     a: "Solana programs are stateless. All state lives in accounts passed to the program. Aegis uses separate Program Derived Accounts (PDAs) for operator metadata, bond vaults, and reputation scores. This means each data domain can be updated independently without locking the others, enabling parallel execution of multiple operator invocations without blocking. It also means each PDA can have its own access control. Bond vaults are controlled by the registry program, reputation PDAs by the reputation program.",
   },
   {
-    q: "How does Aegis integrate with Claude Code, Codex, and other agent platforms?",
-    a: "Aegis operators are MCP-native, which means any agent platform that supports the Model Context Protocol can discover and invoke them. Claude Code and Claude Cowork connect via MCP servers. Operators appear as tools in the agent's context. Claude Remote Control lets developers monitor Aegis invocations from mobile while sessions run on their machine. OpenAI's Codex CLI and Codex App connect through the same MCP interface or via direct HTTP x402 calls. ChatGPT, Cursor, and Windsurf all support MCP tool discovery. Agent Aegis is our own runtime that wires everything together natively. The key insight: Aegis does not compete with these platforms. It is the success and payment layer they all use when invoking external operators.",
+    q: "How does Aegis integrate with AegisX, Codex, and other agent platforms?",
+    a: "Aegis operators are MCP-native, which means any agent platform that supports the Model Context Protocol can discover and invoke them. AegisX and AegisX Desktop connect via MCP servers. Operators appear as tools in the agent's context. AegisX Remote lets developers monitor Aegis invocations from mobile while sessions run on their machine. OpenAI's Codex CLI and Codex App connect through the same MCP interface or via direct HTTP x402 calls. ChatGPT, Cursor, and Windsurf all support MCP tool discovery. Agent Aegis is our own runtime that wires everything together natively. The key insight: Aegis does not compete with these platforms. It is the success and payment layer they all use when invoking external operators.",
   },
   {
     q: "What are Scoped Invocation Bonds?",
@@ -61,7 +61,7 @@ const FAQS = [
   },
   {
     q: "What is the Aegis Insurance Fund?",
-    a: "A protocol-level consumer protection pool funded by a slice of the treasury. If a bonded Operator causes demonstrable damage to a consumer agent (bad data leading to a loss, malicious output, credential exposure) the consumer can file a claim against the insurance fund. This goes beyond slashing. Slashing punishes the creator. Insurance compensates the victim. Stripe has chargebacks. x402 has nothing. Aegis has both slashing and insurance.",
+    a: "A protocol-level consumer protection pool funded by a dedicated 1.5% of every invocation fee. If a bonded Operator causes demonstrable damage to a consumer agent (bad data leading to a loss, malicious output, credential exposure) the consumer can file a claim against the insurance fund. This goes beyond slashing. Slashing punishes the creator. Insurance compensates the victim. Stripe has chargebacks. x402 has nothing. Aegis has both slashing and insurance.",
   },
   {
     q: "What are the five Operator classes?",

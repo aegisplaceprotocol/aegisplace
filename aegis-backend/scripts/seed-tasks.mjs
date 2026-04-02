@@ -19,7 +19,7 @@ if (!process.env.DATABASE_URL) {
 await mongoose.connect(process.env.DATABASE_URL);
 
 // ---------------------------------------------------------------------------
-// Inline schemas matching runtime models
+// Inline schemas matching the backend's MongoDB collections.
 // ---------------------------------------------------------------------------
 const dec128 = (defaultVal = "0") => ({
   type: mongoose.Schema.Types.Decimal128,

@@ -76,6 +76,8 @@ const FILES_TO_CHECK = [
   "package.json",
   "setup.py",
   "pyproject.toml",
+  "Dockerfile",
+  "docker-compose.yml",
   ".env.example",
   "src/index.ts",
   "src/index.js",

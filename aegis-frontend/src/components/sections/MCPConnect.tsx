@@ -60,7 +60,7 @@ export default function MCPConnect() {
               </h2>
               <p className="text-[14px] text-white/30 leading-relaxed mb-8">
                 Any AI agent that speaks MCP can connect to Aegis with one line
-                of config. 452 operators, 16 tools, zero setup.
+                of config. 180+ operators, 16 tools, zero setup.
               </p>
 
               {/* Code block */}

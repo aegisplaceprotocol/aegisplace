@@ -64,7 +64,6 @@ const NAV_ITEMS = [
 export default function MobileBottomNav() {
   const [activeId, setActiveId] = useState("home");
   const [visible, setVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     // Set active based on current path
@@ -75,6 +74,7 @@ export default function MobileBottomNav() {
   }, []);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
     let ticking = false;
 
     const handleScroll = () => {
@@ -89,14 +89,14 @@ export default function MobileBottomNav() {
         } else if (currentY < lastScrollY - 5 || currentY < 100) {
           setVisible(true);
         }
-        setLastScrollY(currentY);
+        lastScrollY = currentY;
         ticking = false;
       });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const navigateTo = (href: string, id: string) => {
     setActiveId(id);

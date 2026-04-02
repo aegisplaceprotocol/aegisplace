@@ -129,7 +129,7 @@ export default function OperatorDetail() {
     : "100.0";
   const price = parseFloat(operator.pricePerCall);
   const priceDisplay = price < 0.01 ? price.toFixed(4) : price < 1 ? price.toFixed(3) : price.toFixed(2);
-  const creatorShare = (price * 0.60).toFixed(4);
+  const creatorShare = (price * 0.85).toFixed(4);
   const validatorShare = (price * 0.15).toFixed(4);
   const stakerShare = (price * 0.12).toFixed(4);
   const treasuryShare = (price * 0.08).toFixed(4);
@@ -277,7 +277,7 @@ export default function OperatorDetail() {
                     </div>
                     <div className="h-px bg-zinc-800/50" />
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-400">Creator (60%)</span>
+                      <span className="text-zinc-400">Creator (85%)</span>
                       <span className="text-zinc-300">${creatorShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
@@ -285,7 +285,7 @@ export default function OperatorDetail() {
                       <span className="text-zinc-400">${validatorShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Stakers (12%)</span>
+                      <span className="text-zinc-500">Treasury (3%)</span>
                       <span className="text-zinc-400">${stakerShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
@@ -297,7 +297,7 @@ export default function OperatorDetail() {
                       <span className="text-zinc-400">${insuranceShare}</span>
                     </div>
                     <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Burned (2%)</span>
+                      <span className="text-zinc-500">Burned (0.5%)</span>
                       <span className="text-zinc-400">${burnAmount}</span>
                     </div>
                   </div>

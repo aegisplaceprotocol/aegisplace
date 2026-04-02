@@ -74,7 +74,7 @@ describe("validateInvocation", () => {
 });
 
 describe("calculateFees", () => {
-  it("splits fees correctly at 60/15/12/8/3/2", () => {
+  it("splits fees correctly at 85/10/3/1.5/0.5", () => {
     const fees = calculateFees(1.0);
     expect(fees.creator).toBe(0.60);
     expect(fees.validators).toBe(0.15);

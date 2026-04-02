@@ -4,12 +4,11 @@ import { fadeInView } from "@/lib/animations";
 import GlowCard from "@/components/GlowCard";
 
 const SPLITS = [
-  { label: "Operator Creator", pct: 60, color: "#A1A1AA" },
-  { label: "Validators", pct: 15, color: "#71717A" },
-  { label: "Stakers", pct: 12, color: "#6B7280" },
-  { label: "Treasury", pct: 8, color: "#4A7A82" },
-  { label: "Insurance", pct: 3, color: "#3B82F6" },
-  { label: "Burned Forever", pct: 2, color: "#FF4444" },
+  { label: "Operator Creator", pct: 85, color: "#A1A1AA" },
+  { label: "Validators", pct: 10, color: "#71717A" },
+  { label: "Treasury", pct: 3, color: "#4A7A82" },
+  { label: "Insurance", pct: 1.5, color: "#3B82F6" },
+  { label: "Burned Forever", pct: 0.5, color: "#FF4444" },
 ];
 
 const FLYWHEEL = [
@@ -150,11 +149,11 @@ export default function MoneySlide() {
             {[
               {
                 title: "Creator earnings",
-                desc: "Upload a skill. Earn 60% of every invocation fee. A researcher in Lagos wakes up to $280 from 40,000 overnight agent calls. No employer needed.",
+                desc: "Upload a skill. Earn 85% of every invocation fee. A researcher in Lagos wakes up to $280 from 40,000 overnight agent calls. No employer needed.",
               },
               {
                 title: "Deflationary by design",
-                desc: "2% of every revenue split is burned permanently. Supply decreases over time. More usage, more burns, more scarcity.",
+                desc: "0.5% of every revenue split is burned permanently. Supply decreases over time. More usage, more burns, more scarcity.",
               },
               {
                 title: "No gatekeepers",

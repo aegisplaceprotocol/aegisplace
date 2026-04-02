@@ -67,10 +67,10 @@ export default function BurnTrackerPanel() {
   const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
   const stats = statsQuery.data as Record<string, any> | undefined;
 
-  // Compute burn metrics from totalEarnings * 2% burn rate
+  // Compute burn metrics from totalEarnings * 0.5% burn rate
   const totalEarnings = stats?.totalEarnings ? Number(stats.totalEarnings) : 0;
-  const totalBurned = totalEarnings > 0 ? Math.round(totalEarnings * 0.02) : 2847193;
-  const dailyBurn = totalEarnings > 0 ? Math.round((totalEarnings * 0.02) / 30) : 4219;
+  const totalBurned = totalEarnings > 0 ? Math.round(totalEarnings * 0.005) : 2847193;
+  const dailyBurn = totalEarnings > 0 ? Math.round((totalEarnings * 0.005) / 30) : 4219;
   const weeklyBurn = dailyBurn * 7;
   const supplyImpact = totalEarnings > 0 ? ((totalBurned / 100_000_000) * 100).toFixed(2) : "2.85";
   const annualProjected = Math.round(dailyBurn * 365);

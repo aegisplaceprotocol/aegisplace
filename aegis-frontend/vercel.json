@@ -1,23 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm build",
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://aegis-backend.onrender.com/api/$1"
-    },
-    {
-      "source": "/metrics",
-      "destination": "https://aegis-backend.onrender.com/metrics"
-    },
-    {
-      "source": "/.well-known/agent.json",
-      "destination": "https://aegis-backend.onrender.com/.well-known/agent.json"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }
   ]

@@ -5,17 +5,17 @@ const REASONS = [
   {
     num: "01",
     title: "Creator Earnings",
-    desc: "Build a skill, set your price. 60% of every invocation fee goes directly to you. Revenue settles in 400ms on Solana.",
+    desc: "Build a skill, set your price. 85% of every invocation fee goes directly to you. Revenue settles in 400ms on Solana.",
   },
   {
     num: "02",
     title: "Validator Income",
-    desc: "Stake tokens, attest to operator quality. Validators earn 15% of every fee for operators they vouch for.",
+    desc: "Stake tokens, attest to operator quality. Validators earn 10% of every fee for operators they vouch for.",
   },
   {
     num: "03",
     title: "Staking Yield",
-    desc: "12% of all protocol revenue flows to stakers. Not inflation. Real yield from real usage that grows with the network.",
+    desc: "10% of all protocol revenue flows to validators. Not inflation. Real yield from real usage that grows with the network.",
   },
   {
     num: "04",
@@ -30,7 +30,7 @@ const REASONS = [
   {
     num: "06",
     title: "Deflationary by Design",
-    desc: "2% of every fee is burned permanently. Every new skill, every new agent, every call reduces the supply forever.",
+    desc: "0.5% of every fee is burned permanently. Every new skill, every new agent, every call reduces the supply forever.",
   },
 ];
 

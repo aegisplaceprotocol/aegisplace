@@ -123,7 +123,7 @@ export function scoreQuality(input: QualityInput): QualityResult {
 
 /**
  * Calculate fee distribution for an invocation.
- * 60% creator, 15% validators, 12% stakers, 8% treasury, 3% insurance, 2% burned.
+ * 85% creator, 10% validators, 3% treasury, 1.5% insurance, 0.5% burned.
  */
 export function calculateFees(amountUsdc: number) {
   return {

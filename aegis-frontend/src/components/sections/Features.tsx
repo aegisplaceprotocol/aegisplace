@@ -19,7 +19,7 @@ const FEATURES = [
   },
   {
     title: "Bonded Validation + Observation Loops",
-    desc: "Validators stake $AEGIS bonds to attest operator quality. Every challenge produces a replayable audit trace, deterministic scaffolding around non-deterministic AI. Accurate reviews earn 15% of invocation revenue. Inaccurate attestations get slashed.",
+    desc: "Validators stake $AEGIS bonds to attest operator quality. Every challenge produces a replayable audit trace, deterministic scaffolding around non-deterministic AI. Accurate reviews earn 10% of invocation revenue. Inaccurate attestations get slashed.",
     cmd: "agent-aegis validate --attest --trace",
     paper: "Chan & Anderljung, GovAI",
   },
@@ -31,7 +31,7 @@ const FEATURES = [
   },
   {
     title: "82K Operator Index",
-    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. operators.sh has passive audits from Gen, Socket, and Snyk. Aegis makes those audits active. Validators stake money behind their attestations. Compatible with Claude Code, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
+    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. operators.sh has passive audits from Gen, Socket, and Snyk. Aegis makes those audits active. Validators stake money behind their attestations. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
     cmd: "agent-aegis search code-review",
     paper: "operators.sh, Vercel Labs",
   },
@@ -165,7 +165,7 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
     >
       {/* Index + NVIDIA logo */}
       <div className={`flex items-center justify-between mb-6`}>
-        <div className={`text-[11px] font-medium tracking-wider transition-colors duration-300 ${hovered ? "text-zinc-300/50" : "text-white/12"}`}>
+        <div className={`text-[11px] font-medium tracking-wider transition-colors duration-300 ${hovered ? "text-zinc-300/70" : "text-white/30"}`}>
           {String(index + 1).padStart(2, "0")}
         </div>
         {feature.nvidia && (
@@ -177,20 +177,20 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
         {feature.title}
       </h3>
 
-      <p className="text-[14px] leading-[1.7] text-white/35 mb-6">
+      <p className="text-[14px] leading-[1.7] text-white/65 mb-6">
         {feature.desc}
       </p>
 
       {/* CLI command */}
       <div className={`text-[11px] font-medium px-4 py-2.5 border transition-all duration-300 ${
-        hovered ? "border-white/15 bg-white/[0.04] text-zinc-300/60" : "border-white/[0.04] bg-white/[0.015] text-white/20"
+        hovered ? "border-white/15 bg-white/[0.04] text-zinc-300/80" : "border-white/[0.04] bg-white/[0.015] text-white/40"
       }`}>
         $ {feature.cmd}
       </div>
 
       {/* Paper citation */}
       {feature.paper && (
-        <div className={`mt-4 text-[12px] transition-colors duration-300 ${hovered ? "text-white/25" : "text-white/12"}`}>
+        <div className={`mt-4 text-[12px] transition-colors duration-300 ${hovered ? "text-white/45" : "text-white/30"}`}>
           {feature.paper}
         </div>
       )}
@@ -209,12 +209,12 @@ export default function Features() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-20">
           <div className={``}>
             <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-normal text-white leading-[1.05] tracking-tight">
-              24 Protocol Primitives.
+              23 Protocol Primitives.
               <br className="hidden lg:block" />
               <span className="text-white/35 font-normal">Zero assumptions.</span>
             </h2>
           </div>
-          <p className={`text-[14px] text-white/30 max-w-md leading-relaxed lg:text-right`}>
+          <p className={`text-[14px] text-white/55 max-w-md leading-relaxed lg:text-right`}>
             Bonds, escrow, insurance, sandboxing, reputation, micropayments, A2A, agentic wallets, NVIDIA NeMo stack, and more.
             Every primitive is independent. Together they arm your agents for autonomous operation.
           </p>

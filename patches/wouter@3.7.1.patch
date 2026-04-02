@@ -9,6 +9,7 @@ index c83bc63a2c10431fb62e25b7d490656a3796f301..bcae513cc20a4be6c38dc116e0b8d9ba
 +  // Collect all route paths to window object
 +  if (typeof window !== 'undefined') {
 +    if (!window.__WOUTER_ROUTES__) {
+
 +      window.__WOUTER_ROUTES__ = [];
 +    }
 +

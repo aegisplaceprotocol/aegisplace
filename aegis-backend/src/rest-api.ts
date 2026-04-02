@@ -170,7 +170,7 @@ router.post(
           txSignature: paymentHeader || null,
           settledAt: new Date().toISOString(),
           feeSplit: {
-            creator: "60%",
+            creator: "85%",
             validators: "15%",
             stakers: "12%",
             treasury: "8%",

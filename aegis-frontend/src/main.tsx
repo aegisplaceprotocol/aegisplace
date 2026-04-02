@@ -1,8 +1,8 @@
 import { Buffer } from "buffer";
 (window as any).Buffer = Buffer;
 
+import { apiUrl } from "@/lib/api";
 import { trpc } from "@/lib/trpc";
-import { withApiBase } from "@/lib/api";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -29,7 +29,7 @@ queryClient.getMutationCache().subscribe(event => {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: withApiBase("/api/trpc"),
+      url: apiUrl("/api/trpc"),
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {

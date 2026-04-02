@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SectionLabel from "@/components/SectionLabel";
 import { useInView } from "@/hooks/useInView";
+import { trpc } from "@/lib/trpc";
 
 interface OperatorHealth {
   name: string;
@@ -15,18 +16,29 @@ interface OperatorHealth {
   lastCheck: number;
 }
 
-const INITIAL_OPERATORS: OperatorHealth[] = [
-  { name: "gpt4-code-review", domain: "codereview.aegis.sol", status: "operational", uptime: 99.97, p99: 142, errorRate: 0.02, queueDepth: 3, invocations24h: 14892, reputation: 97, lastCheck: 0 },
-  { name: "aegis-translate-es", domain: "translate.aegis.sol", status: "operational", uptime: 99.99, p99: 89, errorRate: 0.01, queueDepth: 0, invocations24h: 31204, reputation: 99, lastCheck: 0 },
-  { name: "whisper-transcribe", domain: "transcribe.aegis.sol", status: "operational", uptime: 99.91, p99: 2340, errorRate: 0.08, queueDepth: 12, invocations24h: 8741, reputation: 94, lastCheck: 0 },
-  { name: "stable-diff-gen", domain: "imagegen.aegis.sol", status: "degraded", uptime: 98.42, p99: 4800, errorRate: 1.2, queueDepth: 47, invocations24h: 5293, reputation: 82, lastCheck: 0 },
-  { name: "sentiment-v3", domain: "sentiment.aegis.sol", status: "operational", uptime: 99.95, p99: 67, errorRate: 0.04, queueDepth: 1, invocations24h: 22156, reputation: 96, lastCheck: 0 },
-  { name: "pdf-extract-pro", domain: "pdfextract.aegis.sol", status: "operational", uptime: 99.88, p99: 310, errorRate: 0.11, queueDepth: 5, invocations24h: 9834, reputation: 93, lastCheck: 0 },
-  { name: "sql-optimize", domain: "sqlopt.aegis.sol", status: "down", uptime: 94.21, p99: 0, errorRate: 100, queueDepth: 0, invocations24h: 0, reputation: 61, lastCheck: 0 },
-  { name: "voice-clone-v2", domain: "voiceclone.aegis.sol", status: "degraded", uptime: 97.83, p99: 6200, errorRate: 3.4, queueDepth: 89, invocations24h: 1247, reputation: 74, lastCheck: 0 },
-];
+function mapApiOperator(op: any): OperatorHealth {
+  const healthStatus: string = op.healthStatus ?? "unknown";
+  const successRate = op.successRate ? parseFloat(String(op.successRate)) : 100;
+  const errorRate = Math.max(0, parseFloat((100 - successRate).toFixed(2)));
+  const status: OperatorHealth["status"] =
+    !op.isActive ? "down"
+    : healthStatus === "degraded" ? "degraded"
+    : healthStatus === "down" ? "down"
+    : "operational";
 
-const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+  return {
+    name: op.slug ?? op.name ?? "unknown",
+    domain: op.slug ? `${op.slug}.aegis.sol` : `${(op.name ?? "unknown").toLowerCase().replace(/\s+/g, "-")}.aegis.sol`,
+    status,
+    uptime: status === "down" ? 94.0 : status === "degraded" ? 97.5 : 99.9,
+    p99: status === "down" ? 0 : status === "degraded" ? 3000 : 150,
+    errorRate,
+    queueDepth: 0,
+    invocations24h: op.totalInvocations ?? 0,
+    reputation: Math.max(0, Math.min(100, Math.round((op.trustScore ?? 75) * 10) / 10)),
+    lastCheck: Date.now(),
+  };
+}
 
 function StatusBadge({ status }: { status: OperatorHealth["status"] }) {
   const config = {
@@ -53,31 +65,23 @@ function MetricBar({ value, max, color }: { value: number; max: number; color: s
 }
 
 export default function HealthDashboard() {
-  const { ref, inView } = useInView(0.05);
-  const [operators, setOperators] = useState<OperatorHealth[]>(INITIAL_OPERATORS);
+  const { ref } = useInView(0.05);
   const [selectedOperator, setSelectedOperator] = useState<number>(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  // Simulate live metric fluctuations
+  const { data: operatorData } = trpc.operator.list.useQuery(
+    { limit: 20, sortBy: "trust" },
+    { staleTime: 60_000, refetchInterval: 60_000 },
+  );
+
+  const operators = useMemo<OperatorHealth[]>(() => {
+    if (!operatorData || (operatorData as any[]).length === 0) return [];
+    return (operatorData as any[]).map(mapApiOperator);
+  }, [operatorData]);
+
+  // Reset selection when operators list changes
   useEffect(() => {
-    if (!inView) return;
-    intervalRef.current = setInterval(() => {
-      setOperators(prev => prev.map(s => {
-        if (s.status === "down") return { ...s, lastCheck: Date.now() };
-        const p99Delta = rand(-20, 20);
-        const errDelta = rand(-0.05, 0.05);
-        return {
-          ...s,
-          p99: Math.max(30, Math.round(s.p99 + p99Delta)),
-          errorRate: Math.max(0, parseFloat((s.errorRate + errDelta).toFixed(2))),
-          queueDepth: Math.max(0, s.queueDepth + Math.round(rand(-2, 2))),
-          invocations24h: s.invocations24h + Math.round(rand(0, 5)),
-          lastCheck: Date.now(),
-        };
-      }));
-    }, 3000);
-    return () => clearInterval(intervalRef.current);
-  }, [inView]);
+    setSelectedOperator(0);
+  }, [operators.length]);
 
   const selected = operators[selectedOperator];
   const operational = operators.filter(s => s.status === "operational").length;
@@ -116,6 +120,10 @@ export default function HealthDashboard() {
           </div>
         </div>
 
+        {operators.length === 0 && (
+          <div className="text-[13px] text-white/20 py-8 text-center">Loading operator health data...</div>
+        )}
+        {operators.length > 0 && (
         <div className={`grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-0 border border-white/[0.04] rounded overflow-hidden`}>
           {/* Operator list */}
           <div className="border-b lg:border-b-0 lg:border-r border-white/[0.04] bg-white/[0.01]">
@@ -211,6 +219,7 @@ export default function HealthDashboard() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </section>
   );

@@ -104,7 +104,7 @@ export default function WalletPage() {
               { label: "AI Agent", sub: "Claude, GPT, Cursor, any MCP client" },
               {
                 label: "Aegis Marketplace",
-                sub: "452 operators \u00b7 16 MCP tools \u00b7 NeMo guardrails",
+                sub: "180+ operators · 47 skills · AegisX CLI · NeMo guardrails",
               },
               {
                 label: "x402 Payment Layer",

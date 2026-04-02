@@ -16,7 +16,7 @@ const SPLIT_CX = JUP_X + BOX_W + ARROW_W + 24;
 const SPLIT_R = 24;
 
 /* Branches: text OUTSIDE bars to prevent overlap */
-const PCT_W = 64;           // width reserved for "60%" text left of bar
+const PCT_W = 64;           // width reserved for "85%" text left of bar
 const LABEL_W = 96;         // width reserved for "Creator" text right of bar
 const BRANCH_X = SPLIT_CX + SPLIT_R + 48;           // where pct text starts
 const BAR_X = BRANCH_X + PCT_W;                      // where bar starts

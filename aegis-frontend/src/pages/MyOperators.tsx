@@ -349,7 +349,7 @@ function _MyOperators() {
                     <div className="text-[10px] font-medium text-white/15 mt-1">Total fees paid</div>
                   </div>
                   <div className="border border-white/15 bg-white/[0.03] p-5">
-                    <div className="text-[10px] font-medium text-zinc-300/40 mb-2">CREATOR (60%)</div>
+                    <div className="text-[10px] font-medium text-zinc-300/40 mb-2">CREATOR (85%)</div>
                     <div className="text-[22px] font-normal text-zinc-300 ">
                       ${totalEarnings.toFixed(4)}
                     </div>
@@ -363,7 +363,7 @@ function _MyOperators() {
                     <div className="text-[10px] font-medium text-white/15 mt-1">Quality attestors</div>
                   </div>
                   <div className="border border-white/[0.04] bg-white/[0.02] p-5">
-                    <div className="text-[10px] font-medium text-white/25 mb-2">STAKERS (12%)</div>
+                    <div className="text-[10px] font-medium text-white/25 mb-2">TREASURY (3%)</div>
                     <div className="text-[22px] font-normal text-white/50 ">
                       ${((totalEarnings / 0.6) * 0.12).toFixed(4)}
                     </div>
@@ -384,7 +384,7 @@ function _MyOperators() {
                     <div className="text-[10px] font-medium text-white/15 mt-1">Dispute coverage</div>
                   </div>
                   <div className="border border-white/[0.04] bg-white/[0.02] p-5">
-                    <div className="text-[10px] font-medium text-red-400/20 mb-2">BURNED (2%)</div>
+                    <div className="text-[10px] font-medium text-red-400/20 mb-2">BURNED (0.5%)</div>
                     <div className="text-[22px] font-normal text-red-400/60 ">
                       ${((totalEarnings / 0.6) * 0.02).toFixed(4)}
                     </div>

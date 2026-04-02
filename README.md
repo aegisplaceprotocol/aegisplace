@@ -42,38 +42,44 @@ Aegis wraps every AI skill invocation in four guarantees:
 
 ## Quick Start
 
-**MCP (any MCP-compatible agent)**
+**REST API (live now)**
+```bash
+# List operators
+curl https://aegisplace.com/api/v1/operators?limit=5
+
+# Get protocol stats
+curl https://aegisplace.com/api/trpc/stats.overview
+
+# MCP discovery manifest
+curl https://aegisplace.com/api/mcp
+```
+
+**MCP Integration (connect any agent)**
 ```json
 {
   "mcpServers": {
     "aegis": {
-      "command": "npx",
-      "args": ["-y", "@aegis/mcp-server"],
-      "env": { "AEGIS_API_URL": "https://mcp.aegisplace.com" }
+      "url": "https://aegisplace.com/api/mcp"
     }
   }
 }
 ```
 
-**REST API**
-```bash
-curl https://mcp.aegisplace.com/api/v1/operators?limit=5
-```
-
-**TypeScript SDK**
+**SDKs (source included, npm/PyPI publishing in progress)**
 ```typescript
+// TypeScript - see packages/sdk/src/index.ts
 import { AegisClient } from "@aegis/sdk";
 
-const aegis = new AegisClient({ baseUrl: "https://mcp.aegisplace.com" });
+const aegis = new AegisClient({ baseUrl: "https://aegisplace.com" });
 const operators = await aegis.operators.list({ sortBy: "trust" });
 const result = await aegis.invoke("code-review-agent", { code: payload });
 ```
 
-**Python SDK**
 ```python
+# Python - see packages/python-sdk/aegis/client.py
 from aegis import AegisClient
 
-client = AegisClient(base_url="https://mcp.aegisplace.com")
+client = AegisClient(base_url="https://aegisplace.com")
 operators = client.operators.list(sort_by="trust")
 result = client.invoke("code-review-agent", code=payload)
 ```
@@ -109,7 +115,7 @@ Every invocation splits atomically into six parties on Solana:
 
 | Recipient | Share | Purpose |
 |---|---|---|
-| Skill creator | 60% | Direct payment for providing the skill |
+| Skill creator | 85% | Direct payment for providing the skill |
 | Validators | 15% | Quality attestation and dispute resolution |
 | Stakers | 12% | Pro-rata yield for $AEGIS stakers |
 | Treasury | 8% | Protocol development and operations |
@@ -236,15 +242,17 @@ All programs built with [Anchor](https://www.anchor-lang.com/) 0.30.1. Checked a
 
 ---
 
-## Packages
+## Packages (Coming Soon to npm/PyPI)
 
-| Package | Description | Install |
+Source code for all packages is included in `packages/`. Registry publishing is in progress.
+
+| Package | Description | Status |
 |---|---|---|
-| `@aegis/sdk` | TypeScript client SDK | `npm i @aegis/sdk` |
-| `@aegis/mcp-server` | MCP server (16 tools) | `npx -y @aegis/mcp-server` |
-| `@aegis/royalty-sdk` | Royalty registration and claiming | `npm i @aegis/royalty-sdk` |
-| `@aegis/elizaos-plugin` | ElizaOS agent integration | `npm i @aegis/elizaos-plugin` |
-| `aegis-python` | Python SDK with LangChain adapter | `pip install aegis-python` |
+| `@aegis/sdk` | TypeScript client SDK | Source ready, publishing soon |
+| `@aegis/mcp-server` | MCP server (16 tools) | Source ready, publishing soon |
+| `@aegis/royalty-sdk` | Royalty registration and claiming | Source ready, publishing soon |
+| `@aegis/elizaos-plugin` | ElizaOS agent integration | Source ready, publishing soon |
+| `aegis-python` | Python SDK with LangChain adapter | Source ready, publishing soon |
 
 ---
 
@@ -267,21 +275,20 @@ All programs built with [Anchor](https://www.anchor-lang.com/) 0.30.1. Checked a
 ## Development
 
 ```bash
-git clone https://github.com/aegis-protocol/aegis
+git clone https://github.com/aegisplaceprotocol/aegisplace
 cd aegis
 pnpm install
-pnpm dev          # Backend dev server
-pnpm dev:frontend # Frontend dev server
-pnpm build        # Build frontend + backend
-pnpm test         # Backend test suite
+pnpm dev          # http://localhost:3000
+pnpm build        # Production build
+pnpm test         # Run test suite
 ```
 
 ### Project Structure
 
 ```
 aegis/
-├── aegis-frontend/      # React 19 + Vite frontend
-├── aegis-backend/       # Express + tRPC backend
+├── client/              # React 19 + Vite frontend (49 pages)
+├── server/              # Express + tRPC backend (60+ procedures)
 ├── programs/
 │   ├── aegis/           # Core protocol (Anchor/Rust)
 │   ├── royalty-registry/ # Royalty cascade program
@@ -294,7 +301,7 @@ aegis/
 │   ├── gateway/         # API gateway middleware
 │   └── elizaos-plugin/  # ElizaOS integration
 ├── shared/              # Shared types and constants
-└── tests/               # Anchor/integration tests
+└── tests/               # Integration tests
 ```
 
 ---

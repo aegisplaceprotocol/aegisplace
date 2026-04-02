@@ -3,22 +3,21 @@ import { motion } from "framer-motion";
 import { fadeInView, staggerContainer, staggerItem } from "@/lib/animations";
 
 const FEE_SPLIT = [
-  { label: "Creators", pct: "60%", flex: 60, opacity: "0.50" },
-  { label: "Validators", pct: "15%", flex: 15, opacity: "0.35" },
-  { label: "Stakers", pct: "12%", flex: 12, opacity: "0.25" },
-  { label: "Treasury", pct: "8%", flex: 8, opacity: "0.15" },
-  { label: "Insurance", pct: "3%", flex: 3, opacity: "0.10" },
-  { label: "Burned", pct: "2%", flex: 2, opacity: null, color: "rgba(220,100,60,0.50)" },
+  { label: "Creators", pct: "85%", flex: 85, opacity: "0.50" },
+  { label: "Validators", pct: "10%", flex: 10, opacity: "0.35" },
+  { label: "Treasury", pct: "3%", flex: 3, opacity: "0.25" },
+  { label: "Insurance", pct: "1.5%", flex: 1.5, opacity: "0.15" },
+  { label: "Burned", pct: "0.5%", flex: 0.5, opacity: null, color: "rgba(220,100,60,0.50)" },
 ];
 
 const FLYWHEEL_STEPS = [
   "Agent pays USDC via x402 micropayment",
   "USDC is swapped to $AEGIS on Jupiter",
-  "60% flows to the skill creator instantly",
-  "15% goes to bonded validators",
-  "12% distributed to $AEGIS stakers",
-  "3% builds the insurance fund",
-  "2% is burned permanently, reducing supply",
+  "85% flows to the skill creator instantly",
+  "10% goes to bonded validators",
+  "3% goes to protocol treasury",
+  "1.5% builds the insurance fund",
+  "0.5% is burned permanently, reducing supply",
 ];
 
 export default function TokenSection() {

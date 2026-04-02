@@ -114,7 +114,7 @@ export default function ConnectPanel() {
   const connectOps = ((connectStats.data as Record<string, unknown>)?.totalOperators as number)?.toLocaleString() ?? "...";
 
   const codeTabItems: Array<{ key: typeof codeTab; label: string }> = [
-    { key: "claude",  label: "Claude Code" },
+    { key: "claude",  label: "AegisX" },
     { key: "rest",    label: "REST API" },
     { key: "python",  label: "Python" },
   ];
@@ -195,7 +195,7 @@ export default function ConnectPanel() {
         <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
           {[
             { n: "1", title: "Get your API key", desc: "Generate a key from the Settings panel. Keep it secret." },
-            { n: "2", title: "Add to Claude Code", desc: "Paste the config snippet into ~/.claude/mcp.json and restart." },
+            { n: "2", title: "Add to AegisX", desc: "Paste the config snippet into ~/.claude/mcp.json and restart." },
             { n: "3", title: "Invoke any skill", desc: "Ask Claude to use any Aegis operator. it handles the rest." },
           ].map((step) => (
             <div key={step.n} style={{ display: "flex", gap: 14 }}>

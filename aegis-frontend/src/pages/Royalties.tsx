@@ -797,7 +797,7 @@ function HowItWorksSection() {
       num: 3,
       icon: "layers",
       title: "Royalties Cascade Upstream",
-      body: "5% of your 60% creator share flows automatically to pdf-extractor's creator. This cascade continues up the dependency graph, diminishing 50% per hop. Entirely automatic. Entirely on-chain.",
+      body: "5% of your 85% creator share flows automatically to pdf-extractor's creator. This cascade continues up the dependency graph, diminishing 50% per hop. Entirely automatic. Entirely on-chain.",
     },
     {
       num: 4,
@@ -865,7 +865,7 @@ function HowItWorksSection() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr) 2px repeat(3, 1fr)", gap: 0 }}>
             {[
               { label: "Total Paid", amount: "$0.1000", note: "by calling agent", highlight: false },
-              { label: "Creator Share", amount: "$0.0600", note: "60% of invocation", highlight: false },
+              { label: "Creator Share", amount: "$0.0850", note: "85% of invocation", highlight: false },
               { label: "Royalty Pool", amount: "$0.0030", note: "5% of creator share", highlight: true },
             ].map((item) => (
               <div key={item.label} style={{ padding: "16px 20px", borderRight: `1px solid ${T.border}` }}>

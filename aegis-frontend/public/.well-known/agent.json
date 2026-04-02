@@ -35,6 +35,6 @@
   "protocols": ["mcp", "x402", "a2a"],
   "contact": {
     "website": "https://aegisplace.com",
-    "github": "https://github.com/aegis-protocol/aegis"
+    "github": "https://github.com/aegisplaceprotocol/aegisplace"
   }
 }

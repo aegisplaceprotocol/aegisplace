@@ -1,8 +1,7 @@
-const rawApiBase = (import.meta.env.VITE_API_BASE_URL ?? "").trim();
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim() ?? "";
 
-export const API_BASE_URL = rawApiBase.replace(/\/+$/, "");
+export const API_BASE_URL = rawApiBaseUrl.replace(/\/$/, "");
 
-export function withApiBase(pathname: string): string {
-  const normalized = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return API_BASE_URL ? `${API_BASE_URL}${normalized}` : normalized;
+export function apiUrl(path: string): string {
+  return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
 }

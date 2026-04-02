@@ -7,7 +7,7 @@
  *   Step 3: Create/load USDC devnet token accounts
  *   Step 4: Register a new operator
  *   Step 5: Invoke skill with USDC payment
- *   Step 6: Verify fee distribution to 6 wallets (60/15/12/8/3/2)
+ *   Step 6: Verify fee distribution to 6 wallets (85/10/3/1.5/0.5)
  *   Step 7: Check trust score
  *   Step 8: Print invocation receipt
  *
@@ -490,7 +490,7 @@ async function main(): Promise<void> {
   // ──────────────────────────────────────────────────────────────────────────
   // Step 6: Verify fee distribution
   // ──────────────────────────────────────────────────────────────────────────
-  stepHeader(6, "Verify fee distribution (60/15/12/8/3/2)");
+  stepHeader(6, "Verify fee distribution (85/10/3/1.5/0.5)");
 
   const callerBalAfter = Number((await getAccount(connection, callerAta)).amount);
   const creatorBalAfter = Number((await getAccount(connection, creatorAta)).amount);

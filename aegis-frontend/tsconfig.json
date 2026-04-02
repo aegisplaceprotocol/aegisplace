@@ -1,23 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": true,
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "moduleDetection": "force",
     "noEmit": true,
-    "skipLibCheck": true,
+    "jsx": "react-jsx",
     "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["../shared/*"]
-    },
-    "types": ["vite/client", "node"]
+    }
   },
-  "include": ["src", "vite.config.ts", "tsconfig.node.json"]
+  "include": ["src", "vite.config.ts", "../shared/**/*.ts", "../aegis-backend/src/routers.ts"],
+  "exclude": ["dist", "node_modules"]
 }

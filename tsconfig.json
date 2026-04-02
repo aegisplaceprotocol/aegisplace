@@ -11,7 +11,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@/*": ["aegis-frontend/src/*"],
+      "@shared/*": ["shared/*"]
+    }
   },
   "ts-node": {
     "compilerOptions": {
@@ -19,6 +22,6 @@
     },
     "esm": false
   },
-  "include": ["tests/**/*.ts"],
+  "include": ["aegis-backend/src/**/*.ts", "aegis-frontend/src/**/*.ts", "shared/**/*.ts", "tests/**/*.ts", "vite.config.ts"],
   "exclude": ["node_modules"]
 }

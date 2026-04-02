@@ -38,7 +38,7 @@ async function ensureConnection(): Promise<boolean> {
 }
 
 // ────────────────────────────────────────────────────────────
-// Mongoose schema mirroring runtime OperatorModel shape
+// Mongoose schema matching the main app's Operator model.
 // ────────────────────────────────────────────────────────────
 
 const operatorSchema = new mongoose.Schema(

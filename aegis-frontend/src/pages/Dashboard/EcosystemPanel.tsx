@@ -101,7 +101,7 @@ const PARTNERS = [
   { name: "ElizaOS", type: "Agent Framework", status: "Compatible" },
   { name: "Stripe ACP", type: "Payment Protocol", status: "Compatible" },
   { name: "Google AP2", type: "Payment Protocol", status: "Compatible" },
-  { name: "Claude Code / Codex", type: "Agent Interface", status: "Compatible" },
+  { name: "AegisX / Codex", type: "Agent Interface", status: "Compatible" },
   { name: "NIST CAISI", type: "Standards Body", status: "Engaging" },
   { name: "Agentic AI Foundation", type: "Governance", status: "Tracking" },
 ];

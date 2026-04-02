@@ -1,4 +1,4 @@
-import { COOKIE_NAME } from "../../shared/const";
+import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -137,7 +137,7 @@ export const appRouter = router({
     register: protectedProcedure
       .input(z.object({
         name: z.string().min(2).max(256),
-        slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/).optional(),
+        slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/),
         tagline: z.string().max(512).optional(),
         description: z.string().optional(),
         category: z.enum([
@@ -151,41 +151,20 @@ export const appRouter = router({
         requestSchema: z.any().optional(),
         responseSchema: z.any().optional(),
         pricePerCall: z.string().optional(),
-        creatorWallet: z.string().min(32).max(64).optional(),
+        creatorWallet: z.string().min(32).max(64),
         tags: z.array(z.string()).optional(),
         iconUrl: z.string().url().optional(),
         docsUrl: z.string().url().optional(),
         githubUrl: z.string().url().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const makeSlug = (v: string) =>
-          v
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "")
-            .slice(0, 128);
-
-        const resolvedSlug = (input.slug && input.slug.trim()) || makeSlug(input.name);
-        if (!resolvedSlug || resolvedSlug.length < 2) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Unable to derive a valid slug from operator name" });
-        }
-
-        const resolvedCreatorWallet = input.creatorWallet || (ctx.user as any).walletAddress;
-        if (!resolvedCreatorWallet) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Creator wallet is required. Link your wallet in account settings or provide creatorWallet.",
-          });
-        }
-
         // Rate limit: 5 operator registrations per hour
         const rl = await checkRateLimit(`user:${ctx.user.id}`, "operator.register", 5, 3600);
         if (!rl.allowed) {
           throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Registration rate limit exceeded. Try again later." });
         }
 
-        const existing = await getOperatorBySlug(resolvedSlug);
+        const existing = await getOperatorBySlug(input.slug);
         if (existing) throw new TRPCError({ code: "CONFLICT", message: "An operator with this slug already exists" });
 
         // Validate endpoint URL is reachable before accepting registration
@@ -201,8 +180,6 @@ export const appRouter = router({
 
         const operator = await createOperator({
           ...input,
-          slug: resolvedSlug,
-          creatorWallet: resolvedCreatorWallet,
           creatorId: ctx.user.id,
           pricePerCall: input.pricePerCall || "0.003",
           trustScore: 50,
@@ -221,12 +198,12 @@ export const appRouter = router({
           action: "operator.register",
           targetType: "operator",
           targetId: operator?.id,
-          details: { slug: resolvedSlug, name: input.name },
+          details: { slug: input.slug, name: input.name },
         });
 
         broadcastEvent("registration", {
           operatorId: operator?.id,
-          slug: resolvedSlug,
+          slug: input.slug,
           name: input.name,
           category: input.category,
           creatorId: ctx.user.id,
@@ -789,10 +766,16 @@ export const appRouter = router({
         return getBondsByOperator(input.operatorId);
       }),
 
-    /** Release a bond (admin or bond owner) */
+    /** Release a bond (admin or bond owner only) */
     release: protectedProcedure
       .input(z.object({ bondId: z.number() }))
       .mutation(async ({ input, ctx }) => {
+        const bonds = await getBondsByOperator(input.bondId);
+        const bond = bonds?.[0];
+        if (!bond) throw new Error("Bond not found");
+        if (bond.bondWallet !== ctx.user.walletAddress && ctx.user.role !== "admin") {
+          throw new Error("Not authorized to release this bond");
+        }
         await releaseBond(input.bondId);
         await logAudit({
           userId: ctx.user.id,

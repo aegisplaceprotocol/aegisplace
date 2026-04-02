@@ -298,7 +298,7 @@ export default function MissionEconomics() {
                     label="TOKEN BURN"
                     amount={`${economics.burnAmount.toFixed(0)} $AEGIS`}
                     pct={(economics.burnAmount / taskValue) * 100}
-                    color="#FF6B6B"
+                    color="#71717A"
                     delay={150}
                   />
                   <FlowBar
@@ -312,7 +312,7 @@ export default function MissionEconomics() {
                     label="VALIDATOR REWARDS"
                     amount={`${economics.validatorRewards.toFixed(0)} $AEGIS`}
                     pct={(economics.validatorRewards / taskValue) * 100}
-                    color="#FFD93D"
+                    color="#A1A1AA"
                     delay={450}
                   />
                 </div>
@@ -321,7 +321,7 @@ export default function MissionEconomics() {
               {/* Summary stats */}
               <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/[0.04]">
                 <div className="text-center">
-                  <div className="text-lg font-normal text-[#FF6B6B]">{economics.netBurnRate.toFixed(1)}%</div>
+                  <div className="text-lg font-normal text-zinc-400">{economics.netBurnRate.toFixed(1)}%</div>
                   <div className="text-[8px] text-white/20 tracking-wider">BURN RATE</div>
                 </div>
                 <div className="text-center">
@@ -372,7 +372,7 @@ export default function MissionEconomics() {
                   value={pressure.disapprovalThreshold}
                   max={pressure.quorum}
                   label="DISAPPROVAL THRESHOLD"
-                  color="#FF6B6B"
+                  color="#52525B"
                   size={110}
                 />
               </div>
@@ -396,7 +396,7 @@ export default function MissionEconomics() {
                     <span className="text-[10px] font-medium text-white/50">{pressure.slashSeverity.toFixed(1)}%</span>
                   </div>
                   <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#FF6B6B] rounded-full transition-all" style={{ width: `${(pressure.slashSeverity / pressure.maxSlash) * 100}%` }} />
+                    <div className="h-full bg-zinc-600 rounded-full transition-all" style={{ width: `${(pressure.slashSeverity / pressure.maxSlash) * 100}%` }} />
                   </div>
                 </div>
               </div>

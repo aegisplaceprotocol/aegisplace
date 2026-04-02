@@ -40,7 +40,7 @@ function Gauge({ label, value, color }: { label: string; value: number; color: s
 
 export default function SuccessEngine() {
   return (
-    <section className="py-24 sm:py-32 border-t border-white/[0.04]">
+    <section className="py-16 sm:py-20 border-t border-white/[0.04]">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
         <motion.div {...fadeInView}>
           <div className="flex items-center gap-2 mb-6">
@@ -52,7 +52,7 @@ export default function SuccessEngine() {
             The full-stack Solana AI platform. Nothing else comes close.
           </h2>
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
-            AegisX is the only browser-based IDE built for Solana. 57 tools, Bags.fm integration,
+            AegisX is the only browser-based IDE built for Solana. 86 modules, Bags.fm integration,
             smart contract auditing across 15 vulnerability classes, and multi-agent swarms with 16 concurrent agents.
             Cursor, Windsurf, and Copilot don't ship any of this.
           </p>

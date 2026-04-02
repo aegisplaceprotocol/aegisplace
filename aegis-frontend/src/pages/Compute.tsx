@@ -28,7 +28,7 @@ const FEATURES = [
   },
   {
     title: "Nemotron foundation models",
-    desc: "Operators built on NVIDIA Nemotron across three tiers. Nano for lightweight edge inference. Super for balanced reasoning and RAG. Ultra for maximum capability. Open weights, training data, and fine-tuning recipes. A researcher fine-tunes Nemotron on medical data, uploads it as an Aegis operator, and earns 60% of every call.",
+    desc: "Operators built on NVIDIA Nemotron across three tiers. Nano for lightweight edge inference. Super for balanced reasoning and RAG. Ultra for maximum capability. Open weights, training data, and fine-tuning recipes. A researcher fine-tunes Nemotron on medical data, uploads it as an Aegis operator, and earns 85% of every call.",
   },
   {
     title: "NeMo RL data flywheel",
@@ -135,7 +135,7 @@ export default function Compute() {
               <p>1 billion agents making 100 calls a day at $0.003 each.</p>
               <p><span className="text-zinc-300 font-normal">$300M per day</span> in operator fees.</p>
               <p>8% treasury fee = <span className="text-white/60">$24M per day</span> in protocol revenue.</p>
-              <p>2% daily burn = <span className="text-red-400/60">$3M in $AEGIS burned per day</span>.</p>
+              <p>0.5% per-invocation burn = <span className="text-red-400/60">$3M in $AEGIS burned per day</span>.</p>
               <p className="text-[16px] text-white/60 font-medium pt-2">
                 Annual: $110B in operator fees. $9.9B in protocol revenue.
               </p>

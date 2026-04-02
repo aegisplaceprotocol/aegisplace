@@ -7,11 +7,12 @@ export default defineConfig({
   root: projectRoot,
   resolve: {
     alias: {
-      "@shared": path.resolve(projectRoot, "..", "shared"),
+      "@": path.resolve(projectRoot, "client", "src"),
+      "@shared": path.resolve(projectRoot, "shared"),
     },
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
+    include: ["server/**/*.test.ts", "server/**/*.spec.ts"],
   },
 });

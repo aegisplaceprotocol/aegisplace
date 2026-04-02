@@ -84,7 +84,7 @@ export default function Connect() {
             Connect to AegisX
           </h1>
           <p className="text-[15px] text-white/35 leading-relaxed max-w-2xl mx-auto">
-            Any MCP-compatible AI agent can access 61 tools with one line of
+            Any MCP-compatible AI agent can access 180+ operators and 47 skills with one line of
             config. Works with Claude, Cursor, Windsurf, and OpenCode.
           </p>
         </motion.div>

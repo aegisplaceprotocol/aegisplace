@@ -24,7 +24,7 @@ const STEPS = [
   {
     num: "04",
     title: "Verify",
-    body: "Every response scored. Latency, accuracy, schema. Trust accrues on-chain. 60/15/12/8/3/2 fee split.",
+    body: "Every response scored. Latency, accuracy, schema. Trust accrues on-chain. 85/10/3/1.5/0.5 fee split.",
   },
 ];
 

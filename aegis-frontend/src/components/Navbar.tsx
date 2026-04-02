@@ -85,9 +85,20 @@ export default function Navbar() {
   const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navRef = useRef<HTMLElement>(null);
 
+  const showComingSoonToast = useCallback((label: string) => {
+    toast.info(`Coming soon`, {
+      description: "This part of Aegis is locked for now. It will be available very soon.",
+    });
+  }, []);
+
   /* -- Scroll detection -------------------------------------------------- */
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      const nextScrolled = window.scrollY > 20;
+      setScrolled((prev) => (prev === nextScrolled ? prev : nextScrolled));
+    };
+
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -128,13 +139,6 @@ export default function Navbar() {
   const handleClick = (link: NavLink, e: React.MouseEvent) => {
     setMobileOpen(false);
     setOpenDropdown(null);
-    if (link.href === "/aegisx") {
-      e.preventDefault();
-      toast("Coming soon", {
-        description: "AegisX IDE is coming soon.",
-      });
-      return;
-    }
     if (link.external) return;
     if (link.page) return;
     if (link.href.startsWith("#")) {
@@ -149,13 +153,6 @@ export default function Navbar() {
         window.location.href = "/" + link.href;
       }
     }
-  };
-
-  const handleComingSoonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toast("Coming soon", {
-      description: "This feature is coming soon.",
-    });
   };
 
   /* -- Check if a link is active ----------------------------------------- */
@@ -289,24 +286,22 @@ export default function Navbar() {
               </a>
             )}
 
-            <a
-              href="https://aegisplace.com/aegisx"
-              target="_blank"
-              rel="noopener"
-              onClick={handleComingSoonClick}
+            <button
+              type="button"
+              onClick={() => showComingSoonToast("Open IDE")}
               className="hidden xl:inline-flex items-center gap-2 px-4 py-1.5 text-[12px] font-medium border border-white/[0.08] text-white/60 hover:text-white hover:border-white/20 transition-all rounded"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Open IDE
-            </a>
+            </button>
 
-            <a
-              href="/marketplace"
-              onClick={handleComingSoonClick}
+            <button
+              type="button"
+              onClick={() => showComingSoonToast("Launch App")}
               className="text-[12px] font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-md hover:bg-zinc-200 transition-colors duration-200"
             >
               Launch App
-            </a>
+            </button>
           </div>
 
           {/* -- Mobile toggle ------------------------------------------- */}
