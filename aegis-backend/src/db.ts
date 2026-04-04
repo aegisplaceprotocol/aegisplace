@@ -48,6 +48,8 @@ const dec128 = (defaultVal = "0") => ({
   get: (v: any) => (v ? v.toString() : defaultVal),
 });
 
+const objectIdLike = mongoose.Schema.Types.ObjectId;
+
 // ────────────────────────────────────────────────────────────
 // Schemas & Models
 // ────────────────────────────────────────────────────────────
@@ -89,7 +91,21 @@ const operatorSchema = new mongoose.Schema(
     responseSchema: { type: mongoose.Schema.Types.Mixed, default: null },
     pricePerCall: dec128("0.003"),
     creatorWallet: { type: String, required: true, maxlength: 64 },
-    creatorId: { type: Number, default: null },
+    creatorId: { type: objectIdLike, default: null },
+    onChainProgramId: { type: String, default: null, maxlength: 64 },
+    onChainConfigPda: { type: String, default: null, maxlength: 64 },
+    onChainOperatorPda: { type: String, default: null, maxlength: 64 },
+    onChainOperatorId: { type: Number, default: null },
+    onChainTxSignature: { type: String, default: null, maxlength: 128 },
+    onChainMetadataUri: { type: String, default: null, maxlength: 1024 },
+    onChainCluster: { type: String, enum: ["devnet", "mainnet-beta", "testnet", "localnet"], default: null },
+    onChainRegisteredAt: { type: Date, default: null },
+    onChainSyncStatus: {
+      type: String,
+      enum: ["unregistered", "pending", "confirmed", "failed"],
+      default: "unregistered",
+      required: true,
+    },
     stakeAmount: dec128("0"),
     trustScore: { type: Number, default: 50, required: true },
     totalInvocations: { type: Number, default: 0, required: true },
@@ -114,6 +130,8 @@ operatorSchema.index({ category: 1 });
 operatorSchema.index({ creatorWallet: 1 });
 operatorSchema.index({ trustScore: -1 });
 operatorSchema.index({ isActive: 1 });
+operatorSchema.index({ onChainOperatorPda: 1 });
+operatorSchema.index({ onChainSyncStatus: 1 });
 
 const invocationSchema = new mongoose.Schema(
   {
@@ -584,7 +602,8 @@ export async function getOperatorsByCreator(walletAddress: string) {
 }
 
 export async function getOperatorsByUserId(userId: number | string) {
-  const docs = await OperatorModel.find({ creatorId: userId }).sort({ createdAt: -1 }).lean();
+  const creatorIds = Array.from(new Set([userId, String(userId)]));
+  const docs = await OperatorModel.find({ creatorId: { $in: creatorIds } }).sort({ createdAt: -1 }).lean();
   return docs.map(toPlain);
 }
 

@@ -63,9 +63,17 @@ pub struct Operator {
     #[max_len(64)]
     pub name: String,
 
+    /// URL-safe marketplace slug. Stable lookup key shared by frontend, MCP, and REST.
+    #[max_len(64)]
+    pub slug: String,
+
     /// HTTPS endpoint URL for off-chain skill execution.
     #[max_len(256)]
     pub endpoint_url: String,
+
+    /// Canonical metadata document for rich marketplace fields that do not need to live on-chain.
+    #[max_len(200)]
+    pub metadata_uri: String,
 
     /// Price per invocation in USDC base units (6 decimals).
     pub price_usdc_base: u64,

@@ -1,10 +1,7 @@
 import { useCallback, useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { apiUrl } from "@/lib/api";
 import { useWalletModal } from "@/components/WalletModal";
 import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
-import bs58 from "bs58";
 
 function truncateAddress(addr: string): string {
   return addr.slice(0, 4) + "..." + addr.slice(-4);
@@ -15,64 +12,11 @@ interface Props {
 }
 
 export default function ConnectWalletButton({ variant = "navbar" }: Props) {
-  const { publicKey, connected, connecting, disconnect, signMessage } = useWallet();
+  const { publicKey, connected, connecting, disconnect } = useWallet();
   const { setVisible } = useWalletModal();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [authenticating, setAuthenticating] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const authAttempted = useRef(false);
   const utils = trpc.useUtils();
-
-  // After wallet connects, run the auth flow
-  useEffect(() => {
-    if (!connected || !publicKey || !signMessage) return;
-    if (authAttempted.current) return;
-    authAttempted.current = true;
-
-    (async () => {
-      setAuthenticating(true);
-      try {
-        const wallet = publicKey.toBase58();
-        // Step 1: Get nonce
-        const nonceRes = await fetch(apiUrl(`/api/auth/nonce?wallet=${wallet}`), {
-          credentials: "include",
-        });
-        if (!nonceRes.ok) throw new Error("Failed to get nonce");
-        const { nonce } = await nonceRes.json();
-
-        // Step 2: Sign message
-        const message = `Sign in to Aegis Protocol\nNonce: ${nonce}`;
-        const encoded = new TextEncoder().encode(message);
-        const sig = await signMessage(encoded);
-
-        // Step 3: Verify
-        const verifyRes = await fetch(apiUrl("/api/auth/verify"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ wallet, signature: bs58.encode(sig), nonce }),
-        });
-        if (!verifyRes.ok) throw new Error("Authentication failed");
-
-        // Step 4: Refresh auth state
-        await utils.auth.me.invalidate();
-        toast.success("Wallet authenticated");
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Authentication failed";
-        toast.error(msg);
-        disconnect();
-      } finally {
-        setAuthenticating(false);
-      }
-    })();
-  }, [connected, publicKey, signMessage, disconnect, utils]);
-
-  // Reset auth attempt flag on disconnect
-  useEffect(() => {
-    if (!connected) {
-      authAttempted.current = false;
-    }
-  }, [connected]);
 
   const handleClick = useCallback(() => {
     if (connected && publicKey) {
@@ -107,7 +51,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
   }, [menuOpen]);
 
   const address = publicKey?.toBase58() || "";
-  const isLoading = connecting || authenticating;
+  const isLoading = connecting;
 
   if (variant === "hero") {
     return (
@@ -128,7 +72,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
             </svg>
-            {authenticating ? "Signing in..." : "Connecting..."}
+            Connecting...
           </>
         ) : connected ? (
           <>
@@ -155,7 +99,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
             : "text-white/40 border border-white/[0.05] hover:border-white/[0.08] hover:text-white/60"
         }`}
       >
-        {isLoading ? (authenticating ? "Signing in..." : "Connecting...") : connected ? truncateAddress(address) : "Connect Wallet"}
+        {isLoading ? "Connecting..." : connected ? truncateAddress(address) : "Connect Wallet"}
       </button>
     );
   }
@@ -180,7 +124,7 @@ export default function ConnectWalletButton({ variant = "navbar" }: Props) {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
             </svg>
-            {authenticating ? "Signing in..." : "Connecting..."}
+            Connecting...
           </>
         ) : connected ? (
           <>

@@ -30,6 +30,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import { OperatorModel } from "../db.js";
+import { ENV } from "../_core/env.js";
 
 /** USDC mint on Solana mainnet */
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -231,7 +232,7 @@ export function x402PaymentGate() {
         amount: price.toFixed(6),
         currency: "USDC",
         chain: "solana",
-        recipient: op.creatorWallet || "",
+        recipient: ENV.treasuryWallet || op.creatorWallet || "",
         network: "mainnet-beta",
         description: `Invoke ${op.name} (${op.slug})`,
         operatorSlug: op.slug,

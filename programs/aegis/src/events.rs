@@ -19,7 +19,9 @@ pub struct OperatorRegistered {
     pub operator_id: u64,
     pub creator: Pubkey,
     pub name: String,
+    pub slug: String,
     pub endpoint_url: String,
+    pub metadata_uri: String,
     pub price_usdc_base: u64,
     pub category: u8,
 }

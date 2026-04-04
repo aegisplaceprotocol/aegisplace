@@ -11,16 +11,26 @@ use crate::state::{Operator, ProtocolConfig};
 pub fn handler(
     ctx: Context<RegisterOperator>,
     name: String,
+    slug: String,
     endpoint_url: String,
+    metadata_uri: String,
     price_usdc_base: u64,
     category: u8,
 ) -> Result<()> {
     // Validate input lengths.
     require!(name.len() <= 64, AegisError::NameTooLong);
+    require!(slug.len() <= 64, AegisError::SlugTooLong);
     require!(endpoint_url.len() <= 256, AegisError::EndpointUrlTooLong);
+    require!(metadata_uri.len() <= 200, AegisError::MetadataUriTooLong);
     require!(price_usdc_base > 0, AegisError::ZeroPrice);
     // Minimum price: 10,000 base units = $0.01 USDC (6 decimals).
     require!(price_usdc_base >= 10_000, AegisError::PriceTooLow);
+    require!(
+        slug
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'),
+        AegisError::InvalidSlug,
+    );
 
     let config = &mut ctx.accounts.config;
     let operator_id = config.total_operators;
@@ -29,7 +39,9 @@ pub fn handler(
     operator.creator = ctx.accounts.creator.key();
     operator.operator_id = operator_id;
     operator.name = name.clone();
+    operator.slug = slug.clone();
     operator.endpoint_url = endpoint_url.clone();
+    operator.metadata_uri = metadata_uri.clone();
     operator.price_usdc_base = price_usdc_base;
     operator.category = category;
     operator.trust_score = 5_000; // Start at 50% trust.
@@ -50,7 +62,9 @@ pub fn handler(
         operator_id,
         creator: operator.creator,
         name,
+        slug,
         endpoint_url,
+        metadata_uri,
         price_usdc_base,
         category,
     });

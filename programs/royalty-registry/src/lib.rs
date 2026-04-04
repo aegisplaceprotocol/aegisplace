@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("FrXBFm4WdqBHosZJ8rMyT9FHNvRXuSVzxqGBbH7nCWs6");
+declare_id!("8KAWrDAwgGihNr49VRu2Wvsf8n1dHkjFtUt53M1D9T7a");
 
 /// USDC mint address on Solana mainnet (EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v).
 pub const USDC_MINT: Pubkey = Pubkey::new_from_array([

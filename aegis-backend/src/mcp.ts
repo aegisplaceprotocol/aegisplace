@@ -19,9 +19,6 @@ import {
   getOperatorCount,
   getProtocolStats,
   getGuardrailStats,
-  recordInvocation,
-  createPayment,
-  updateOperator,
   checkRateLimit,
   listTasks,
   createTask,
@@ -31,9 +28,7 @@ import {
   OperatorTokenModel,
 } from "./db";
 import { getTrustBreakdown } from "./trust-engine";
-import { checkInput, checkOutput } from "./guardrails";
-import { validateInvocation, calculateFees } from "./validator";
-import { broadcastEvent } from "./sse";
+import { executeInvocation, InvocationError } from "./invoke-engine";
 import { bags, BagsApiError } from "./bags";
 
 // ────────────────────────────────────────────────────────────
@@ -137,6 +132,10 @@ const TOOLS = [
         callerWallet: {
           type: "string",
           description: "Solana wallet address of the caller (optional)",
+        },
+        txSignature: {
+          type: "string",
+          description: "Confirmed Solana payment transaction signature for paid skills (required when pricePerCall > 0)",
         },
       },
       required: ["operatorId"],
@@ -491,6 +490,7 @@ async function executeTool(
 
         const callerWallet = (args.callerWallet as string) || "mcp-agent";
         const payload = args.payload ?? {};
+        const txSignature = args.txSignature as string | undefined;
 
         // Rate limit by caller wallet
         const rl = await checkRateLimit(`wallet:${callerWallet}`, "invoke.execute", 60, 60);
@@ -506,46 +506,13 @@ async function executeTool(
           };
         }
 
-        const price = parseFloat(operator.pricePerCall);
-        const fees = calculateFees(price);
-
-        // Guardrail input check
-        let guardrailInputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
-        let guardrailOutputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
-        let totalGuardrailLatencyMs = 0;
-
-        guardrailInputResult = await checkInput(operator.category, payload);
-        totalGuardrailLatencyMs += guardrailInputResult.latencyMs;
-
-        if (!guardrailInputResult.passed) {
-          const invocationId = await recordInvocation({
-            operatorId: toObjectId(operator.id),
+        try {
+          const result = await executeInvocation({
+            operatorId,
             callerWallet,
-            amountPaid: "0",
-            creatorShare: "0",
-            validatorShare: "0",
-            treasuryShare: "0",
-            burnAmount: "0",
-            responseMs: 0,
-            success: false,
-            statusCode: 403,
-            trustDelta: 0,
-            guardrailInputPassed: false,
-            guardrailOutputPassed: true,
-            guardrailViolations: guardrailInputResult.violations,
-            guardrailLatencyMs: totalGuardrailLatencyMs,
-          });
-
-          broadcastEvent("invocation", {
-            invocationId,
-            operatorId: operator.id,
-            operatorName: operator.name,
-            operatorSlug: operator.slug,
-            callerWallet,
-            success: false,
-            responseMs: 0,
-            amountPaid: "0",
-            trustDelta: 0,
+            payload,
+            txSignature,
+            source: "mcp",
           });
 
           return {
@@ -554,196 +521,52 @@ async function executeTool(
                 type: "text",
                 text: JSON.stringify(
                   {
-                    success: false,
-                    invocationId,
-                    error: "Blocked by Aegis NeMo Guardrails safety check",
-                    violations: guardrailInputResult.violations,
+                    success: result.success,
+                    invocationId: result.invocationId,
+                    operatorId: operator.id,
+                    operatorSlug: operator.slug,
+                    operatorName: result.operatorName,
+                    responseMs: result.responseMs,
+                    statusCode: result.statusCode,
+                    response: result.response,
+                    fees: result.fees,
+                    guardrails: result.guardrails,
+                    trustDelta: result.trustDelta,
+                    newTrustScore: result.newTrustScore,
                   },
                   null,
                   2,
                 ),
               },
             ],
-            isError: true,
           };
-        }
-
-        // Execute the operator
-        let responseMs = 0;
-        let statusCode = 200;
-        let responseBody: unknown = null;
-        let success = true;
-
-        if (operator.endpointUrl) {
-          if (isPrivateUrl(operator.endpointUrl)) {
-            throw new Error('Operator endpoint URL is not allowed (private/internal address)');
-          }
-          const start = Date.now();
-          try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
-
-            const res = await fetch(operator.endpointUrl, {
-              method: operator.httpMethod || "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Aegis-Operator-Id": String(operator.id),
-                "X-Aegis-Caller": callerWallet,
-                "X-Aegis-Source": "mcp",
-              },
-              body: payload ? JSON.stringify(payload) : undefined,
-              signal: controller.signal,
-            });
-
-            clearTimeout(timeout);
-            responseMs = Date.now() - start;
-            statusCode = res.status;
-
-            try {
-              responseBody = await res.json();
-            } catch {
-              responseBody = await res.text();
-            }
-
-            success = statusCode >= 200 && statusCode < 400;
-          } catch (err: any) {
-            responseMs = Date.now() - start;
-            statusCode = 0;
-            success = false;
-            responseBody = { error: err.message || "Request failed" };
-          }
-        } else {
-          // Simulated invocation for demo operators
-          const hashCode = (s: string) => s.split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
-          responseMs = 200 + Math.abs(hashCode(operator.slug || 'default')) % 800;
-          statusCode = 200;
-          success = true;
-          responseBody = {
-            result: `Response from ${operator.name}`,
-            timestamp: new Date().toISOString(),
-            operatorId: operator.id,
-          };
-        }
-
-        // Guardrail output check
-        if (success) {
-          guardrailOutputResult = await checkOutput(operator.category, responseBody);
-          totalGuardrailLatencyMs += guardrailOutputResult.latencyMs;
-          if (!guardrailOutputResult.passed) {
-            success = false;
-          }
-        }
-
-        // Validate response
-        const validation = validateInvocation({
-          responseMs,
-          statusCode,
-          responseBody,
-          expectedSchema: operator.responseSchema as Record<string, unknown> | undefined,
-        });
-
-        let trustDelta = validation.trustDelta;
-        if (!guardrailOutputResult.passed) {
-          trustDelta = -5;
-        }
-
-        const allViolations = [
-          ...guardrailInputResult.violations,
-          ...guardrailOutputResult.violations,
-        ];
-
-        // Record invocation
-        const invocationId = await recordInvocation({
-          operatorId: toObjectId(operator.id),
-          callerWallet,
-          amountPaid: price.toFixed(8),
-          creatorShare: fees.creator.toFixed(8),
-          validatorShare: fees.validators.toFixed(8),
-          treasuryShare: fees.treasury.toFixed(8),
-          burnAmount: fees.burn.toFixed(8),
-          stakersShare: fees.stakers.toFixed(8),
-          insuranceShare: fees.insurance.toFixed(8),
-          responseMs,
-          success,
-          statusCode,
-          trustDelta,
-          paymentVerified: false,
-          guardrailInputPassed: guardrailInputResult.passed,
-          guardrailOutputPassed: guardrailOutputResult.passed,
-          guardrailViolations: allViolations.length > 0 ? allViolations : undefined,
-          guardrailLatencyMs: totalGuardrailLatencyMs,
-        });
-
-        // Update trust score
-        const newTrust = Math.max(0, Math.min(100, operator.trustScore + trustDelta));
-        await updateOperator(operator.id, { trustScore: newTrust });
-
-        // Create payment record
-        await createPayment({
-          invocationId,
-          txSignature: `mcp-${invocationId}`,
-          totalAmount: price.toFixed(8),
-          operatorShare: fees.creator.toFixed(8),
-          protocolShare: fees.treasury.toFixed(8),
-          validatorShare: fees.validators.toFixed(8),
-          burnAmount: fees.burn.toFixed(8),
-          stakersShare: fees.stakers.toFixed(8),
-          insuranceShare: fees.insurance.toFixed(8),
-          status: "pending",
-        });
-
-        broadcastEvent("invocation", {
-          invocationId,
-          operatorId: operator.id,
-          operatorName: operator.name,
-          operatorSlug: operator.slug,
-          callerWallet,
-          success,
-          responseMs,
-          amountPaid: price.toFixed(8),
-          trustDelta,
-        });
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
+        } catch (err: any) {
+          if (err instanceof InvocationError && err.statusCode === 402) {
+            return {
+              content: [
                 {
-                  success,
-                  invocationId,
-                  operatorId: operator.id,
-                  operatorName: operator.name,
-                  responseMs,
-                  statusCode,
-                  response: responseBody,
-                  validation: {
-                    score: validation.score,
-                    trustDelta,
-                    newTrustScore: newTrust,
-                  },
-                  guardrails: {
-                    inputPassed: guardrailInputResult.passed,
-                    outputPassed: guardrailOutputResult.passed,
-                    violations: allViolations,
-                    latencyMs: totalGuardrailLatencyMs,
-                  },
-                  fees: {
-                    total: price,
-                    creator: fees.creator,
-                    validators: fees.validators,
-                    stakers: fees.stakers,
-                    treasury: fees.treasury,
-                    insurance: fees.insurance,
-                    burn: fees.burn,
-                  },
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      success: false,
+                      error: "PAYMENT_REQUIRED",
+                      message: err.message,
+                      operatorId: operator.id,
+                      operatorSlug: operator.slug,
+                      callerWallet,
+                      pricePerCall: operator.pricePerCall,
+                    },
+                    null,
+                    2,
+                  ),
                 },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
+              ],
+              isError: true,
+            };
+          }
+
+          throw err;
+        }
       }
 
       // ── Get Trust Score ──

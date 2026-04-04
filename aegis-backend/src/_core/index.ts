@@ -54,11 +54,20 @@ const globalLimiter = rateLimit({
   message: { error: "Too many requests, please try again later." },
 });
 
-const authLimiter = rateLimit({
+const authNonceLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many nonce requests, please try again later." },
+});
+
+const authVerifyLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: { error: "Too many auth attempts, please try again later." },
 });
 
@@ -149,8 +158,9 @@ async function startServer() {
   // Body parsing
   app.use(express.json({ limit: '100kb' }));
 
-  // Auth rate limiter on auth routes
-  app.use("/api/auth", authLimiter);
+  // Auth rate limiters: nonce and verify are split so the handshake does not burn its own budget.
+  app.use("/api/auth/nonce", authNonceLimiter);
+  app.use("/api/auth/verify", authVerifyLimiter);
 
   // Register wallet-sign auth routes
   registerAuthRoutes(app);

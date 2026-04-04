@@ -26,10 +26,15 @@ import {
 } from "./db";
 import { validateInvocation, calculateFees } from "./validator";
 import { checkInput, checkOutput } from "./guardrails";
-import { verifyPayment } from "./solana";
+import { prepareSkillRegistrationPlan, verifyPayment } from "./solana";
 import { validateEndpoint } from "./operator-health";
 import { ENV } from "./_core/env";
 import { broadcastEvent } from "./sse";
+
+function sameId(left: unknown, right: unknown): boolean {
+  if (left == null || right == null) return false;
+  return String(left) === String(right);
+}
 
 function isPrivateUrl(urlStr: string): boolean {
   try {
@@ -134,6 +139,39 @@ export const appRouter = router({
       return getOperatorsByUserId(ctx.user.id);
     }),
 
+    prepareRegistration: protectedProcedure
+      .input(z.object({
+        slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/),
+        creatorWallet: z.string().min(32).max(64),
+        apiBaseUrl: z.string().url(),
+        endpointUrl: z.string().url().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const existing = await getOperatorBySlug(input.slug);
+        if (existing) {
+          throw new TRPCError({ code: "CONFLICT", message: "An operator with this slug already exists" });
+        }
+
+        if (ctx.user.walletAddress && ctx.user.walletAddress !== input.creatorWallet) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Creator wallet must match the wallet linked to your account",
+          });
+        }
+
+        if (input.endpointUrl) {
+          const endpointCheck = await validateEndpoint(input.endpointUrl);
+          if (!endpointCheck.reachable) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Endpoint validation failed: ${endpointCheck.error || "Endpoint did not respond within 15 seconds"}`,
+            });
+          }
+        }
+
+        return prepareSkillRegistrationPlan(input);
+      }),
+
     register: protectedProcedure
       .input(z.object({
         name: z.string().min(2).max(256),
@@ -156,6 +194,13 @@ export const appRouter = router({
         iconUrl: z.string().url().optional(),
         docsUrl: z.string().url().optional(),
         githubUrl: z.string().url().optional(),
+        onChainProgramId: z.string().min(32).max(64).optional(),
+        onChainConfigPda: z.string().min(32).max(64).optional(),
+        onChainOperatorPda: z.string().min(32).max(64).optional(),
+        onChainOperatorId: z.number().int().min(0).optional(),
+        onChainTxSignature: z.string().min(32).max(128).optional(),
+        onChainMetadataUri: z.string().url().optional(),
+        onChainCluster: z.enum(["devnet", "mainnet-beta", "testnet", "localnet"]).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Rate limit: 5 operator registrations per hour
@@ -166,6 +211,13 @@ export const appRouter = router({
 
         const existing = await getOperatorBySlug(input.slug);
         if (existing) throw new TRPCError({ code: "CONFLICT", message: "An operator with this slug already exists" });
+
+        if (ctx.user.walletAddress && ctx.user.walletAddress !== input.creatorWallet) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Creator wallet must match the wallet linked to your account",
+          });
+        }
 
         // Validate endpoint URL is reachable before accepting registration
         if (input.endpointUrl) {
@@ -191,6 +243,8 @@ export const appRouter = router({
           isVerified: false,
           healthStatus: input.endpointUrl ? "healthy" : "unknown",
           consecutiveFailures: 0,
+          onChainRegisteredAt: input.onChainTxSignature ? new Date() : null,
+          onChainSyncStatus: input.onChainTxSignature ? "confirmed" : "unregistered",
         });
 
         await logAudit({
@@ -232,7 +286,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const op = await getOperatorById(input.id);
         if (!op) throw new TRPCError({ code: "NOT_FOUND", message: "Operator not found" });
-        if (op.creatorId !== ctx.user.id && ctx.user.role !== "admin") {
+        if (!sameId(op.creatorId, ctx.user.id) && ctx.user.role !== "admin") {
           throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized to update this operator" });
         }
 
@@ -254,7 +308,7 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         const op = await getOperatorById(input.id);
         if (!op) throw new TRPCError({ code: "NOT_FOUND", message: "Operator not found" });
-        if (op.creatorId !== ctx.user.id && ctx.user.role !== "admin") {
+        if (!sameId(op.creatorId, ctx.user.id) && ctx.user.role !== "admin") {
           throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
         }
         await softDeleteOperator(input.id);

@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR");
+declare_id!("HiDGqc9NX4dbERfqAyq2skF3Tk5vWEjXwsrrtSWxi19v");
 
 /// Aegis Operator Registry - the on-chain backbone of the Aegis AI Agent Marketplace.
 ///
@@ -38,11 +38,13 @@ pub mod aegis {
     pub fn register_operator(
         ctx: Context<RegisterOperator>,
         name: String,
+        slug: String,
         endpoint_url: String,
+        metadata_uri: String,
         price_usdc_base: u64,
         category: u8,
     ) -> Result<()> {
-        instructions::register_operator::handler(ctx, name, endpoint_url, price_usdc_base, category)
+        instructions::register_operator::handler(ctx, name, slug, endpoint_url, metadata_uri, price_usdc_base, category)
     }
 
     /// Invokes an operator's skill, paying in USDC.

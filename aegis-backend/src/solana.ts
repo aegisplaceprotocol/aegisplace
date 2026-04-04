@@ -3,7 +3,7 @@
  * Verifies USDC SPL token transfers on Solana mainnet.
  */
 
-import { Connection, ParsedTransactionWithMeta } from "@solana/web3.js";
+import { Connection, ParsedTransactionWithMeta, PublicKey, SystemProgram } from "@solana/web3.js";
 import { ENV } from "./_core/env";
 
 /** USDC mint address on Solana mainnet */
@@ -17,6 +17,26 @@ export interface PaymentVerificationResult {
   error?: string;
 }
 
+export interface ProtocolConfigSnapshot {
+  address: string;
+  totalOperators: number;
+}
+
+export interface SkillRegistrationPlan {
+  cluster: string;
+  rpcUrl: string;
+  programId: string;
+  configPda: string;
+  operatorPda: string;
+  operatorId: number;
+  metadataUri: string;
+  accounts: Array<{
+    pubkey: string;
+    isSigner: boolean;
+    isWritable: boolean;
+  }>;
+}
+
 let _connection: Connection | null = null;
 
 function getConnection(): Connection {
@@ -24,6 +44,78 @@ function getConnection(): Connection {
     _connection = new Connection(ENV.solanaRpcUrl, "confirmed");
   }
   return _connection;
+}
+
+export function getAegisProgramId(): PublicKey {
+  return new PublicKey(ENV.aegisProgramId);
+}
+
+export function deriveConfigPda(programId = getAegisProgramId()): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("config")], programId)[0];
+}
+
+export function deriveOperatorPda(
+  creatorWallet: string,
+  operatorId: number | bigint,
+  programId = getAegisProgramId(),
+): PublicKey {
+  const creator = new PublicKey(creatorWallet);
+  const operatorIdBytes = Buffer.alloc(8);
+  operatorIdBytes.writeBigUInt64LE(BigInt(operatorId));
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("operator"), creator.toBuffer(), operatorIdBytes],
+    programId,
+  )[0];
+}
+
+export async function getProtocolConfigSnapshot(): Promise<ProtocolConfigSnapshot> {
+  const connection = getConnection();
+  const configPda = deriveConfigPda();
+  const accountInfo = await connection.getAccountInfo(configPda, "confirmed");
+
+  if (!accountInfo) {
+    throw new Error(
+      `Aegis protocol config not found at ${configPda.toBase58()}. Initialize the program before registering skills.`,
+    );
+  }
+
+  if (accountInfo.data.length < 240) {
+    throw new Error("Aegis protocol config account is smaller than expected");
+  }
+
+  const totalOperators = Number(accountInfo.data.readBigUInt64LE(232));
+
+  return {
+    address: configPda.toBase58(),
+    totalOperators,
+  };
+}
+
+export async function prepareSkillRegistrationPlan(params: {
+  creatorWallet: string;
+  slug: string;
+  apiBaseUrl: string;
+}): Promise<SkillRegistrationPlan> {
+  const config = await getProtocolConfigSnapshot();
+  const programId = getAegisProgramId();
+  const operatorPda = deriveOperatorPda(params.creatorWallet, config.totalOperators, programId);
+  const metadataUri = `${params.apiBaseUrl.replace(/\/$/, "")}/api/v1/skills/${params.slug}/metadata`;
+
+  return {
+    cluster: ENV.solanaCluster,
+    rpcUrl: ENV.solanaRpcUrl,
+    programId: programId.toBase58(),
+    configPda: config.address,
+    operatorPda: operatorPda.toBase58(),
+    operatorId: config.totalOperators,
+    metadataUri,
+    accounts: [
+      { pubkey: params.creatorWallet, isSigner: true, isWritable: true },
+      { pubkey: config.address, isSigner: false, isWritable: true },
+      { pubkey: operatorPda.toBase58(), isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId.toBase58(), isSigner: false, isWritable: false },
+    ],
+  };
 }
 
 /**

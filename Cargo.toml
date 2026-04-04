@@ -2,6 +2,9 @@
 members = ["programs/aegis", "programs/royalty-registry", "programs/aegis-governance"]
 resolver = "2"
 
+[patch.crates-io]
+anchor-syn = { path = "vendor/anchor-syn-0.30.1" }
+
 [workspace.metadata.anchor]
 
 [profile.release]

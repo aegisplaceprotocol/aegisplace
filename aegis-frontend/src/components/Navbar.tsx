@@ -33,6 +33,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Earn",
     links: [
       { label: "Creator Economy", href: "/earn", page: true, description: "Upload skills, earn per invocation" },
+      { label: "Create Skill", href: "/skill-marketplace?tab=earn", page: true, description: "Register a wallet-owned skill on Solana" },
       { label: "Deploy Operator", href: "/submit", page: true, description: "Bond stake and start earning" },
       { label: "Bags.fm Integration", href: "/skill-fi", page: true, description: "Trade operator tokens on Bags", iconUrl: "/assets/solana-gradient_e9806652.png" },
       { label: "Tasks & Bounties", href: "/tasks", page: true, description: "Open work and rewards" },
@@ -176,7 +177,7 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
-        <div className="container flex items-center justify-between h-[56px]">
+        <div className="container flex items-center justify-between h-14">
           {/* -- Logo ---------------------------------------------------- */}
           <a href="/" className="flex items-center shrink-0 group">
             <img
@@ -224,16 +225,16 @@ export default function Navbar() {
                       : "opacity-0 pointer-events-none"
                   }`}
                 >
-                  <div className="bg-zinc-900/97 backdrop-blur-xl border border-white/[0.07] rounded-xl min-w-[260px] overflow-hidden shadow-xl shadow-black/30">
+                  <div className="bg-zinc-900/97 backdrop-blur-xl border border-white/[0.07] rounded-xl min-w-65 overflow-hidden shadow-xl shadow-black/30">
                     {group.links.map((link, i) => (
                       <a
                         key={link.label}
                         href={link.href}
                         onClick={(e) => handleClick(link, e)}
                         aria-current={isActive(link.href) ? "page" : undefined}
-                        className={`block px-4 py-2.5 transition-colors duration-150 group/item hover:bg-white/[0.04] ${
-                          i > 0 ? "border-t border-white/[0.04]" : ""
-                        } ${isActive(link.href) ? "bg-white/[0.03]" : ""}`}
+                        className={`block px-4 py-2.5 transition-colors duration-150 group/item hover:bg-white/4 ${
+                          i > 0 ? "border-t border-white/4" : ""
+                        } ${isActive(link.href) ? "bg-white/3" : ""}`}
                       >
                         <div className="flex items-center justify-between">
                           <span className={`text-[12px] font-medium flex items-center gap-2.5 ${
@@ -289,7 +290,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => showComingSoonToast("Open IDE")}
-              className="hidden xl:inline-flex items-center gap-2 px-4 py-1.5 text-[12px] font-medium border border-white/[0.08] text-white/60 hover:text-white hover:border-white/20 transition-all rounded"
+              className="hidden xl:inline-flex items-center gap-2 px-4 py-1.5 text-[12px] font-medium border border-white/8 text-white/60 hover:text-white hover:border-white/20 transition-all rounded"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Open IDE
@@ -329,7 +330,7 @@ export default function Navbar() {
 
         {/* Panel */}
         <div
-          className={`absolute top-[56px] left-0 right-0 bottom-0 bg-zinc-950/98 backdrop-blur-xl overflow-y-auto transition-transform duration-300 ${
+          className={`absolute top-14 left-0 right-0 bottom-0 bg-zinc-950/98 backdrop-blur-xl overflow-y-auto transition-transform duration-300 ${
             mobileOpen ? "translate-y-0" : "-translate-y-4"
           }`}
         >
@@ -350,8 +351,8 @@ export default function Navbar() {
                       aria-current={isActive(link.href) ? "page" : undefined}
                       className={`flex items-center justify-between py-2.5 px-3 rounded-lg transition-colors duration-150 ${
                         isActive(link.href)
-                          ? "text-zinc-100 bg-white/[0.04]"
-                          : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
+                          ? "text-zinc-100 bg-white/4"
+                          : "text-zinc-400 hover:text-zinc-200 hover:bg-white/3"
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -387,8 +388,8 @@ export default function Navbar() {
                     aria-current={isActive(link.href) ? "page" : undefined}
                     className={`block py-2.5 px-3 text-[13px] font-medium rounded-lg transition-colors duration-150 ${
                       isActive(link.href)
-                        ? "text-zinc-100 bg-white/[0.04]"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
+                        ? "text-zinc-100 bg-white/4"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/3"
                     }`}
                   >
                     {link.label}

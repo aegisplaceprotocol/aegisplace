@@ -49,6 +49,7 @@ const CreateTask = lazy(() => import("./pages/CreateTask"));
 const LeaderboardPage = lazy(() => import("./pages/Leaderboard"));
 const AgentsPage = lazy(() => import("./pages/Agents"));
 const SkillFi = lazy(() => import("./pages/SkillFi"));
+const CreateSkill = lazy(() => import("./pages/CreateSkill"));
 const AegisXTerminal = lazy(() => import("./pages/AegisXTerminal"));
 const Protocol = lazy(() => import("./pages/Protocol"));
 const Royalties = lazy(() => import("./pages/Royalties"));
@@ -72,6 +73,7 @@ function Router() {
         <Route path={"/dashboard"} component={Dashboard} />
         <Route path={"/ops"} component={OpsDashboard} />
         <Route path={"/skills"} component={SkillDirectory} />
+        <Route path={"/skills/create"} component={CreateSkill} />
         <Route path={"/skill-marketplace"} component={SkillMarketplace} />
         <Route path={"/pitch"} component={Pitch} />
         <Route path={"/missions/new"} component={MissionBuilder} />

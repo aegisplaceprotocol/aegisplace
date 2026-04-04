@@ -10,9 +10,21 @@ pub enum AegisError {
     #[msg("Operator name exceeds 64 bytes")]
     NameTooLong,
 
+    /// Operator slug exceeds the 64-byte maximum.
+    #[msg("Operator slug exceeds 64 bytes")]
+    SlugTooLong,
+
     /// Endpoint URL exceeds the 256-byte maximum.
     #[msg("Endpoint URL exceeds 256 bytes")]
     EndpointUrlTooLong,
+
+    /// Metadata URI exceeds the 200-byte maximum.
+    #[msg("Metadata URI exceeds 200 bytes")]
+    MetadataUriTooLong,
+
+    /// Slug contains invalid characters.
+    #[msg("Slug must only contain lowercase letters, numbers, and hyphens")]
+    InvalidSlug,
 
     /// The operator is not currently active.
     #[msg("Operator is not active")]

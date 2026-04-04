@@ -36,6 +36,18 @@ function formatOperator(op: Record<string, unknown>) {
     endpointUrl: op.endpointUrl || null,
     httpMethod: op.httpMethod || "POST",
     endpoint: op.endpoint,
+    creatorWallet: op.creatorWallet || null,
+    metadataUri: op.onChainMetadataUri || null,
+    onChain: {
+      cluster: op.onChainCluster || null,
+      programId: op.onChainProgramId || null,
+      configPda: op.onChainConfigPda || null,
+      operatorPda: op.onChainOperatorPda || null,
+      operatorId: op.onChainOperatorId ?? null,
+      txSignature: op.onChainTxSignature || null,
+      syncStatus: op.onChainSyncStatus || "unregistered",
+      registeredAt: op.onChainRegisteredAt || null,
+    },
     createdAt: op.createdAt,
   };
 }
@@ -79,6 +91,47 @@ router.get("/operators/:idOrSlug", async (req: Request, res: Response) => {
     res.json(formatOperator(op as unknown as Record<string, unknown>));
   } catch {
     res.status(500).json({ error: "Failed to fetch operator" });
+  }
+});
+
+/* ── GET /api/v1/skills/:slug/metadata ───────────────────────────────── */
+router.get("/skills/:slug/metadata", async (req: Request, res: Response) => {
+  try {
+    const op = await db.getOperatorBySlug(req.params.slug);
+    if (!op) {
+      res.status(404).json({ error: "Skill not found" });
+      return;
+    }
+
+    const operator = op as unknown as Record<string, any>;
+    res.json({
+      version: "1.0",
+      slug: operator.slug,
+      name: operator.name,
+      tagline: operator.tagline || null,
+      description: operator.description || operator.tagline || null,
+      category: operator.category,
+      creatorWallet: operator.creatorWallet,
+      endpointUrl: operator.endpointUrl || null,
+      httpMethod: operator.httpMethod || "POST",
+      pricePerCall: operator.pricePerCall || "0",
+      requestSchema: operator.requestSchema || null,
+      responseSchema: operator.responseSchema || null,
+      tags: operator.tags || [],
+      iconUrl: operator.iconUrl || null,
+      docsUrl: operator.docsUrl || null,
+      githubUrl: operator.githubUrl || null,
+      onChain: {
+        cluster: operator.onChainCluster || null,
+        programId: operator.onChainProgramId || null,
+        configPda: operator.onChainConfigPda || null,
+        operatorPda: operator.onChainOperatorPda || null,
+        operatorId: operator.onChainOperatorId ?? null,
+      },
+      updatedAt: operator.updatedAt,
+    });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch skill metadata" });
   }
 });
 
@@ -170,7 +223,7 @@ router.post(
           txSignature: paymentHeader || null,
           settledAt: new Date().toISOString(),
           feeSplit: {
-            creator: "85%",
+            creator: "60%",
             validators: "15%",
             stakers: "12%",
             treasury: "8%",

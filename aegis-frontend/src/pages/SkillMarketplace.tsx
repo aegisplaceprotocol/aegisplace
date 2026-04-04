@@ -1,9 +1,18 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Link, useSearch } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { API_BASE_URL } from "@/lib/api";
+import {
+  sanitizeSlug,
+  sendSkillRegistrationTransaction,
+  type PreparedSkillRegistrationPlan,
+} from "@/lib/solanaSkillRegistry";
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -110,6 +119,26 @@ const CATEGORY_ICONS: Record<string, string> = {
   All: "✦",
 };
 
+const CATEGORY_OPTIONS = [
+  ["code-review", "Code Review"],
+  ["sentiment-analysis", "Sentiment Analysis"],
+  ["data-extraction", "Data Extraction"],
+  ["image-generation", "Image Generation"],
+  ["text-generation", "Text Generation"],
+  ["translation", "Translation"],
+  ["summarization", "Summarization"],
+  ["classification", "Classification"],
+  ["search", "Search"],
+  ["financial-analysis", "Financial Analysis"],
+  ["security-audit", "Security Audit"],
+  ["other", "Other"],
+] as const;
+
+function parseOptionalJson(value: string) {
+  if (!value.trim()) return undefined;
+  return JSON.parse(value);
+}
+
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
 function formatNum(n: number): string {
@@ -206,7 +235,7 @@ function SkeletonCard() {
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
+      <div className="flex items-center justify-between pt-3 border-t border-white/4">
         <div className="h-4 skeleton-shimmer w-24" />
         <div className="h-4 skeleton-shimmer w-16" />
       </div>
@@ -218,7 +247,7 @@ function SkeletonCard() {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="card-glass p-4 hover:border-white/[0.10] transition-all group">
+    <div className="card-glass p-4 hover:border-white/10 transition-all group">
       <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-2">{label}</div>
       <div className="text-xl font-normal text-[#10B981] tracking-tight">{value}</div>
       {sub && <div className="text-[10px] text-white/40 mt-1">{sub}</div>}
@@ -397,7 +426,7 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
 
 function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
       <div
         className="card-glow relative w-full max-w-2xl max-h-[85vh] overflow-y-auto"
@@ -626,12 +655,141 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
 /* ── Upload Wizard ──────────────────────────────────────────────────────── */
 
 function UploadWizard({ onClose }: { onClose: () => void }) {
+  const { connection } = useConnection();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { isAuthenticated, user, refresh, loading: authLoading } = useAuth();
+  const utils = trpc.useUtils();
+  const registerMutation = trpc.operator.register.useMutation();
   const [step, setStep] = useState(1);
   const [skillName, setSkillName] = useState("");
+  const [skillSlug, setSkillSlug] = useState("");
+  const [tagline, setTagline] = useState("");
   const [skillDesc, setSkillDesc] = useState("");
-  const [skillCategory, setSkillCategory] = useState("Development");
-  const [pricingModel, setPricingModel] = useState("per-use");
-  const [priceAmount, setPriceAmount] = useState("");
+  const [skillCategory, setSkillCategory] = useState("other");
+  const [endpointUrl, setEndpointUrl] = useState("");
+  const [httpMethod, setHttpMethod] = useState("POST");
+  const [priceAmount, setPriceAmount] = useState("0.050000");
+  const [tags, setTags] = useState("");
+  const [iconUrl, setIconUrl] = useState("");
+  const [docsUrl, setDocsUrl] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [requestSchema, setRequestSchema] = useState("{\n  \"input\": \"string\"\n}");
+  const [responseSchema, setResponseSchema] = useState("{\n  \"result\": \"string\"\n}");
+  const [submitting, setSubmitting] = useState(false);
+
+  const walletAddress = publicKey?.toBase58() ?? ((user as { walletAddress?: string } | null)?.walletAddress ?? "");
+  const apiBaseUrl = useMemo(() => {
+    if (API_BASE_URL) return API_BASE_URL;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
+  }, []);
+  const sessionWallet = (user as { walletAddress?: string } | null)?.walletAddress ?? "";
+  const slugValue = sanitizeSlug(skillSlug || skillName);
+  const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
+  const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
+  const canAdvance =
+    (step === 1 && Boolean(skillName.trim() && slugValue && skillDesc.trim())) ||
+    (step === 2 && Boolean(endpointUrl.trim() && priceAmount.trim())) ||
+    (step === 3 && Boolean(requestSchema.trim() && responseSchema.trim())) ||
+    step === 4;
+
+  useEffect(() => {
+    if (!connected || !publicKey || authReady) return;
+
+    const handleWalletAuthenticated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ wallet?: string }>;
+      if (!customEvent.detail?.wallet || customEvent.detail.wallet === publicKey.toBase58()) {
+        void refresh();
+      }
+    };
+
+    window.addEventListener("aegis:wallet-authenticated", handleWalletAuthenticated as EventListener);
+    return () => {
+      window.removeEventListener("aegis:wallet-authenticated", handleWalletAuthenticated as EventListener);
+    };
+  }, [authReady, connected, publicKey, refresh]);
+
+  async function handleUpload() {
+    if (!connected || !publicKey || !sendTransaction) {
+      toast.error("Connect a Solana wallet before uploading a skill");
+      return;
+    }
+
+    if (!authReady) {
+      toast.error("Authenticate with your wallet before publishing a skill");
+      return;
+    }
+
+    if (!slugValue) {
+      toast.error("Provide a valid skill slug");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const parsedRequestSchema = parseOptionalJson(requestSchema);
+      const parsedResponseSchema = parseOptionalJson(responseSchema);
+
+      const plan = await utils.operator.prepareRegistration.fetch({
+        slug: slugValue,
+        creatorWallet: walletAddress,
+        apiBaseUrl,
+        endpointUrl,
+      }) as PreparedSkillRegistrationPlan;
+
+      const txSignature = await sendSkillRegistrationTransaction({
+        connection,
+        sendTransaction,
+        creatorWallet: walletAddress,
+        plan,
+        payload: {
+          name: skillName.trim(),
+          slug: slugValue,
+          endpointUrl: endpointUrl.trim(),
+          metadataUri: plan.metadataUri,
+          pricePerCall: priceAmount,
+          category: skillCategory,
+        },
+      });
+
+      await registerMutation.mutateAsync({
+        name: skillName.trim(),
+        slug: slugValue,
+        tagline: tagline.trim() || undefined,
+        description: skillDesc.trim() || undefined,
+        category: skillCategory as any,
+        endpointUrl: endpointUrl.trim(),
+        httpMethod: httpMethod as "GET" | "POST" | "PUT",
+        requestSchema: parsedRequestSchema,
+        responseSchema: parsedResponseSchema,
+        pricePerCall: priceAmount,
+        creatorWallet: walletAddress,
+        tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        iconUrl: iconUrl.trim() || undefined,
+        docsUrl: docsUrl.trim() || undefined,
+        githubUrl: githubUrl.trim() || undefined,
+        onChainProgramId: plan.programId,
+        onChainConfigPda: plan.configPda,
+        onChainOperatorPda: plan.operatorPda,
+        onChainOperatorId: plan.operatorId,
+        onChainTxSignature: txSignature,
+        onChainMetadataUri: plan.metadataUri,
+        onChainCluster: plan.cluster as "devnet" | "mainnet-beta" | "testnet" | "localnet",
+      });
+
+      await Promise.all([
+        utils.operator.list.invalidate(),
+        utils.operator.mine.invalidate(),
+      ]);
+
+      toast.success("Skill registered on Solana and published to the marketplace");
+      onClose();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to upload skill");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   const inputClass = "w-full text-sm text-white/75 px-4 py-3 placeholder:text-white/20 focus:outline-none transition-colors";
   const inputStyle = {
@@ -642,7 +800,7 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
   const inputFocusStyle = { borderColor: "rgba(16,185,129,0.40)" };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
       <div
         className="relative w-full max-w-xl max-h-[85vh] overflow-y-auto"
@@ -708,8 +866,30 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
               <div>
                 <label className="text-xs font-medium text-white/55 mb-1.5 block">Skill Name</label>
                 <input
-                  type="text" value={skillName} onChange={(e) => setSkillName(e.target.value)}
+                  type="text" value={skillName} onChange={(e) => { setSkillName(e.target.value); if (!skillSlug) setSkillSlug(sanitizeSlug(e.target.value)); }}
                   placeholder="e.g. Smart Contract Auditor"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Slug</label>
+                <input
+                  type="text" value={skillSlug} onChange={(e) => setSkillSlug(sanitizeSlug(e.target.value))}
+                  placeholder="e.g. smart-contract-auditor"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Tagline</label>
+                <input
+                  type="text" value={tagline} onChange={(e) => setTagline(e.target.value)}
+                  placeholder="One-line value proposition for the marketplace card"
                   className={inputClass}
                   style={inputStyle}
                   onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
@@ -731,10 +911,10 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
               <div>
                 <label className="text-xs font-medium text-white/55 mb-1.5 block">Category</label>
                 <div className="flex flex-wrap gap-1.5">
-                  {CATEGORIES.filter(c => c !== "All").map((cat) => (
-                    <button key={cat} onClick={() => setSkillCategory(cat)}
+                  {CATEGORY_OPTIONS.map(([value, label]) => (
+                    <button key={value} type="button" onClick={() => setSkillCategory(value)}
                       className="text-[11px] font-medium px-3 py-1.5 transition-all"
-                      style={skillCategory === cat ? {
+                      style={skillCategory === value ? {
                         background: "rgba(16,185,129,0.12)",
                         color: "#10B981",
                         border: "1px solid rgba(16,185,129,0.30)",
@@ -746,8 +926,7 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                         borderRadius: "4px",
                       }}
                     >
-                      {CATEGORY_ICONS[cat] && <span className="mr-1">{CATEGORY_ICONS[cat]}</span>}
-                      {cat}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -757,41 +936,52 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
 
           {step === 2 && (
             <>
-              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Pricing Model</div>
-              <p className="text-xs text-white/45 mb-4">Choose how you want to get paid. You earn every time someone uses your skill.</p>
-              <div className="space-y-2">
-                {[
-                  { id: "per-use", title: "Pay Per Use", desc: "Users pay a fixed amount each time they call your skill. Best for simple, single-action skills.", example: "e.g. $0.05 per scan" },
-                  { id: "subscription", title: "Monthly Subscription", desc: "Users pay a flat monthly fee for unlimited access. Best for skills that get used frequently.", example: "e.g. $29/month" },
-                  { id: "revenue-share", title: "Revenue Share", desc: "You take a percentage of the value your skill creates. Best for DeFi and trading skills.", example: "e.g. 2% of yield generated" },
-                  { id: "tiered", title: "Tiered Pricing", desc: "Different prices for different usage levels. Free tier for testing, paid tiers for production.", example: "e.g. Free: 100 calls, Pro: $19/mo" },
-                  { id: "staked", title: "Stake-Gated", desc: "Users must stake $AEGIS tokens to access your skill. Higher stakes unlock premium features.", example: "e.g. Stake 1,000 $AEGIS" },
-                ].map((model) => (
-                  <button key={model.id} onClick={() => setPricingModel(model.id)}
-                    className="w-full text-left p-4 transition-all"
-                    style={pricingModel === model.id ? {
-                      border: "1px solid rgba(16,185,129,0.30)",
-                      background: "rgba(16,185,129,0.05)",
-                      borderRadius: "5px",
-                    } : {
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      background: "rgba(255,255,255,0.01)",
-                      borderRadius: "5px",
-                    }}
+              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Endpoint & Pricing</div>
+              <p className="text-xs text-white/45 mb-4">Set the live endpoint your skill exposes and the per-call amount charged on-chain.</p>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Endpoint URL</label>
+                <input
+                  type="url" value={endpointUrl} onChange={(e) => setEndpointUrl(e.target.value)}
+                  placeholder="https://api.example.com/skill"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-white/55 mb-1.5 block">HTTP Method</label>
+                  <select
+                    value={httpMethod}
+                    onChange={(e) => setHttpMethod(e.target.value)}
+                    className={inputClass}
+                    style={inputStyle}
+                    onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                    onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-white/85">{model.title}</span>
-                      <span className="text-[10px] font-medium text-white/30">{model.example}</span>
-                    </div>
-                    <p className="text-[11px] text-white/45">{model.desc}</p>
-                  </button>
-                ))}
+                    <option value="POST">POST</option>
+                    <option value="GET">GET</option>
+                    <option value="PUT">PUT</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-white/55 mb-1.5 block">Price / Call</label>
+                  <input
+                    type="text" value={priceAmount} onChange={(e) => setPriceAmount(e.target.value)}
+                    placeholder="0.050000"
+                    className={inputClass}
+                    style={inputStyle}
+                    onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                    onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                  />
+                </div>
               </div>
               <div className="mt-4">
-                <label className="text-xs font-medium text-white/55 mb-1.5 block">Price Amount</label>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Tags</label>
                 <input
-                  type="text" value={priceAmount} onChange={(e) => setPriceAmount(e.target.value)}
-                  placeholder="e.g. 0.05"
+                  type="text" value={tags} onChange={(e) => setTags(e.target.value)}
+                  placeholder="mcp, audits, security"
                   className={inputClass}
                   style={inputStyle}
                   onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
@@ -803,44 +993,64 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
 
           {step === 3 && (
             <>
-              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Upload Code</div>
-              <p className="text-xs text-white/45 mb-4">Upload your skill code or connect a GitHub repository. We validate, sandbox-test, and security-audit it automatically.</p>
-              <div
-                className="p-8 text-center cursor-pointer transition-all"
-                style={{ border: "2px dashed rgba(255,255,255,0.08)", borderRadius: "6px" }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(16,185,129,0.25)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.08)")}
-                onClick={() => toast.info("Use the CLI to upload skills: agent-aegis register")}
-              >
-                <svg className="mx-auto mb-3 text-white/20" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="17 8 12 3 7 8" />
-                  <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-                <p className="text-sm text-white/45 mb-1">Drop your skill files here</p>
-                <p className="text-[10px] text-white/25">or click to browse. Supports .ts, .py, .rs, .zip, or GitHub URL</p>
+              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Schemas & Links</div>
+              <p className="text-xs text-white/45 mb-4">Add the interface definition and the links shown on the marketplace listing.</p>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Request Schema JSON</label>
+                <textarea
+                  value={requestSchema} onChange={(e) => setRequestSchema(e.target.value)}
+                  rows={6}
+                  className={`${inputClass} resize-none font-mono text-xs`}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
               </div>
-              <div className="mt-4 text-center">
-                <span className="text-[10px] text-white/25">or</span>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Response Schema JSON</label>
+                <textarea
+                  value={responseSchema} onChange={(e) => setResponseSchema(e.target.value)}
+                  rows={6}
+                  className={`${inputClass} resize-none font-mono text-xs`}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
               </div>
-              <button
-                onClick={() => toast.info("Use the CLI to register from GitHub: agent-aegis register --github <repo>")}
-                className="w-full flex items-center justify-center gap-2 py-3 text-sm text-white/45 hover:text-white/70 transition-all"
-                style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: "5px" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                </svg>
-                Connect GitHub Repository
-              </button>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <input
+                  type="url" value={docsUrl} onChange={(e) => setDocsUrl(e.target.value)}
+                  placeholder="Docs URL"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+                <input
+                  type="url" value={githubUrl} onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="GitHub URL"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+                <input
+                  type="url" value={iconUrl} onChange={(e) => setIconUrl(e.target.value)}
+                  placeholder="Icon URL"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
+              </div>
               <div className="mt-5 p-4" style={{ border: "1px solid rgba(255,255,255,0.06)", borderRadius: "5px" }}>
                 <div className="text-[9px] font-bold text-white/30 tracking-widest uppercase mb-2">What Happens Next</div>
                 <div className="space-y-2">
                   {[
-                    "Your code runs in a sandboxed environment to verify it works",
-                    "Automated security audit checks for vulnerabilities and data leaks",
-                    "Performance benchmarks measure latency and resource usage",
-                    "If everything passes, your skill goes live on the marketplace",
+                    "The backend validates your slug and checks the endpoint is reachable",
+                    "Your wallet signs the on-chain register_operator transaction",
+                    "Marketplace metadata is stored with the tx signature and PDAs",
+                    "The skill becomes discoverable through the marketplace, REST API, and MCP",
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5" style={{ color: "#10B981" }}>
@@ -863,17 +1073,31 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                   <div className="text-sm text-white/80">{skillName || "Untitled Skill"}</div>
                 </div>
                 <div className="card-glass p-4">
+                  <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">SLUG</div>
+                  <div className="text-sm text-white/80">{slugValue || "not-set"}</div>
+                </div>
+                <div className="card-glass p-4">
                   <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">DESCRIPTION</div>
                   <div className="text-xs text-white/60">{skillDesc || "No description provided"}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="card-glass p-4">
                     <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">CATEGORY</div>
-                    <div className="text-sm text-white/80">{skillCategory}</div>
+                    <div className="text-sm text-white/80">{CATEGORY_OPTIONS.find(([value]) => value === skillCategory)?.[1] ?? skillCategory}</div>
                   </div>
                   <div className="card-glass p-4">
                     <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">PRICING</div>
-                    <div className="text-sm text-white/80">{pricingModel}{priceAmount ? ` — $${priceAmount}` : ""}</div>
+                    <div className="text-sm text-white/80">{priceAmount ? `$${priceAmount}/call` : "Not set"}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="card-glass p-4">
+                    <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">ENDPOINT</div>
+                    <div className="text-xs text-white/60 break-all">{endpointUrl || "No endpoint provided"}</div>
+                  </div>
+                  <div className="card-glass p-4">
+                    <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">METHOD</div>
+                    <div className="text-sm text-white/80">{httpMethod}</div>
                   </div>
                 </div>
                 <div className="p-4" style={{ border: "1px solid rgba(16,185,129,0.15)", background: "rgba(16,185,129,0.04)", borderRadius: "5px" }}>
@@ -881,16 +1105,23 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                     How You Will Earn
                   </div>
                   <p className="text-xs text-white/55 leading-relaxed">
-                    Every time an operator uses your skill, you earn{" "}
-                    {pricingModel === "per-use"
-                      ? `$${priceAmount || "0.05"} per call`
-                      : pricingModel === "subscription"
-                      ? `$${priceAmount || "29"}/month per subscriber`
-                      : pricingModel === "revenue-share"
-                      ? `${priceAmount || "2"}% of value generated`
-                      : "based on your pricing model"}.{" "}
-                    Payments settle automatically via x402 protocol. No minimums, no delays.
+                    Every time an operator uses your skill, the on-chain invocation flow charges {priceAmount ? `$${priceAmount}` : "$0.05"} per call and records the creator-owned listing on Solana before the marketplace publishes the metadata.
                   </p>
+                </div>
+                <div className="card-glass p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">WALLET</div>
+                      <div className="text-xs text-white/60 break-all">{walletAddress || "No wallet connected"}</div>
+                    </div>
+                    <ConnectWalletButton />
+                  </div>
+                  <p className="mt-3 text-[11px] text-white/45">
+                    Connect and authenticate a wallet first. The Upload CTA unlocks after the session refresh completes for the connected wallet.
+                  </p>
+                  {connected && !authReady && authLoading && (
+                    <p className="mt-2 text-[11px] text-[#10B981]">Finalizing wallet session...</p>
+                  )}
                 </div>
               </div>
             </>
@@ -909,45 +1140,55 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
             )}
             {step < 4 ? (
               <button
+                type="button"
+                disabled={!canAdvance}
                 onClick={() => setStep(step + 1)}
                 className="flex-1 text-sm font-semibold py-3 transition-all"
                 style={{
-                  background: "#10B981",
-                  color: "#000",
+                  background: canAdvance ? "#10B981" : "rgba(255,255,255,0.08)",
+                  color: canAdvance ? "#000" : "rgba(255,255,255,0.35)",
                   borderRadius: "5px",
-                  boxShadow: "0 0 16px rgba(16,185,129,0.25)",
+                  boxShadow: canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none",
                 }}
                 onMouseEnter={(e) => {
+                  if (!canAdvance) return;
                   (e.currentTarget as HTMLButtonElement).style.background = "#059669";
                   (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#10B981";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 16px rgba(16,185,129,0.25)";
+                  (e.currentTarget as HTMLButtonElement).style.background = canAdvance ? "#10B981" : "rgba(255,255,255,0.08)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none";
                 }}
               >
                 Continue
               </button>
             ) : (
               <button
-                onClick={() => { toast.success("Skill submitted for review! You will be notified when it goes live."); onClose(); }}
+                type="button"
+                disabled={!uploadEnabled}
+                onClick={handleUpload}
                 className="flex-1 text-sm font-semibold py-3 transition-all"
                 style={{
-                  background: "#10B981",
-                  color: "#000",
+                  background: uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)",
+                  color: uploadEnabled ? "#000" : "rgba(255,255,255,0.35)",
                   borderRadius: "5px",
-                  boxShadow: "0 0 16px rgba(16,185,129,0.25)",
+                  boxShadow: uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none",
                 }}
                 onMouseEnter={(e) => {
+                  if (!uploadEnabled) return;
                   (e.currentTarget as HTMLButtonElement).style.background = "#059669";
                   (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
                 }}
                 onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.background = "#10B981";
-                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 16px rgba(16,185,129,0.25)";
+                  (e.currentTarget as HTMLButtonElement).style.background = uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none";
                 }}
               >
-                Submit Skill
+                {submitting || registerMutation.isPending
+                  ? "Uploading Skill..."
+                  : connected && authReady
+                    ? "Upload Skill"
+                    : "Connect Wallet To Upload"}
               </button>
             )}
           </div>
@@ -1138,7 +1379,7 @@ export default function SkillMarketplace() {
           <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 md:py-24 relative">
             {/* Radial emerald glow behind title */}
             <div
-              className="absolute top-0 left-1/4 w-[600px] h-[400px] pointer-events-none"
+              className="absolute top-0 left-1/4 h-100 w-150 pointer-events-none"
               style={{
                 background: "radial-gradient(ellipse at center, rgba(16,185,129,0.06) 0%, transparent 70%)",
                 filter: "blur(40px)",
@@ -1442,7 +1683,7 @@ export default function SkillMarketplace() {
             ].map((item) => (
               <div
                 key={item.num}
-                className="card-standard p-6 hover:border-white/[0.12] transition-all"
+                className="card-standard p-6 hover:border-white/12 transition-all"
               >
                 <div
                   className="text-3xl font-bold mb-3"
