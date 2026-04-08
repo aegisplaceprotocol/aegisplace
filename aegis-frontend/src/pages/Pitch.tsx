@@ -57,10 +57,10 @@ export default function Pitch() {
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider mb-6">CONFIDENTIAL -- INVESTOR OVERVIEW</div>
+          <div className="text-[10px] font-medium text-zinc-300/40 tracking-wider mb-6">CONFIDENTIAL. INVESTOR OVERVIEW</div>
           <h1 className="text-4xl md:text-6xl font-normal tracking-tight text-white/95 leading-[1.1] mb-6">
             The only platform combining marketplace +<br />
-            <span className="text-zinc-300">trust layer + payments + IDE for the $52B agent economy.</span>
+            <span className="text-zinc-300">skills marketplace + payments + IDE for the $52B agent economy.</span>
           </h1>
           <p className="text-lg text-white/30 leading-relaxed max-w-2xl mb-10">
             Cursor raised at $29B. Copilot has 20M users. 19K MCP servers exist. 75M x402 transactions have settled. But nobody built what agents actually need: trust + payments + IDE in one platform. Aegis has AegisX with 86 modules including Solana-native capabilities no competitor offers, NeMo guardrails for trust, x402 for payments, and direct Bags.fm integration ($5B volume, $40M creator payouts). Every invocation generates protocol revenue. Every transaction burns $AEGIS.
@@ -110,7 +110,7 @@ export default function Pitch() {
 
       {/* ── Key Metrics ───────────────────────────────────────────────── */}
       <section className="border-y border-white/[0.04]">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
+        <div className="max-w-[1520px] px-12 mx-auto grid grid-cols-2 md:grid-cols-4">
           {[
             { value: 57, suffix: "", label: "AegisX Tools", prefix: "" },
             { value: 19000, suffix: "+", label: "MCP Servers", prefix: "" },
@@ -137,17 +137,17 @@ export default function Pitch() {
                 AI agents cannot discover, trust, pay, and execute autonomously.
               </h2>
               <p className="text-sm text-white/30 leading-relaxed mb-4">
-                Cursor raised at $29B building IDE tools. Copilot has 20M users for code completion. But neither enables autonomous agent commerce. 19K MCP servers have zero trust verification. 75M x402 transactions flow without quality guarantees. Agents default to centralized APIs because there is no unified platform for discovery, trust, payment, and execution.
+                Cursor raised at $29B building IDE tools. Copilot has 20M users for code completion. But neither enables autonomous agent commerce. 19K MCP servers have zero quality verification. 75M x402 transactions flow without quality guarantees. Agents default to centralized APIs because there is no unified platform for discovery, trust, payment, and execution.
               </p>
               <p className="text-sm text-white/30 leading-relaxed">
-                The result: a $7B x402 ecosystem and a $5B Solana DeFi market (Bags.fm alone) are disconnected from agent infrastructure. Aegis is the only platform that unifies marketplace, trust layer (NeMo guardrails + bonded operators), payments (x402), and IDE (AegisX with 86 modules) in one protocol.
+                The result: a $7B x402 ecosystem and a $5B Solana DeFi market (Bags.fm alone) are disconnected from agent infrastructure. Aegis is the only platform that unifies skills marketplace (NeMo safety scans + bonded operators), payments (x402), and IDE (AegisX with 86 modules) in one protocol.
               </p>
             </div>
             <div className="space-y-3">
               {[
                 { problem: "No payment rails", detail: "Agents cannot pay other agents for work. Skills are free or API-key gated." },
                 { problem: "No quality guarantees", detail: "No way to verify if a skill actually works before paying for it." },
-                { problem: "No reputation system", detail: "No on-chain history of skill performance, reliability, or trustworthiness." },
+                { problem: "No quality system", detail: "No on-chain history of skill performance, reliability, or trustworthiness." },
                 { problem: "No dispute resolution", detail: "When a skill fails, there is no recourse. Payment is lost." },
                 { problem: "No economic incentive", detail: "Skill creators have no revenue model. Validators have no reward." },
               ].map((p, i) => (
@@ -190,7 +190,7 @@ export default function Pitch() {
                   value: "15%",
                 },
                 {
-                  title: "6-Pillar Trust Scoring",
+                  title: "6-Pillar quality scoring",
                   desc: "Composite success rate across Operational Readiness, Verification, Combat Record, Network Attestation, Economic Stake, and Ecosystem Reach.",
                   metric: "Assessment pillars",
                   value: "6",
@@ -231,7 +231,7 @@ export default function Pitch() {
               Five market signals in five weeks.
             </h2>
             <p className="text-sm text-white/25 leading-relaxed mb-8 max-w-2xl">
-              The agent economy just hit an inflection point. Infrastructure is shipping fast, but trust is missing from every layer. Aegis exists to fill that gap.
+              The agent economy just hit an inflection point. Infrastructure is shipping fast, but a verified skills marketplace is missing. Aegis exists to fill that gap.
             </p>
             <div className="space-y-3">
               {[
@@ -241,11 +241,11 @@ export default function Pitch() {
                 },
                 {
                   signal: "Stripe MPP launched March 18 with Visa/Mastercard/OpenAI",
-                  implication: "Validates agent payments as a category. Creates immediate need for a trust layer on top of payment rails.",
+                  implication: "Validates agent payments as a category. Creates immediate need for a skills marketplace on top of payment rails.",
                 },
                 {
-                  signal: "19K+ MCP servers with zero trust model",
-                  implication: "McpInject malware is already harvesting secrets from MCP servers. The ecosystem has no verification, no reputation, no safety layer.",
+                  signal: "19K+ MCP servers with zero quality model",
+                  implication: "McpInject malware is already harvesting secrets from MCP servers. The ecosystem has no verification, no quality, no safety layer.",
                 },
                 {
                   signal: "351K+ skills indexed, no quality verification",
@@ -302,7 +302,7 @@ export default function Pitch() {
                   label: "SOM",
                   title: "Platform Capture",
                   value: "$4.2B",
-                  desc: "Aegis captures across three revenue streams: marketplace fees (trust layer), IDE subscriptions (AegisX 86 modules), and DeFi integration (Bags.fm). Only platform combining all four: marketplace + trust + payments + IDE.",
+                  desc: "Aegis captures across three revenue streams: marketplace fees (skills platform), IDE subscriptions (AegisX 86 modules), and DeFi integration (Bags.fm). Only platform combining all three: skills marketplace + payments + IDE.",
                   source: "Internal projections",
                 },
               ].map((m, i) => (
@@ -342,7 +342,7 @@ export default function Pitch() {
                 {[
                   { driver: "AI coding market proven ($29B Cursor, 20M Copilot)", detail: "AegisX with 86 modules competes directly. Solana-native capabilities and x402 payments are unique moats no incumbent can replicate." },
                   { driver: "x402 Foundation + Bags.fm integration", detail: "75M x402 transactions. $5B Bags.fm volume. $40M creator payouts. Aegis connects agent infrastructure to real DeFi liquidity." },
-                  { driver: "MCP ecosystem (19K+ servers, zero trust)", detail: "McpInject malware already exploiting the gap. NeMo guardrails and bonded operators solve the trust crisis." },
+                  { driver: "MCP ecosystem (19K+ servers, no verified marketplace)", detail: "McpInject malware already exploiting the gap. NeMo safety scans and bonded operators are the fix." },
                   { driver: "Solana dominance (65% of agentic payments)", detail: "Sub-second finality, sub-cent fees. Aegis is Solana-native with direct Bags.fm DeFi integration." },
                 ].map((g, i) => (
                   <div key={i} className="flex gap-3">
@@ -425,7 +425,7 @@ export default function Pitch() {
               Our moat: the only platform combining all five.
             </h2>
             <p className="text-sm text-white/25 leading-relaxed mb-8 max-w-2xl">
-              Cursor ($29B) has an IDE but no payments or trust. Copilot (20M users) has code completion but no agent commerce. x402 has payments but no validation. MCP has discovery but no safety. Bags.fm has DeFi liquidity but no agent infrastructure. Aegis is the only platform that combines marketplace + trust layer + payments + IDE + DeFi integration.
+              Cursor ($29B) has an IDE but no payments or verified skills. Copilot (20M users) has code completion but no agent commerce. x402 has payments but no marketplace. MCP has discovery but no safety. Bags.fm has DeFi liquidity but no agent infrastructure. Aegis is the only platform that combines skills marketplace + payments + IDE + DeFi integration.
             </p>
 
             <div className="overflow-x-auto">
@@ -442,20 +442,20 @@ export default function Pitch() {
                 </thead>
                 <tbody>
                   {[
-                    { name: "Aegis Protocol", payments: true, validation: true, reputation: true, safety: true, nvidia: true, highlight: true, note: "86 modules, NeMo guardrails, x402, Bags.fm, IDE" },
-                    { name: "Cursor ($29B)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "IDE only -- no payments, no trust, no agents" },
-                    { name: "GitHub Copilot (20M)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "Code completion -- no agent commerce" },
-                    { name: "Stripe MPP / x402", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "75M tx -- payment rail only, no trust layer" },
-                    { name: "MCP Ecosystem (19K)", payments: false, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "Discovery only -- zero trust, McpInject exploits" },
-                    { name: "Warden Protocol", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "$200M val -- separate L1, no safety or IDE" },
-                    { name: "Bags.fm ($5B vol)", payments: true, validation: false, reputation: false, safety: false, nvidia: false, highlight: false, note: "DeFi only -- Aegis integrates their liquidity" },
+                    { name: "Aegis Protocol", payments: true, validation: true, quality: true, safety: true, nvidia: true, highlight: true, note: "86 modules, NeMo guardrails, x402, Bags.fm, IDE" },
+                    { name: "Cursor ($29B)", payments: false, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "IDE only. No payments, no trust, no agents" },
+                    { name: "GitHub Copilot (20M)", payments: false, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "Code completion. No agent commerce" },
+                    { name: "Stripe MPP / x402", payments: true, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "75M tx. Payment rail only, no skills marketplace" },
+                    { name: "MCP Ecosystem (19K)", payments: false, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "Discovery only. Zero quality, McpInject exploits" },
+                    { name: "Warden Protocol", payments: true, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "$200M val. Separate L1, no safety or IDE" },
+                    { name: "Bags.fm ($5B vol)", payments: true, validation: false, quality: false, safety: false, nvidia: false, highlight: false, note: "DeFi only. Aegis integrates their liquidity" },
                   ].map((c, i) => (
                     <tr key={i} className={`border-b border-white/[0.04] ${c.highlight ? "bg-white/[0.02]" : ""}`}>
                       <td className={`py-3 pr-4 ${c.highlight ? "text-zinc-300 font-normal" : "text-white/40"}`}>
                         <div className="text-sm">{c.name}</div>
                         <div className="text-[10px] text-white/15 mt-0.5">{c.note}</div>
                       </td>
-                      {[c.payments, c.validation, c.reputation, c.safety, c.nvidia].map((v, j) => (
+                      {[c.payments, c.validation, c.quality, c.safety, c.nvidia].map((v, j) => (
                         <td key={j} className="py-3 px-3 text-center">
                           <span className={`text-sm ${v ? "text-zinc-300" : "text-white/10"}`}>{v ? "\u2713" : "\u2717"}</span>
                         </td>
@@ -467,7 +467,7 @@ export default function Pitch() {
             </div>
 
             <p className="text-[12px] text-white/15 mt-4 leading-relaxed">
-              Cursor ($29B) and Copilot (20M users) prove the AI coding market is massive but offer no agent commerce. x402 has 75M transactions but no trust layer. MCP has 19K servers but zero validation. Bags.fm has $5B volume but no agent infrastructure. Aegis is the only platform that combines all five: micropayments (x402), bonded validation (NeMo guardrails), on-chain reputation, a safety layer, and a full IDE (AegisX with 86 Solana-native modules). Our team has deep expertise in MCP, x402, Solana, and NeMo guardrails -- we understand the market because we built the integrations.
+              Cursor ($29B) and Copilot (20M users) prove the AI coding market is massive but offer no agent commerce. x402 has 75M transactions but no skills marketplace. MCP has 19K servers but zero validation. Bags.fm has $5B volume but no agent infrastructure. Aegis is the only platform that combines all four: skills marketplace (bonded operators + NeMo safety scans), micropayments (x402), and a full IDE (AegisX with 86 Solana-native modules). Our team has deep expertise in MCP, x402, Solana, and NeMo guardrails. We understand the market because we built the integrations.
             </p>
 
             {/* NVIDIA Moat */}
@@ -572,7 +572,7 @@ export default function Pitch() {
                   "x402 payment in $AEGIS",
                   "0.5% burned permanently",
                   "Validator attests quality",
-                  "Reputation score updates",
+                  "quality score updates",
                   "Higher trust attracts more agents",
                   "More invocations, more burns",
                 ].map((step, i) => (
@@ -597,16 +597,16 @@ export default function Pitch() {
             </h2>
             <div className="space-y-3">
               {[
-                { title: "The Coasean Singularity", authors: "Cowen & Zhang", venue: "NBER 2019", insight: "Identity, credentials, and reputation enable small purchases that were previously uneconomical. Aegis implements this for agent-to-agent transactions." },
+                { title: "The Coasean Singularity", authors: "Cowen & Zhang", venue: "NBER 2019", insight: "Identity, credentials, and quality scores enable small purchases that were previously uneconomical. Aegis implements this for agent-to-agent transactions." },
                 { title: "Regulatory Markets for AI Agents", authors: "Hadfield", venue: "Oxford 2023", insight: "Infrastructure that allows artificial agents to participate in regulated economic activity. Aegis provides the trust and payment infrastructure." },
-                { title: "Infrastructure for AI Agents", authors: "Chan, Anderljung et al.", venue: "GovAI 2024", insight: "Attribution, Shaping, and Oversight as the three functions of agent infrastructure. Aegis implements all three via bonded registration, validation, and reputation." },
+                { title: "Infrastructure for AI Agents", authors: "Chan, Anderljung et al.", venue: "GovAI 2024", insight: "Attribution, Shaping, and Oversight as the three functions of agent infrastructure. Aegis implements all three via bonded registration, validation, and quality." },
                 { title: "Formal Contracts for AI Agents", authors: "Haupt & Christoffersen", venue: "MIT CSAIL 2024", insight: "Binding reward transfers produce socially optimal outcomes in multi-agent systems. Aegis's x402 payments are exactly this mechanism." },
-                { title: "Ethereum as AI Settlement Layer", authors: "Vitalik Buterin", venue: "2026", insight: "Bots paying bots, security deposits, reputations, dispute resolution. Aegis builds this vision on Solana for speed and cost." },
+                { title: "Ethereum as AI Settlement Layer", authors: "Vitalik Buterin", venue: "2026", insight: "Bots paying bots, security deposits, quality scores, dispute resolution. Aegis builds this vision on Solana for speed and cost." },
               ].map((p, i) => (
                 <div key={i} className="border border-white/[0.04] bg-white/[0.01] p-5 hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
                     <div className="text-sm font-normal text-white/60">{p.title}</div>
-                    <div className="text-[10px] font-medium text-white/15">{p.authors} -- {p.venue}</div>
+                    <div className="text-[10px] font-medium text-white/15">{p.authors}, {p.venue}</div>
                   </div>
                   <p className="text-[12px] text-white/25 leading-relaxed">{p.insight}</p>
                 </div>
@@ -625,7 +625,7 @@ export default function Pitch() {
               Live product. Working IDE. 86 modules. MCP bridge functional. Raising to scale.
             </h2>
             <p className="text-sm text-white/30 leading-relaxed mb-8 max-w-2xl">
-              The live dashboard, working AegisX IDE with 86 modules, MCP server bridge, marketplace, and protocol design are complete. Traction: functional aegisx CLI, Bags.fm integration, NeMo guardrails, x402 payment flow. The vision: autonomous agents that discover, evaluate, pay for, and execute skills without human intervention. We are looking for strategic investors who understand that the next $29B company in AI is not another IDE -- it is the trust and payment infrastructure underneath all of them.
+              The live dashboard, working AegisX IDE with 86 modules, MCP server bridge, marketplace, and protocol design are complete. Traction: functional aegisx CLI, Bags.fm integration, NeMo guardrails, x402 payment flow. The vision: autonomous agents that discover, evaluate, pay for, and execute skills without human intervention. We are looking for strategic investors who understand that the next $29B company in AI is not another IDE. It is the trust and payment infrastructure underneath all of them.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               {[
@@ -665,7 +665,7 @@ export default function Pitch() {
       <footer className="border-t border-white/[0.04] py-10 px-4">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[10px] font-medium text-white/15">
-            AEGIS PROTOCOL -- CONFIDENTIAL INVESTOR OVERVIEW
+            AEGIS PROTOCOL. CONFIDENTIAL INVESTOR OVERVIEW
           </div>
           <div className="flex items-center gap-6">
             <Link href="/" className="text-[11px] text-white/20 hover:text-white/40 transition-colors">Home</Link>

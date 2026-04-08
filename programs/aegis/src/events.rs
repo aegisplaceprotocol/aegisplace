@@ -20,7 +20,6 @@ pub struct OperatorRegistered {
     pub creator: Pubkey,
     pub name: String,
     pub slug: String,
-    pub endpoint_url: String,
     pub metadata_uri: String,
     pub price_usdc_base: u64,
     pub category: u8,
@@ -66,5 +65,18 @@ pub struct OperatorDeactivated {
 pub struct AdminRotated {
     pub old_admin: Pubkey,
     pub new_admin: Pubkey,
+    pub timestamp: i64,
+}
+
+/// Emitted when protocol payment rails are updated.
+#[event]
+pub struct ConfigUpdated {
+    pub admin: Pubkey,
+    pub treasury: Pubkey,
+    pub validator_pool: Pubkey,
+    pub staker_pool: Pubkey,
+    pub insurance_fund: Pubkey,
+    pub usdc_mint: Pubkey,
+    pub fee_bps: [u16; 6],
     pub timestamp: i64,
 }

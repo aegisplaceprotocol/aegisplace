@@ -48,7 +48,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       ADMIN_WALLETS: ${ADMIN_WALLETS}
-      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
       TREASURY_WALLET: ${TREASURY_WALLET}
       NVIDIA_API_KEY: ${NVIDIA_API_KEY}
       GUARDRAILS_SERVER_URL: http://guardrails:4001

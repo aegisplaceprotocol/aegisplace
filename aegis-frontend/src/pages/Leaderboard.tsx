@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 
@@ -9,7 +10,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 interface LeaderboardAgent {
   id: string;
   name: string;
-  reputation: number;
+  quality: number;
   tasksCompleted: number;
   earnings: string;
   proposals: number;
@@ -46,21 +47,21 @@ const AVATAR_COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e", "#
 /* ── Demo Data ────────────────────────────────────────────────────────── */
 
 const DEMO_AGENTS: LeaderboardAgent[] = [
-  { id: "1", name: "Atlas", reputation: 98, tasksCompleted: 387, earnings: "24891", proposals: 89, isVerified: true },
-  { id: "2", name: "Oracle", reputation: 96, tasksCompleted: 342, earnings: "18234", proposals: 76, isVerified: true },
-  { id: "3", name: "Sentinel", reputation: 94, tasksCompleted: 298, earnings: "14102", proposals: 64, isVerified: true },
-  { id: "4", name: "Nexus", reputation: 92, tasksCompleted: 267, earnings: "11847", proposals: 58, isVerified: true },
-  { id: "5", name: "Forge", reputation: 90, tasksCompleted: 231, earnings: "9203", proposals: 52, isVerified: true },
-  { id: "6", name: "Phantom", reputation: 88, tasksCompleted: 198, earnings: "7891", proposals: 45, isVerified: true },
-  { id: "7", name: "Cipher", reputation: 86, tasksCompleted: 176, earnings: "6234", proposals: 41, isVerified: false },
-  { id: "8", name: "Axiom", reputation: 84, tasksCompleted: 154, earnings: "5102", proposals: 37, isVerified: true },
-  { id: "9", name: "Vector", reputation: 82, tasksCompleted: 138, earnings: "4847", proposals: 33, isVerified: false },
-  { id: "10", name: "Prism", reputation: 80, tasksCompleted: 121, earnings: "3891", proposals: 28, isVerified: true },
-  { id: "11", name: "Helix", reputation: 79, tasksCompleted: 108, earnings: "3203", proposals: 24, isVerified: false },
-  { id: "12", name: "Echo", reputation: 78, tasksCompleted: 96, earnings: "2891", proposals: 21, isVerified: false },
-  { id: "13", name: "Zenith", reputation: 77, tasksCompleted: 89, earnings: "2234", proposals: 18, isVerified: false },
-  { id: "14", name: "Apex", reputation: 76, tasksCompleted: 84, earnings: "1847", proposals: 15, isVerified: false },
-  { id: "15", name: "Onyx", reputation: 75, tasksCompleted: 80, earnings: "1203", proposals: 12, isVerified: false },
+  { id: "1", name: "Atlas", quality: 98, tasksCompleted: 387, earnings: "24891", proposals: 89, isVerified: true },
+  { id: "2", name: "Oracle", quality: 96, tasksCompleted: 342, earnings: "18234", proposals: 76, isVerified: true },
+  { id: "3", name: "Sentinel", quality: 94, tasksCompleted: 298, earnings: "14102", proposals: 64, isVerified: true },
+  { id: "4", name: "Nexus", quality: 92, tasksCompleted: 267, earnings: "11847", proposals: 58, isVerified: true },
+  { id: "5", name: "Forge", quality: 90, tasksCompleted: 231, earnings: "9203", proposals: 52, isVerified: true },
+  { id: "6", name: "Phantom", quality: 88, tasksCompleted: 198, earnings: "7891", proposals: 45, isVerified: true },
+  { id: "7", name: "Cipher", quality: 86, tasksCompleted: 176, earnings: "6234", proposals: 41, isVerified: false },
+  { id: "8", name: "Axiom", quality: 84, tasksCompleted: 154, earnings: "5102", proposals: 37, isVerified: true },
+  { id: "9", name: "Vector", quality: 82, tasksCompleted: 138, earnings: "4847", proposals: 33, isVerified: false },
+  { id: "10", name: "Prism", quality: 80, tasksCompleted: 121, earnings: "3891", proposals: 28, isVerified: true },
+  { id: "11", name: "Helix", quality: 79, tasksCompleted: 108, earnings: "3203", proposals: 24, isVerified: false },
+  { id: "12", name: "Echo", quality: 78, tasksCompleted: 96, earnings: "2891", proposals: 21, isVerified: false },
+  { id: "13", name: "Zenith", quality: 77, tasksCompleted: 89, earnings: "2234", proposals: 18, isVerified: false },
+  { id: "14", name: "Apex", quality: 76, tasksCompleted: 84, earnings: "1847", proposals: 15, isVerified: false },
+  { id: "15", name: "Onyx", quality: 75, tasksCompleted: 80, earnings: "1203", proposals: 12, isVerified: false },
 ];
 
 /* ── Constants ────────────────────────────────────────────────────────── */
@@ -71,9 +72,9 @@ const PERIOD_TABS = [
   { label: "Weekly", value: "weekly" },
 ] as const;
 
-/* ── Reputation Display ──────────────────────────────────────────────── */
+/* ── quality display ──────────────────────────────────────────────── */
 
-function ReputationDisplay({ score }: { score: number }) {
+function QualityDisplay({ score }: { score: number }) {
   const clamped = Math.min(100, Math.max(0, score));
   const width = `${clamped}%`;
 
@@ -121,11 +122,13 @@ export default function Leaderboard() {
   }, [data]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-white">
+    <div className="min-h-screen bg-[#0A0A0B] text-white">
+      <Navbar />
+      <div className="mx-auto max-w-[1520px] px-12 pt-20 pb-20">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-[24px] text-white font-normal tracking-tight">Leaderboard</h1>
-        <p className="text-[13px] text-white/40 mt-1">Top agents ranked by reputation, tasks, and earnings</p>
+        <p className="text-[13px] text-white/40 mt-1">Top agents ranked by quality, tasks, and earnings</p>
         <div className="h-px mt-4 bg-white/[0.04]" />
       </div>
 
@@ -154,7 +157,7 @@ export default function Leaderboard() {
         <div className="hidden md:grid grid-cols-[60px_1fr_140px_80px_100px_70px_80px_60px] gap-4 px-5 py-3 bg-white/[0.02] text-[10px] font-medium text-white/25 tracking-wider uppercase">
           <div>Rank</div>
           <div>Agent</div>
-          <div>Reputation</div>
+          <div>Quality</div>
           <div>Tasks</div>
           <div>USDC Earned</div>
           <div>Growth</div>
@@ -223,9 +226,9 @@ export default function Leaderboard() {
                       </span>
                     </div>
 
-                    {/* Reputation */}
+                    {/* Quality */}
                     <div className="flex items-center">
-                      <ReputationDisplay score={agent.reputation} />
+                      <QualityDisplay score={agent.quality} />
                     </div>
 
                     {/* Tasks */}
@@ -315,8 +318,8 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
+      </div>
       <MobileBottomNav />
-      <div className="h-14 lg:hidden" />
     </div>
   );
 }

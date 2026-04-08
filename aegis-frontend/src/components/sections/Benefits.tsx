@@ -31,7 +31,7 @@ const BENEFITS = [
     math: "1,000 invocations/day at $0.001 = $0.70 passive income per operator",
     details: [
       "Automatic SOL/USDC payouts per invocation",
-      "Reputation score increases discoverability",
+      "quality score increases discoverability",
       "$AEGIS bond protects against copycats",
       "Multiple operators compound revenue streams",
     ],
@@ -60,7 +60,7 @@ const BENEFITS = [
     details: [
       "Pay only for what you use",
       "Quality guaranteed by bonded validators",
-      "Reputation scores filter bad operators",
+      "quality scores filter bad operators",
       "Dispute resolution if operator underperforms",
     ],
   },

@@ -150,7 +150,7 @@ export default function SocialProof() {
             ))}
           </div>
           <p className="text-[12px] text-zinc-600 mt-4 max-w-xl">
-            Combined: 160k+ stars. Zero revenue infrastructure. Aegis is the missing layer that turns open source skills into income streams.
+            Combined: 160k+ stars. Zero revenue infrastructure. Aegis is the skills marketplace that turns open source skills into income streams.
           </p>
         </motion.div>
 
@@ -213,14 +213,14 @@ export default function SocialProof() {
           </div>
           <div className="text-[14px] sm:text-[16px] text-white/50 max-w-lg leading-relaxed">
             of all x402 transactions settle on Solana.
-            <span className="text-white/25"> Aegis is the success layer they are all missing.</span>
+            <span className="text-white/25"> Aegis is the skills marketplace built for all of them.</span>
           </div>
         </div>
 
         {/* Vitalik quote */}
         <div className="border-l-2 border-white/[0.08] pl-6 sm:pl-8 py-2">
           <blockquote className="text-[16px] sm:text-[18px] lg:text-[20px] text-white/50 leading-relaxed mb-4 italic">
-            "Bots paying bots, security deposits, reputations, dispute resolution
+            "Bots paying bots, security deposits, quality scores, dispute resolution
             : the four pillars of crypto and AI."
           </blockquote>
           <div className="flex items-center gap-3">

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { fadeInView, staggerContainer, staggerItem } from "@/lib/animations";
 import { trpc } from "@/lib/trpc";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 /* ── Skill data types ────────────────────────────────────────────────── */
 
@@ -44,20 +45,20 @@ const CATEGORY_META: Record<string, { icon: string; description: string }> = {
 
 function providerBadge(type: string) {
   switch (type) {
-    case "Aegis Native": return "bg-white/10 text-zinc-300 border-white/20";
-    case "Solana Agent Kit": return "bg-white/8 text-zinc-300/70 border-emerald-500/20";
-    case "OpenClaw": return "bg-white/8 text-zinc-300/80 border-white/15";
-    case "MCP": return "bg-white/8 text-zinc-300/80 border-zinc-500/20";
-    case "Partner": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-    default: return "bg-white/5 text-white/40 border-white/10";
+    case "Aegis Native": return "bg-white/[0.08] text-white/70 border-white/[0.12]";
+    case "Solana Agent Kit": return "bg-white/[0.05] text-white/50 border-white/[0.08]";
+    case "OpenClaw": return "bg-white/[0.05] text-white/60 border-white/[0.08]";
+    case "MCP": return "bg-white/[0.05] text-white/60 border-white/[0.08]";
+    case "Partner": return "bg-white/[0.05] text-white/50 border-white/[0.08]";
+    default: return "bg-white/[0.03] text-white/40 border-white/[0.06]";
   }
 }
 
 function statusBadge(status: string) {
   switch (status) {
-    case "live": return "bg-white/10 text-zinc-300";
-    case "beta": return "bg-amber-400/8 text-amber-400";
-    default: return "bg-white/5 text-white/30";
+    case "live": return "bg-white/[0.08] text-white/70";
+    case "beta": return "bg-white/[0.05] text-white/40";
+    default: return "bg-white/[0.03] text-white/30";
   }
 }
 
@@ -120,11 +121,12 @@ export default function SkillDirectory() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0A0A0B] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');`}</style>
       <Navbar />
       {/* Breadcrumb nav */}
-      <nav className="sticky top-[88px] z-40 border-b border-white/[0.07] bg-background/80 backdrop-blur-xl">
-        <div className="container flex items-center justify-between h-14">
+      <nav className="sticky top-[88px] z-40 border-b border-white/[0.07] bg-[#0A0A0B]/80 backdrop-blur-xl">
+        <div className="mx-auto max-w-[1520px] px-12 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <Link href="/" className="font-medium text-xs text-white/30 hover:text-white/50 transition-colors">
               home
@@ -156,7 +158,7 @@ export default function SkillDirectory() {
         </div>
       </nav>
 
-      <div className="container pb-16">
+      <div className="mx-auto max-w-[1520px] px-12 pb-16">
         {operatorsQuery.isLoading ? (
           <div className="flex items-center justify-center py-24">
             <div className="text-sm text-white/30">Loading skills...</div>
@@ -165,8 +167,8 @@ export default function SkillDirectory() {
           /* ── Category list view ──────────────────────────────────────── */
           <>
             <motion.div {...fadeInView} className="mb-8 sm:mb-10">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-3">
-                <span className="text-zinc-300">$AEGIS</span> Skill Directory
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-normal tracking-tight mb-3 text-white/92">
+                Skill Directory
               </h1>
               <p className="text-sm sm:text-base text-white/40 max-w-xl mb-4">
                 Curated skills for AI agents. Find what you need, tell your operator, get to work.
@@ -203,7 +205,7 @@ export default function SkillDirectory() {
                   {...staggerItem}
                   key={cat.name}
                   onClick={() => { setSelectedCategory(cat.name); setSearchQuery(""); }}
-                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border border-white/[0.06] bg-white/[0.01] hover:bg-white/[0.04] hover:border-white/[0.1] transition-all group text-left"
+                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border border-white/[0.05] bg-white/[0.015] hover:bg-white/[0.025] hover:border-white/[0.08] transition-all group text-left"
                 >
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                     <span className="text-lg sm:text-xl shrink-0">{cat.icon}</span>
@@ -224,13 +226,13 @@ export default function SkillDirectory() {
             </motion.div>
 
             {/* Marketplace CTA */}
-            <div className="mt-8 sm:mt-10 border border-white/10 bg-white/[0.02] p-5 sm:p-6">
+            <div className="mt-8 sm:mt-10 border border-white/[0.05] bg-white/[0.015] p-5 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-white/80 mb-1">Built a skill? Start earning.</h3>
-                  <p className="text-xs text-white/30">Upload your skill to the marketplace and get paid every time an agent uses it.</p>
+                  <h3 className="text-sm font-normal text-white/80 mb-1">Built a skill? Start earning.</h3>
+                  <p className="text-xs text-white/44">Upload your skill to the marketplace and get paid every time an agent uses it.</p>
                 </div>
-                <Link href="/skill-marketplace?tab=upload" className="text-xs font-semibold bg-white text-zinc-900 px-5 py-2.5 hover:bg-zinc-200 transition-colors shrink-0 text-center">
+                <Link href="/skill-marketplace?tab=upload" className="text-xs font-medium bg-white text-zinc-900 px-5 py-2.5 hover:bg-zinc-200 transition-colors shrink-0 text-center">
                   Publish a Skill
                 </Link>
               </div>
@@ -250,7 +252,7 @@ export default function SkillDirectory() {
             <div className="mb-6 sm:mb-8">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-xl sm:text-2xl">{activeCategory.icon}</span>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-normal tracking-tight text-white/92">
                   {activeCategory.name}
                 </h1>
               </div>
@@ -290,7 +292,7 @@ export default function SkillDirectory() {
               ).map((skill) => (
                 <div
                   key={skill.name}
-                  className="border border-white/[0.06] p-6 bg-white/[0.01] hover:bg-white/[0.03] hover:border-white/[0.1] transition-all"
+                  className="border border-white/[0.05] p-6 bg-white/[0.015] hover:bg-white/[0.025] hover:border-white/[0.08] transition-all"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="min-w-0">
@@ -346,6 +348,7 @@ export default function SkillDirectory() {
           </>
         ) : null}
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

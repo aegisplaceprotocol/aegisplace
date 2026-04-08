@@ -5,7 +5,7 @@ import { useInView } from "@/hooks/useInView";
 const FAQS = [
   {
     q: "What is Aegis?",
-    a: "MCP (Anthropic, Nov 2024) standardized how AI agents discover and use tools. x402 (Coinbase, May 2025) standardized how agents pay, with 75M+ transactions processed and Solana controlling 49% of market share. A2A (Google/IBM) standardized agent-to-agent communication. ERC-8004 standardized agent identity on Ethereum (10K+ agents registered). NIST launched an Agent Standards Initiative in Feb 2026. None of them have a success layer. Aegis is that layer: bonded validation, on-chain reputation, and atomic revenue splits — wrapping operators.sh's 82K+ operators with the economic infrastructure they lack. Agent Aegis is the runtime that wires MCP discovery, A2A delegation, x402 payments, and Solana settlement into one agent loop.",
+    a: "Aegis is the skills marketplace and IDE for AI agents on Solana. 148+ skills across 19 categories, all discoverable via MCP, A2A, and Solana Blinks. Agents pay per call in USDC via x402. Every invocation is scanned by NVIDIA NeMo for safety. Creators earn 85% of every call fee. AegisX is the ChatGPT/Cursor hybrid IDE that lets beginners and experts build on Solana, Bags.fm, and OWS.",
   },
   {
     q: "Why Solana and not Ethereum?",
@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "How does Aegis relate to operators.sh and Hugging Face Spaces?",
-    a: "operators.sh (Vercel Labs) is the open agent operators directory with 82K+ operators and passive security audits from Gen Agent Quality Hub, Socket, and Snyk. Hugging Face Spaces hosts 300K+ AI applications. Both are free, open ecosystems with zero economic layer: no payments to creators, no quality bonds, no on-chain reputation. Aegis wraps these discovery layers with the missing economic infrastructure: x402 micropayments, bonded validation (where auditors stake money behind their claims), and on-chain reputation. operators.sh tells you an operator is risky. Aegis makes the auditor put money behind that claim.",
+    a: "operators.sh (Vercel Labs) is the open agent operators directory with 82K+ operators and passive security audits from Gen Agent Quality Hub, Socket, and Snyk. Hugging Face Spaces hosts 300K+ AI applications. Both are free, open ecosystems with zero economic layer: no payments to creators, no quality bonds, no on-chain quality. Aegis wraps these discovery layers with the missing economic infrastructure: x402 micropayments, bonded validation (where auditors stake money behind their claims), and on-chain quality. operators.sh tells you an operator is risky. Aegis makes the auditor put money behind that claim.",
   },
   {
     q: "Why Token-2022 instead of standard SPL?",
@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: "What is the PDA state architecture?",
-    a: "Solana programs are stateless. All state lives in accounts passed to the program. Aegis uses separate Program Derived Accounts (PDAs) for operator metadata, bond vaults, and reputation scores. This means each data domain can be updated independently without locking the others, enabling parallel execution of multiple operator invocations without blocking. It also means each PDA can have its own access control. Bond vaults are controlled by the registry program, reputation PDAs by the reputation program.",
+    a: "Solana programs are stateless. All state lives in accounts passed to the program. Aegis uses separate Program Derived Accounts (PDAs) for operator metadata, bond vaults, and quality scores. This means each data domain can be updated independently without locking the others, enabling parallel execution of multiple operator invocations without blocking. It also means each PDA can have its own access control. Bond vaults are controlled by the registry program, quality PDAs by the quality program.",
   },
   {
     q: "How does Aegis integrate with AegisX, Codex, and other agent platforms?",
@@ -73,19 +73,19 @@ const FAQS = [
   },
   {
     q: "What are Mission Blueprints?",
-    a: "Pre-built economic pipelines that earn. Not app templates. Revenue streams. Intel Ops (scrape, extract, analyze, report), Build Ops (lint, security-scan, review, report), Trade Ops (price-feed, sentiment, volume-analysis, signal), and Security Ops (decompile, analyze, vulnerability-scan, report). Each Blueprint shows its Mission Cost, Operator count, estimated latency, and scheduling options upfront. Fork any Blueprint, swap Operators for higher-reputation alternatives, and save as your own custom Mission.",
+    a: "Pre-built economic pipelines that earn. Not app templates. Revenue streams. Intel Ops (scrape, extract, analyze, report), Build Ops (lint, security-scan, review, report), Trade Ops (price-feed, sentiment, volume-analysis, signal), and Security Ops (decompile, analyze, vulnerability-scan, report). Each Blueprint shows its Mission Cost, Operator count, estimated latency, and scheduling options upfront. Fork any Blueprint, swap Operators for higher-quality alternatives, and save as your own custom Mission.",
   },
   {
     q: "What happened on Agent Infrastructure Day (Feb 11, 2026)?",
-    a: "February 11, 2026 was the day the agent economy stack crystallized. Coinbase launched Agentic Wallets (agents hold their own wallets and sign transactions autonomously). Stripe launched x402 payments (HTTP-native micropayments). Cloudflare shipped Markdown for Agents (standardized agent-readable documentation). NIST launched an Agent Standards Initiative. Every layer of the stack shipped on the same day except the success layer. That is the gap Aegis fills.",
+    a: "February 11, 2026 was the day the agent economy stack crystallized. Coinbase launched Agentic Wallets (agents hold their own wallets and sign transactions autonomously). Stripe launched x402 payments (HTTP-native micropayments). Cloudflare shipped Markdown for Agents (standardized agent-readable documentation). NIST launched an Agent Standards Initiative. Every layer shipped except a skills marketplace. That is the gap Aegis fills.",
   },
   {
     q: "What is A2A and how does Aegis use it?",
-    a: "A2A (Agent-to-Agent) is Google and IBM's protocol for agents to discover each other, negotiate capabilities, and delegate tasks. Agents publish Agent Cards describing what they can do. Other agents discover those cards and send task requests. Aegis adds the missing success gate: before an agent accepts a task from another agent, it checks the requester's on-chain reputation score and bond status. An agent with a success rate below 60 cannot delegate high-value tasks. This prevents reputation laundering and Sybil attacks in multi-agent pipelines.",
+    a: "A2A (Agent-to-Agent) is Google and IBM's protocol for agents to discover each other, negotiate capabilities, and delegate tasks. Agents publish Agent Cards describing what they can do. Other agents discover those cards and send task requests. Aegis adds the missing success gate: before an agent accepts a task from another agent, it checks the requester's on-chain quality score and bond status. An agent with a success rate below 60 cannot delegate high-value tasks. This prevents score manipulation and Sybil attacks in multi-agent pipelines.",
   },
   {
     q: "What are Coinbase Agentic Wallets?",
-    a: "Launched February 11, 2026, Agentic Wallets let AI agents hold their own crypto wallets, sign transactions, and manage funds autonomously without human co-signing. This is a breakthrough for agent autonomy but creates a massive success problem: how do you prevent an unauthorized agent from draining a wallet? Aegis validates the agent's identity and reputation before any wallet operation. An agent must have a minimum success rate and active bond to interact with high-value wallet operations.",
+    a: "Launched February 11, 2026, Agentic Wallets let AI agents hold their own crypto wallets, sign transactions, and manage funds autonomously without human co-signing. This is a breakthrough for agent autonomy but creates a massive success problem: how do you prevent an unauthorized agent from draining a wallet? Aegis validates the agent's identity and quality before any wallet operation. An agent must have a minimum success rate and active bond to interact with high-value wallet operations.",
   },
   {
     q: "How does Aegis compare to Warden Protocol?",
@@ -97,7 +97,7 @@ const FAQS = [
   },
   {
     q: "What is the Solana AI Agent Registry?",
-    a: "Launched on Solana mainnet on March 3, 2026, the Solana AI Agent Registry is a success layer for 9,000+ agents deployed on Solana. It emphasizes x402 payments, MCP servers, and Claw tools. Top projects include SendAI Solana Agent Kit, ElizaOS, and Rig. The registry validates Aegis's thesis: Solana is where agent infrastructure is consolidating. Aegis extends this registry with bonded validation, reputation scoring, and economic accountability that the base registry does not provide.",
+    a: "Launched on Solana mainnet on March 3, 2026, the Solana AI Agent Registry indexes 9,000+ agents deployed on Solana. It emphasizes x402 payments, MCP servers, and Claw tools. Top projects include SendAI Solana Agent Kit, ElizaOS, and Rig. The registry validates Aegis's thesis: Solana is where agent infrastructure is consolidating. Aegis extends this registry with a curated skills marketplace, NeMo safety scans, and an IDE that makes every skill accessible to beginners and experts.",
   },
   {
     q: "How bad is the AI agent security problem?",
@@ -109,7 +109,7 @@ const FAQS = [
   },
   {
     q: "What are sovereign agents?",
-    a: "Sovereign agents are AI systems that earn their own existence, self-improve, and replicate without human intervention. Solana's official thesis (Feb 18, 2026, 178.8K views) describes agents that open wallets, pay for services via x402, hold stablecoins, and launch businesses autonomously. Sigil Wen's Automaton is the first documented example. By 2028, autonomous AI agents are projected to outnumber humans online. Sovereign agents making autonomous financial decisions need a success layer. Who validates the tools they use? Who ensures the services they pay for are legitimate? That is Aegis.",
+    a: "Sovereign agents are AI systems that earn their own existence, self-improve, and replicate without human intervention. Solana's official thesis (Feb 18, 2026, 178.8K views) describes agents that open wallets, pay for services via x402, hold stablecoins, and launch businesses autonomously. Sigil Wen's Automaton is the first documented example. By 2028, autonomous AI agents are projected to outnumber humans online. These agents need a marketplace of safe, verified skills they can pay for and use instantly. That is Aegis.",
   },
 ];
 

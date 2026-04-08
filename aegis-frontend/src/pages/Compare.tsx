@@ -77,13 +77,13 @@ const FEATURES: CompareRow[] = [
     values: ["Automated", "None", "None", "None", "None", "None"],
   },
   {
-    feature: "On-chain trust scores",
-    category: "Trust",
+    feature: "On-chain quality scores",
+    category: "Quality",
     values: ["6-pillar", "None", "None", "None", "None", "None"],
   },
   {
     feature: "Bonded validation",
-    category: "Trust",
+    category: "Quality",
     values: ["$AEGIS stake", "None", "None", "None", "None", "None"],
   },
   {
@@ -98,7 +98,7 @@ const FEATURES: CompareRow[] = [
   },
 ];
 
-const CATEGORIES = ["All", "Blockchain", "Platform", "Safety", "Trust", "Performance", "Pricing"];
+const CATEGORIES = ["All", "Blockchain", "Platform", "Safety", "Quality", "Performance", "Pricing"];
 
 function getCellStyle(value: string, isAegis: boolean): string {
   if (value === "None") return "text-white/15";
@@ -130,7 +130,7 @@ export default function Compare() {
 
       {/* Hero */}
       <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 mb-6">
             COMPARISON
           </div>
@@ -150,7 +150,7 @@ export default function Compare() {
 
       {/* Key metrics */}
       <section className="py-12 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/[0.04]">
             {[
               { value: String(aegisOnlyCount), label: "AegisX-only features" },
@@ -169,7 +169,7 @@ export default function Compare() {
 
       {/* Category filter */}
       <section className="py-8 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button
@@ -190,7 +190,7 @@ export default function Compare() {
 
       {/* Comparison table */}
       <section className="py-12 sm:py-16">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[900px]">
               <thead>
@@ -290,7 +290,7 @@ export default function Compare() {
 
       {/* Guardrails callout */}
       <section className="py-12 sm:py-16 border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <div className="border border-white/[0.06] bg-white/[0.015] p-6 sm:p-10">
             <div className="text-[11px] font-medium text-emerald-400/50 tracking-wider mb-4">
               KEY DIFFERENTIATOR
@@ -325,7 +325,7 @@ export default function Compare() {
 
       {/* Blockchain exclusives */}
       <section className="py-12 sm:py-16 border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <div className="border border-white/[0.06] bg-white/[0.015] p-6 sm:p-10">
             <div className="text-[11px] font-medium text-emerald-400/50 tracking-wider mb-4">
               BLOCKCHAIN-NATIVE
@@ -357,10 +357,10 @@ export default function Compare() {
 
       {/* Bottom CTA */}
       <section className="py-16 sm:py-24 border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-2xl text-center">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-2xl text-center">
           <p className="text-[14px] text-white/30 leading-relaxed mb-6">
             The comparison speaks for itself. AegisX is the only AI development environment with
-            Solana-native tools, NeMo Guardrails, on-chain trust scores, and GPU-native rendering.
+            Solana-native tools, NeMo Guardrails, on-chain quality scores, and GPU-native rendering.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a

@@ -31,11 +31,11 @@ const ECOSYSTEM_PRODUCTS = [
   },
   {
     name: "Aegis Marketplace",
-    tagline: "Operator discovery with trust scores",
-    description: "On-chain marketplace where AI operators are discovered, evaluated, and paid per invocation. Trust scores are computed from bonded validation, NeMo Guardrails compliance, and automated benchmarking. Operators stake $AEGIS to signal quality.",
+    tagline: "Operator discovery with quality scores",
+    description: "On-chain marketplace where AI operators are discovered, evaluated, and paid per invocation. quality scores are computed from bonded validation, NeMo Guardrails compliance, and automated benchmarking. Operators stake $AEGIS to signal quality.",
     stats: [
       { label: "Discovery", value: "MCP" },
-      { label: "Trust Model", value: "6-pillar" },
+      { label: "Quality Model", value: "6-pillar" },
       { label: "Settlement", value: "Solana" },
     ],
     status: "Live",
@@ -80,7 +80,7 @@ const ECOSYSTEM_PRODUCTS = [
   {
     name: "Solana Agent Registry",
     tagline: "On-chain identity for AI agents",
-    description: "ERC-8004-Solana implementation using Metaplex Core NFTs. Every agent gets an on-chain identity with verifiable reputation history. Identity says WHO you are. Aegis trust scores say HOW GOOD you are. Combined, they create accountable AI agents.",
+    description: "ERC-8004-Solana implementation using Metaplex Core NFTs. Every agent gets an on-chain identity with verifiable quality history. Identity says WHO you are. Aegis quality scores say HOW GOOD you are. Combined, they create accountable AI agents.",
     stats: [
       { label: "Standard", value: "8004" },
       { label: "NFT", value: "Metaplex" },
@@ -108,10 +108,10 @@ const STACK_LAYERS = [
     highlight: false,
   },
   {
-    name: "Trust",
+    name: "Quality",
     protocol: "Aegis Protocol",
-    role: "Bonded validation, on-chain reputation, economic slashing.",
-    aegis: "THE MISSING LAYER. Between 'services exist' and 'services are trustworthy.'",
+    role: "Bonded validation, on-chain quality, economic slashing.",
+    aegis: "The skills marketplace for Solana. Bonded operators, verified quality, pay per call.",
     highlight: true,
   },
   {
@@ -131,7 +131,7 @@ const STACK_LAYERS = [
   {
     name: "Identity",
     protocol: "ERC-8004 / 8004-Solana",
-    role: "On-chain agent identity. Metaplex Core NFTs with reputation.",
+    role: "On-chain agent identity. Metaplex Core NFTs with quality history.",
     aegis: "Identity says WHO you are. Aegis says HOW GOOD you are.",
     highlight: false,
   },
@@ -223,7 +223,7 @@ export default function Ecosystem() {
 
       {/* Hero */}
       <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 mb-6">
             ECOSYSTEM
           </div>
@@ -231,7 +231,7 @@ export default function Ecosystem() {
           <h1 className="text-[clamp(2rem,5vw,3.75rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
             The full AegisX ecosystem.
             <br />
-            <span className="text-white/30">Everything agents need to build, trade, and trust.</span>
+            <span className="text-white/30">Everything agents need to build, trade, and verify quality.</span>
           </h1>
 
           <p className="text-[15px] sm:text-[16px] text-white/35 max-w-2xl leading-relaxed">
@@ -244,7 +244,7 @@ export default function Ecosystem() {
 
       {/* AegisX Ecosystem Products */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The AegisX platform.
           </h2>
@@ -270,7 +270,7 @@ export default function Ecosystem() {
                   </h3>
                   <span className={`text-[10px] font-medium tracking-wider px-2 py-0.5 ${
                     product.status === "Live"
-                      ? "text-emerald-400/80 bg-emerald-400/[0.08] border border-emerald-400/20"
+                      ? "text-white/70 bg-white/[0.06] border border-white/[0.12]"
                       : product.status === "Integrated"
                       ? "text-zinc-300/70 bg-white/[0.06] border border-white/10"
                       : "text-amber-400/70 bg-amber-400/[0.06] border border-amber-400/15"
@@ -298,7 +298,7 @@ export default function Ecosystem() {
 
       {/* Partner Integrations */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             Partner integrations.
           </h2>
@@ -323,7 +323,7 @@ export default function Ecosystem() {
                     {partner.name}
                   </div>
                   {partner.tier === "core" && (
-                    <span className="text-[9px] font-medium tracking-wider text-emerald-400/50 bg-emerald-400/[0.06] px-1.5 py-0.5 border border-emerald-400/10">
+                    <span className="text-[9px] font-medium tracking-wider text-white/40 bg-white/[0.04] px-1.5 py-0.5 border border-white/[0.08]">
                       CORE
                     </span>
                   )}
@@ -337,7 +337,7 @@ export default function Ecosystem() {
 
       {/* Protocol Stack */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The protocol stack.
           </h2>
@@ -387,7 +387,7 @@ export default function Ecosystem() {
 
       {/* Buyer vs Seller */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-3xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             Visa authenticates the buyer.
             <br />
@@ -425,7 +425,7 @@ export default function Ecosystem() {
 
       {/* Integrations */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-10">
             Integration map.
           </h2>
@@ -467,7 +467,7 @@ export default function Ecosystem() {
 
       {/* Bottom CTA */}
       <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-2xl text-center">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-2xl text-center">
           <p className="text-[14px] text-white/30 leading-relaxed mb-6">
             The first protocol to own "trust for AI agents on Solana" wins a category
             that every analyst predicts will exist.

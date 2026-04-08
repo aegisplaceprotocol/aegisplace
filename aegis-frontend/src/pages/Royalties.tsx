@@ -1,3 +1,5 @@
+import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { PremiumAreaChart } from "@/components/PremiumAreaChart";
@@ -959,42 +961,11 @@ export default function Royalties() {
   const [tab, setTab] = useState<RoyaltiesTab>("earnings");
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, color: T.text90, fontFamily: "'Inter', sans-serif" }}>
-      {/* Top nav bar */}
-      <div style={{
-        height: 56,
-        borderBottom: `1px solid ${T.border}`,
-        display: "flex",
-        alignItems: "center",
-        padding: "0 32px",
-        gap: 20,
-        position: "sticky" as const,
-        top: 0,
-        zIndex: 50,
-        background: T.bg,
-      }}>
-        <Link href="/dashboard">
-          <span style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", textDecoration: "none" }}>
-            <img src="/assets/vectorwhite.svg" alt="" style={{ height: 20, opacity: 0.9 }} />
-            <span style={{ fontSize: 13, fontWeight: 400, letterSpacing: "0.1em", color: "rgba(255,255,255,0.50)" }}>AEGIS</span>
-          </span>
-        </Link>
-        <span style={{ color: T.border, fontSize: 18 }}>/</span>
-        <span style={{ fontSize: 13, fontWeight: 400, color: T.text90, display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: T.mint }}><SIcon name="dollar" size={14} /></span>
-          Skill Royalties
-        </span>
-        <div style={{ flex: 1 }} />
-        <Link href="/dashboard">
-          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: T.text25, cursor: "pointer" }}>
-            <SIcon name="external" size={13} />
-            Back to Dashboard
-          </span>
-        </Link>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0A0A0B", color: T.text90, fontFamily: "'DM Sans', sans-serif" }}>
+      <Navbar />
 
       {/* Main content */}
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 32px 64px" }}>
+      <div style={{ maxWidth: 1520, margin: "0 auto", padding: "88px 48px 64px" }}>
         {/* Tab navigation */}
         <TabNav active={tab} setActive={setTab} />
 
@@ -1004,6 +975,7 @@ export default function Royalties() {
         {tab === "leaderboard" && <LeaderboardSection />}
         {tab === "how-it-works" && <HowItWorksSection />}
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

@@ -76,28 +76,26 @@ describe("validateInvocation", () => {
 describe("calculateFees", () => {
   it("splits fees correctly at 85/10/3/1.5/0.5", () => {
     const fees = calculateFees(1.0);
-    expect(fees.creator).toBe(0.60);
-    expect(fees.validators).toBe(0.15);
-    expect(fees.stakers).toBe(0.12);
-    expect(fees.treasury).toBe(0.08);
-    expect(fees.insurance).toBe(0.03);
-    expect(fees.burn).toBe(0.02);
+    expect(fees.creator).toBe(0.85);
+    expect(fees.validators).toBe(0.10);
+    expect(fees.treasury).toBe(0.03);
+    expect(fees.insurance).toBe(0.015);
+    expect(fees.burn).toBe(0.005);
   });
 
   it("handles small amounts", () => {
     const fees = calculateFees(0.003);
-    expect(fees.creator).toBeCloseTo(0.0018, 4);
-    expect(fees.validators).toBeCloseTo(0.00045, 5);
-    expect(fees.stakers).toBeCloseTo(0.00036, 5);
-    expect(fees.treasury).toBeCloseTo(0.00024, 5);
-    expect(fees.insurance).toBeCloseTo(0.00009, 5);
-    expect(fees.burn).toBeCloseTo(0.00006, 5);
+    expect(fees.creator).toBeCloseTo(0.00255, 5);
+    expect(fees.validators).toBeCloseTo(0.0003, 5);
+    expect(fees.treasury).toBeCloseTo(0.00009, 5);
+    expect(fees.insurance).toBeCloseTo(0.000045, 6);
+    expect(fees.burn).toBeCloseTo(0.000015, 6);
   });
 
   it("sums to approximately the input", () => {
     const amount = 0.05;
     const fees = calculateFees(amount);
-    const total = fees.creator + fees.validators + fees.stakers + fees.treasury + fees.insurance + fees.burn;
+    const total = fees.creator + fees.validators + fees.treasury + fees.insurance + fees.burn;
     expect(total).toBeCloseTo(amount, 6);
   });
 });

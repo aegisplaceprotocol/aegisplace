@@ -42,12 +42,11 @@ router.get("/:invocationId", async (req: Request, res: Response) => {
       creatorWallet: operator?.creatorWallet || "",
       category: operator?.category || "other",
       feeSplit: {
-        creator: (totalAmount * 0.60).toFixed(6),
-        validators: (totalAmount * 0.15).toFixed(6),
-        stakers: (totalAmount * 0.12).toFixed(6),
-        treasury: (totalAmount * 0.08).toFixed(6),
-        insurance: (totalAmount * 0.03).toFixed(6),
-        burned: (totalAmount * 0.02).toFixed(6),
+        creator: (totalAmount * 0.85).toFixed(6),
+        validators: (totalAmount * 0.10).toFixed(6),
+        treasury: (totalAmount * 0.03).toFixed(6),
+        insurance: (totalAmount * 0.015).toFixed(6),
+        burned: (totalAmount * 0.005).toFixed(6),
       },
     });
 
@@ -93,8 +92,7 @@ router.get("/:invocationId/image", async (req: Request, res: Response) => {
       creatorWallet: operator?.creatorWallet || "",
       category: operator?.category || "other",
       feeSplit: {
-        creator: "0", validators: "0", stakers: "0",
-        treasury: "0", insurance: "0", burned: "0",
+        creator: "0", validators: "0", treasury: "0", insurance: "0", burned: "0",
       },
     });
 

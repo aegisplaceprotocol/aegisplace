@@ -279,7 +279,7 @@ export default function OverviewPanel() {
             <div style={{ paddingTop: 14, borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 7 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ color: T.text30 }}>Creator earnings (total)</span>
-                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * 0.60).toLocaleString()}</span>
+                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * (FEE_SPLIT[0].pct / 100)).toLocaleString()}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
                 <span style={{ color: T.text30 }}>Total burned (est.)</span>

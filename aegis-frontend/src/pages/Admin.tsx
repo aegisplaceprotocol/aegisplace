@@ -82,10 +82,10 @@ function OperatorsTable() {
                 <td className="py-3 pr-4 text-zinc-400 tabular-nums">{op.id}</td>
                 <td className="py-3 pr-4 text-white font-medium">{op.name}</td>
                 <td className="py-3 pr-4 text-zinc-400">{op.category}</td>
-                <td className="py-3 pr-4 text-zinc-300 tabular-nums">{op.trustScore}</td>
+                <td className="py-3 pr-4 text-zinc-300 tabular-nums">{op.qualityScore}</td>
                 <td className="py-3 pr-4 text-zinc-300 tabular-nums">{op.totalInvocations}</td>
                 <td className="py-3 pr-4">
-                  <span className={`text-xs px-2 py-0.5 ${op.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                  <span className={`text-xs px-2 py-0.5 ${op.isActive ? "bg-white/[0.04] text-white/60" : "bg-red-500/10 text-red-400"}`}>
                     {op.isActive ? "Active" : "Suspended"}
                   </span>
                 </td>
@@ -99,7 +99,7 @@ function OperatorsTable() {
                     <button
                       onClick={() => verifyMutation.mutate({ operatorId: op.id })}
                       disabled={verifyMutation.isPending}
-                      className="text-xs px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white transition-colors disabled:opacity-50"
+                      className="text-xs px-3 py-1 bg-white text-zinc-900 hover:bg-zinc-200 transition-colors disabled:opacity-50"
                     >
                       Verify
                     </button>
@@ -211,7 +211,7 @@ function DisputesQueue() {
                 <button
                   onClick={() => handleResolve(d.id, "resolved_for_challenger")}
                   disabled={resolveMutation.isPending}
-                  className="text-xs px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white transition-colors disabled:opacity-50"
+                  className="text-xs px-3 py-1 bg-white text-zinc-900 hover:bg-zinc-200 transition-colors disabled:opacity-50"
                 >
                   For Challenger
                 </button>
@@ -392,7 +392,7 @@ export default function Admin() {
     <div className="min-h-screen bg-black">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 pb-16">
+      <div className="max-w-[1520px] mx-auto px-12 pt-28 pb-16">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-normal text-white">Admin Dashboard</h1>

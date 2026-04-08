@@ -28,9 +28,10 @@ export default function OperatorsPanel() {
       }, 0) / displayOps.length
     : 0;
 
-  const avgResponse = displayOps.length
-    ? displayOps.reduce((acc: number, op: Record<string, unknown>) => acc + ((op.avgResponseMs as number) ?? 142), 0) / displayOps.length
-    : 142;
+  const opsWithLatency = displayOps.filter((op: Record<string, unknown>) => (op.avgResponseMs as number) != null);
+  const avgResponse = opsWithLatency.length
+    ? opsWithLatency.reduce((acc: number, op: Record<string, unknown>) => acc + (op.avgResponseMs as number), 0) / opsWithLatency.length
+    : null;
 
   return (
     <div>
@@ -57,7 +58,7 @@ export default function OperatorsPanel() {
         <StatTile label="Total Operators" value={totalOps.toLocaleString()} delta="+12 this week" sub="across all categories" />
         <StatTile label="Active Now" value={activeCount.toString()} delta="currently serving" sub="of deployed operators" />
         <StatTile label="Avg Success Rate" value={`${avgSuccess.toFixed(1)}%`} delta="+0.5% vs last week" sub="invocation success" />
-        <StatTile label="Avg Response" value={`${Math.round(avgResponse)}ms`} delta="p95: 312ms" sub="median latency" />
+        <StatTile label="Avg Response" value={avgResponse != null ? `${Math.round(avgResponse)}ms` : "—"} delta="p95 latency" sub="median response time" />
       </div>
 
       <Card>
@@ -96,7 +97,7 @@ export default function OperatorsPanel() {
                 const sr: number = (op.successfulInvocations as number) && (op.totalInvocations as number)
                   ? ((op.successfulInvocations as number) / (op.totalInvocations as number)) * 100
                   : (op.successRate as number) ?? 0;
-                const avgMs: number = (op.avgResponseMs as number) ?? Math.floor(Math.random() * 200 + 60);
+                const avgMs: number | null = (op.avgResponseMs as number) ?? null;
                 const verified: boolean = (op.isVerified as boolean) ?? false;
                 const isActive: boolean = op.isActive !== false;
                 return (
@@ -126,7 +127,7 @@ export default function OperatorsPanel() {
                         <span style={{ fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600, minWidth: 40 }}>{sr.toFixed(1)}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums" }}>{avgMs}ms</td>
+                    <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums" }}>{avgMs != null ? `${avgMs}ms` : "—"}</td>
                     <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums" }}>{invocations.toLocaleString()}</td>
                     <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text80, fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>${Math.round(earned).toLocaleString()}</td>
                     <td style={{ padding: "11px 16px", textAlign: "center" }}>

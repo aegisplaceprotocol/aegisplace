@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import RequireWallet from "@/components/RequireWallet";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -313,12 +314,13 @@ function _RecruitOperator() {
 
   return (
     <RequireWallet>
-    <div className="min-h-screen bg-white/[0.02]">
+    <div className="min-h-screen bg-[#0A0A0B]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
       <Navbar />
 
       {/* Hero */}
       <section className="pt-32 pb-20 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 mb-8">
               <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
@@ -346,7 +348,7 @@ function _RecruitOperator() {
 
       {/* Stats bar */}
       <section className="border-b border-white/[0.04] bg-white/[0.01]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
+        <div className="mx-auto max-w-[1520px] px-12 py-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div>
               <div className="text-2xl md:text-3xl font-normal text-white/90"><AnimNum value={2847} /> </div>
@@ -371,7 +373,7 @@ function _RecruitOperator() {
       {/* Wallet gate banner */}
       {!connected && (
         <section className="border-b border-amber-500/20 bg-amber-500/[0.03]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="mx-auto max-w-[1520px] px-12 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-amber-400 shrink-0">
                 <path d="M8 1L15 14H1L8 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -393,7 +395,7 @@ function _RecruitOperator() {
       {/* Connected wallet indicator */}
       {connected && publicKey && (
         <section className="border-b border-white/15 bg-white/[0.02]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-3 flex items-center gap-3">
+          <div className="mx-auto max-w-[1520px] px-12 py-3 flex items-center gap-3">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             <span className="text-[12px] font-medium text-zinc-300/70">Wallet connected: {publicKey.toBase58().slice(0, 6)}...{publicKey.toBase58().slice(-4)}</span>
             <span className="text-[10px] text-white/20">This address will be stored as the operator creator.</span>
@@ -403,7 +405,7 @@ function _RecruitOperator() {
 
       {/* Main content  -  two column */}
       <section className="py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="grid lg:grid-cols-[1fr_420px] gap-16">
 
             {/* Left  -  Form */}
@@ -742,7 +744,7 @@ function _RecruitOperator() {
                     { title: "Slash Protection", desc: "Your bond is only slashed if your operator is proven malicious through the prediction market dispute system." },
                     { title: "Featured Placement", desc: "Standard and Premium tiers get priority placement in search results and curated sections." },
                     { title: "Faster Review", desc: "Higher tiers attract more validators and get reviewed faster. Premium operators can go live in under 4 hours." },
-                    { title: "Reputation Multiplier", desc: "Bond size contributes to your on-chain reputation score, which compounds over time." },
+                    { title: "Quality Multiplier", desc: "Bond size contributes to your on-chain quality score, which compounds over time." },
                   ].map((item, i) => (
                     <div key={i}>
                       <h4 className="text-[13px] font-normal text-white/70 mb-1">{item.title}</h4>
@@ -793,7 +795,7 @@ Example invocation
 
       {/* Revenue Calculator  -  full width */}
       <section className="py-24 border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="max-w-3xl mb-16">
             <span className="text-[11px] font-medium text-zinc-300/40 tracking-widest">EARNINGS</span>
             <h2 className="text-4xl md:text-5xl font-normal tracking-tight mt-4 mb-6">
@@ -812,7 +814,7 @@ Example invocation
 
       {/* x402 callout */}
       <section className="py-16 border-t border-white/[0.04] bg-white/[0.01]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div className="max-w-lg">
               <h3 className="text-xl font-normal text-white/80 mb-3">Built on the x402 Open Standard</h3>
@@ -834,7 +836,7 @@ Example invocation
 
       {/* Footer CTA */}
       <section className="py-24 border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center">
+        <div className="mx-auto max-w-[1520px] px-12 text-center">
           <h2 className="text-3xl md:text-4xl font-normal text-white/90 mb-4">Ready to ship?</h2>
           <p className="text-[15px] text-white/40 mb-8 max-w-md mx-auto">
             Register your operator, stake your bond, and start earning from the first invocation.
@@ -858,11 +860,13 @@ Example invocation
 
       {/* Minimal footer */}
       <footer className="border-t border-white/[0.04] py-8">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 flex items-center justify-between">
+        <div className="mx-auto max-w-[1520px] px-12 flex items-center justify-between">
           <span className="text-[11px] font-medium text-white/15">AEGIS PROTOCOL</span>
           <span className="text-[11px] font-medium text-white/15">$AEGIS on Solana</span>
         </div>
       </footer>
+      <MobileBottomNav />
+      <div className="h-14 lg:hidden" />
     </div>
     </RequireWallet>
   );

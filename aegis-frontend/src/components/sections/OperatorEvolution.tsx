@@ -54,7 +54,7 @@ const TIMELINE = [
   { week: 5, text: "Discovers it excels at Rust security" },
   { week: 8, text: "Acquires cargo-audit tool independently" },
   { week: 12, text: "Picks up techniques from peer operators" },
-  { week: 15, text: "Reputation high enough for premium rates" },
+  { week: 15, text: "Quality high enough for premium rates" },
   { week: 18, text: "Fails a job. Auto-patches the vulnerability" },
   { week: 22, text: "500 jobs done. Writes its own strategy" },
   { week: 25, text: "Outperforms human auditors. Zero intervention" },

@@ -28,7 +28,6 @@ export interface PreparedSkillRegistrationPlan {
 export interface SkillRegistrationPayload {
   name: string;
   slug: string;
-  endpointUrl: string;
   metadataUri: string;
   pricePerCall: string;
   category: string;
@@ -147,7 +146,6 @@ export async function buildRegisterOperatorInstruction(
     discriminator,
     encodeString(payload.name),
     encodeString(payload.slug),
-    encodeString(payload.endpointUrl),
     encodeString(payload.metadataUri),
     encodeU64(priceBaseUnits),
     new Uint8Array([categoryIndex]),

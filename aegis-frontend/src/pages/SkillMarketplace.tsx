@@ -32,7 +32,7 @@ interface MarketplaceSkill {
   invocations: number;
   rating: number;
   reviews: number;
-  trustScore: number;
+  qualityScore: number;
   successRate: number;
   avgLatency: string;
   version: string;
@@ -88,7 +88,7 @@ function mapOperatorToSkill(op: any): MarketplaceSkill {
     invocations: op.totalInvocations ?? 0,
     rating: 0,
     reviews: 0,
-    trustScore: op.trustScore ?? 0,
+    qualityScore: op.qualityScore ?? 0,
     successRate: op.successRate ?? 0,
     avgLatency: ". ",
     version: ". ",
@@ -98,7 +98,7 @@ function mapOperatorToSkill(op: any): MarketplaceSkill {
     operatorsUsing: 0,
     status: op.isActive ? "verified" : "beta",
     trending: (op.totalInvocations ?? 0) > 1000,
-    featured: (op.trustScore ?? 0) >= 95,
+    featured: (op.qualityScore ?? 0) >= 95,
   };
 }
 
@@ -198,7 +198,7 @@ function TrustRing({ score, size = 48 }: { score: number; size?: number }) {
   const dash = (pct / 100) * circ;
   const color = trustRingColor(score);
   return (
-    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }} aria-label={`Trust score ${score}%`}>
+    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }} aria-label={`quality score ${score}%`}>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
       <circle
         cx={size / 2} cy={size / 2} r={r}
@@ -335,12 +335,12 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
               {skill.status}
             </span>
             <div className="relative flex items-center justify-center" style={{ width: 40, height: 40 }}>
-              <TrustRing score={skill.trustScore} size={40} />
+              <TrustRing score={skill.qualityScore} size={40} />
               <span
                 className="absolute text-[9px] font-bold"
-                style={{ color: trustRingColor(skill.trustScore) }}
+                style={{ color: trustRingColor(skill.qualityScore) }}
               >
-                {skill.trustScore}
+                {skill.qualityScore}
               </span>
             </div>
           </div>
@@ -447,12 +447,12 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
         >
           <div className="flex items-start gap-4">
             <div className="relative flex items-center justify-center shrink-0" style={{ width: 52, height: 52 }}>
-              <TrustRing score={skill.trustScore} size={52} />
+              <TrustRing score={skill.qualityScore} size={52} />
               <span
                 className="absolute text-[10px] font-bold"
-                style={{ color: trustRingColor(skill.trustScore) }}
+                style={{ color: trustRingColor(skill.qualityScore) }}
               >
-                {skill.trustScore}
+                {skill.qualityScore}
               </span>
             </div>
             <div>
@@ -509,9 +509,9 @@ function SkillDetail({ skill, onClose }: { skill: MarketplaceSkill; onClose: () 
                 <div className="text-lg font-semibold text-white/80 tracking-tight">{skill.avgLatency}</div>
               </div>
               <div className="card-glass p-3">
-                <div className="text-[8px] font-bold text-white/35 tracking-wider mb-1">TRUST SCORE</div>
-                <div className={`text-lg font-semibold tracking-tight ${trustColor(skill.trustScore)}`}>
-                  {skill.trustScore}/100
+                <div className="text-[8px] font-bold text-white/35 tracking-wider mb-1">quality score</div>
+                <div className={`text-lg font-semibold tracking-tight ${trustColor(skill.qualityScore)}`}>
+                  {skill.qualityScore}/100
                 </div>
               </div>
               <div className="card-glass p-3">
@@ -664,17 +664,14 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
   const [skillName, setSkillName] = useState("");
   const [skillSlug, setSkillSlug] = useState("");
   const [tagline, setTagline] = useState("");
-  const [skillDesc, setSkillDesc] = useState("");
+  const [publicDescription, setPublicDescription] = useState("");
+  const [privateSkill, setPrivateSkill] = useState("");
   const [skillCategory, setSkillCategory] = useState("other");
-  const [endpointUrl, setEndpointUrl] = useState("");
-  const [httpMethod, setHttpMethod] = useState("POST");
   const [priceAmount, setPriceAmount] = useState("0.050000");
   const [tags, setTags] = useState("");
   const [iconUrl, setIconUrl] = useState("");
   const [docsUrl, setDocsUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
-  const [requestSchema, setRequestSchema] = useState("{\n  \"input\": \"string\"\n}");
-  const [responseSchema, setResponseSchema] = useState("{\n  \"result\": \"string\"\n}");
   const [submitting, setSubmitting] = useState(false);
 
   const walletAddress = publicKey?.toBase58() ?? ((user as { walletAddress?: string } | null)?.walletAddress ?? "");
@@ -688,9 +685,9 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
   const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
   const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
   const canAdvance =
-    (step === 1 && Boolean(skillName.trim() && slugValue && skillDesc.trim())) ||
-    (step === 2 && Boolean(endpointUrl.trim() && priceAmount.trim())) ||
-    (step === 3 && Boolean(requestSchema.trim() && responseSchema.trim())) ||
+    (step === 1 && Boolean(skillName.trim() && slugValue && publicDescription.trim())) ||
+    (step === 2 && Boolean(privateSkill.trim() && priceAmount.trim())) ||
+    step === 3 ||
     step === 4;
 
   useEffect(() => {
@@ -727,14 +724,10 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
 
     setSubmitting(true);
     try {
-      const parsedRequestSchema = parseOptionalJson(requestSchema);
-      const parsedResponseSchema = parseOptionalJson(responseSchema);
-
       const plan = await utils.operator.prepareRegistration.fetch({
         slug: slugValue,
         creatorWallet: walletAddress,
         apiBaseUrl,
-        endpointUrl,
       }) as PreparedSkillRegistrationPlan;
 
       const txSignature = await sendSkillRegistrationTransaction({
@@ -745,7 +738,6 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
         payload: {
           name: skillName.trim(),
           slug: slugValue,
-          endpointUrl: endpointUrl.trim(),
           metadataUri: plan.metadataUri,
           pricePerCall: priceAmount,
           category: skillCategory,
@@ -756,12 +748,9 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
         name: skillName.trim(),
         slug: slugValue,
         tagline: tagline.trim() || undefined,
-        description: skillDesc.trim() || undefined,
+        description: publicDescription.trim(),
+        skill: privateSkill.trim(),
         category: skillCategory as any,
-        endpointUrl: endpointUrl.trim(),
-        httpMethod: httpMethod as "GET" | "POST" | "PUT",
-        requestSchema: parsedRequestSchema,
-        responseSchema: parsedResponseSchema,
         pricePerCall: priceAmount,
         creatorWallet: walletAddress,
         tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -774,7 +763,7 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
         onChainOperatorId: plan.operatorId,
         onChainTxSignature: txSignature,
         onChainMetadataUri: plan.metadataUri,
-        onChainCluster: plan.cluster as "devnet" | "mainnet-beta" | "testnet" | "localnet",
+        onChainCluster: plan.cluster as "devnet" | "mainnet-beta" | "testnet",
       });
 
       await Promise.all([
@@ -897,10 +886,10 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-white/55 mb-1.5 block">Description</label>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Public Description</label>
                 <textarea
-                  value={skillDesc} onChange={(e) => setSkillDesc(e.target.value)}
-                  placeholder="Explain what your skill does in plain English. What problem does it solve? Who is it for?"
+                  value={publicDescription} onChange={(e) => setPublicDescription(e.target.value)}
+                  placeholder="Explain what your skill does publicly. What problem does it solve? Who is it for?"
                   rows={4}
                   className={`${inputClass} resize-none`}
                   style={inputStyle}
@@ -936,46 +925,30 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
 
           {step === 2 && (
             <>
-              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Endpoint & Pricing</div>
-              <p className="text-xs text-white/45 mb-4">Set the live endpoint your skill exposes and the per-call amount charged on-chain.</p>
+              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Private Skill & Pricing</div>
+              <p className="text-xs text-white/45 mb-4">Paste the creator-only SKILL.md content buyers unlock after payment, then set the on-chain per-unlock price.</p>
               <div>
-                <label className="text-xs font-medium text-white/55 mb-1.5 block">Endpoint URL</label>
-                <input
-                  type="url" value={endpointUrl} onChange={(e) => setEndpointUrl(e.target.value)}
-                  placeholder="https://api.example.com/skill"
-                  className={inputClass}
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Private SKILL.md</label>
+                <textarea
+                  value={privateSkill} onChange={(e) => setPrivateSkill(e.target.value)}
+                  placeholder="# Goal\n\nDescribe how an agent should apply this skill, implementation notes, inputs, outputs, constraints, and examples."
+                  rows={10}
+                  className={`${inputClass} resize-none font-mono text-xs`}
                   style={inputStyle}
                   onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
                   onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-white/55 mb-1.5 block">HTTP Method</label>
-                  <select
-                    value={httpMethod}
-                    onChange={(e) => setHttpMethod(e.target.value)}
-                    className={inputClass}
-                    style={inputStyle}
-                    onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                    onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
-                  >
-                    <option value="POST">POST</option>
-                    <option value="GET">GET</option>
-                    <option value="PUT">PUT</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-white/55 mb-1.5 block">Price / Call</label>
-                  <input
-                    type="text" value={priceAmount} onChange={(e) => setPriceAmount(e.target.value)}
-                    placeholder="0.050000"
-                    className={inputClass}
-                    style={inputStyle}
-                    onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                    onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-medium text-white/55 mb-1.5 block">Price / Unlock</label>
+                <input
+                  type="text" value={priceAmount} onChange={(e) => setPriceAmount(e.target.value)}
+                  placeholder="0.050000"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
+                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
+                />
               </div>
               <div className="mt-4">
                 <label className="text-xs font-medium text-white/55 mb-1.5 block">Tags</label>
@@ -993,30 +966,8 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
 
           {step === 3 && (
             <>
-              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Schemas & Links</div>
-              <p className="text-xs text-white/45 mb-4">Add the interface definition and the links shown on the marketplace listing.</p>
-              <div>
-                <label className="text-xs font-medium text-white/55 mb-1.5 block">Request Schema JSON</label>
-                <textarea
-                  value={requestSchema} onChange={(e) => setRequestSchema(e.target.value)}
-                  rows={6}
-                  className={`${inputClass} resize-none font-mono text-xs`}
-                  style={inputStyle}
-                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-white/55 mb-1.5 block">Response Schema JSON</label>
-                <textarea
-                  value={responseSchema} onChange={(e) => setResponseSchema(e.target.value)}
-                  rows={6}
-                  className={`${inputClass} resize-none font-mono text-xs`}
-                  style={inputStyle}
-                  onFocus={(e) => Object.assign(e.currentTarget.style, inputFocusStyle)}
-                  onBlur={(e) => Object.assign(e.currentTarget.style, inputStyle)}
-                />
-              </div>
+              <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-4">Links & Publish</div>
+              <p className="text-xs text-white/45 mb-4">Add the links shown on the marketplace listing. The public description stays open, while the private SKILL.md is only revealed after payment.</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <input
                   type="url" value={docsUrl} onChange={(e) => setDocsUrl(e.target.value)}
@@ -1047,10 +998,10 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                 <div className="text-[9px] font-bold text-white/30 tracking-widest uppercase mb-2">What Happens Next</div>
                 <div className="space-y-2">
                   {[
-                    "The backend validates your slug and checks the endpoint is reachable",
+                    "The backend validates your slug and stores both the public description and the private SKILL.md content",
                     "Your wallet signs the on-chain register_operator transaction",
                     "Marketplace metadata is stored with the tx signature and PDAs",
-                    "The skill becomes discoverable through the marketplace, REST API, and MCP",
+                    "The skill becomes discoverable publicly while the private SKILL.md stays paywalled behind the invoke route",
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5" style={{ color: "#10B981" }}>
@@ -1078,7 +1029,11 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="card-glass p-4">
                   <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">DESCRIPTION</div>
-                  <div className="text-xs text-white/60">{skillDesc || "No description provided"}</div>
+                  <div className="text-xs text-white/60">{publicDescription || "No description provided"}</div>
+                </div>
+                <div className="card-glass p-4">
+                  <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">PRIVATE SKILL.MD</div>
+                  <div className="text-xs text-white/60 whitespace-pre-wrap">{privateSkill || "No private skill content provided"}</div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="card-glass p-4">
@@ -1087,17 +1042,7 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className="card-glass p-4">
                     <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">PRICING</div>
-                    <div className="text-sm text-white/80">{priceAmount ? `$${priceAmount}/call` : "Not set"}</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="card-glass p-4">
-                    <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">ENDPOINT</div>
-                    <div className="text-xs text-white/60 break-all">{endpointUrl || "No endpoint provided"}</div>
-                  </div>
-                  <div className="card-glass p-4">
-                    <div className="text-[8px] font-bold text-white/30 tracking-wider mb-1">METHOD</div>
-                    <div className="text-sm text-white/80">{httpMethod}</div>
+                    <div className="text-sm text-white/80">{priceAmount ? `$${priceAmount}/unlock` : "Not set"}</div>
                   </div>
                 </div>
                 <div className="p-4" style={{ border: "1px solid rgba(16,185,129,0.15)", background: "rgba(16,185,129,0.04)", borderRadius: "5px" }}>
@@ -1105,7 +1050,7 @@ function UploadWizard({ onClose }: { onClose: () => void }) {
                     How You Will Earn
                   </div>
                   <p className="text-xs text-white/55 leading-relaxed">
-                    Every time an operator uses your skill, the on-chain invocation flow charges {priceAmount ? `$${priceAmount}` : "$0.05"} per call and records the creator-owned listing on Solana before the marketplace publishes the metadata.
+                    Every time an operator unlocks your private SKILL.md, the on-chain payment flow charges {priceAmount ? `$${priceAmount}` : "$0.05"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.
                   </p>
                 </div>
                 <div className="card-glass p-4">
@@ -1407,7 +1352,7 @@ export default function SkillMarketplace() {
                   The app store for AI agent abilities. Anyone can create a skill, upload it, set their price, and earn real money every single time an operator uses it. No middlemen. Payments settle instantly on-chain.
                 </p>
                 <p className="text-sm text-white/35 max-w-lg leading-relaxed mt-3">
-                  Every skill listed here is available inside AegisX. Find a skill, check its trust score, and use it instantly from the IDE terminal or chat panel.
+                  Every skill listed here is available inside AegisX. Find a skill, check its quality score, and use it instantly from the IDE terminal or chat panel.
                 </p>
               </div>
 
@@ -1719,7 +1664,7 @@ export default function SkillMarketplace() {
                   { title: "Instant settlement via x402", desc: "No waiting 30 days for a payout. Every payment settles on-chain the moment your skill completes a task." },
                   { title: "Zero infrastructure costs", desc: "We host, scale, and secure your skill. You write the code, we handle everything else." },
                   { title: "Composability multiplier", desc: "Other skills can chain yours into workflows. More integrations means more calls means more revenue." },
-                  { title: "Reputation compounds", desc: "Good skills get more visibility, more operators, and more calls. Your reputation is your moat." },
+                  { title: "Quality compounds", desc: "Good skills get more visibility, more operators, and more calls. Your quality score is your moat." },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-3">
                     <div

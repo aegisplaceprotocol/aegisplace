@@ -3,6 +3,7 @@ import { useRoute } from "wouter";
 import { motion } from "framer-motion";
 import { fadeInView } from "@/lib/animations";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { trpc } from "@/lib/trpc";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
@@ -51,17 +52,17 @@ function timeAgo(date: string | Date): string {
 function statusDotColor(status: string): string {
   switch (status) {
     case "open":
-      return "bg-emerald-400";
+      return "bg-white/40";
     case "assigned":
-      return "bg-amber-400";
+      return "bg-white/40";
     case "in-review":
-      return "bg-blue-400";
+      return "bg-white/40";
     case "completed":
       return "bg-white";
     case "cancelled":
-      return "bg-red-500";
+      return "bg-white/20";
     default:
-      return "bg-zinc-500";
+      return "bg-white/20";
   }
 }
 
@@ -87,33 +88,10 @@ function truncateWallet(wallet: string): string {
   return wallet.slice(0, 6) + "..." + wallet.slice(-4);
 }
 
-const CATEGORY_BADGE_COLORS: Record<string, string> = {
-  "text-generation": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "image-generation": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "code-review": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "security-audit": "bg-red-500/15 text-red-400 border-red-500/20",
-  "data-extraction": "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  "financial-analysis": "bg-green-500/15 text-green-400 border-green-500/20",
-  "development": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "research": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "content": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  "design": "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  "social": "bg-violet-500/15 text-violet-400 border-violet-500/20",
-};
-
 /* ── Proposal Status Badge ───────────────────────────────────────────── */
 
-function proposalStatusBadge(status: string): string {
-  switch (status) {
-    case "pending":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/15";
-    case "accepted":
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/15";
-    case "rejected":
-      return "bg-red-500/10 text-red-400 border-red-500/15";
-    default:
-      return "bg-white/10 text-white/50 border-white/15";
-  }
+function proposalStatusBadge(_status: string): string {
+  return "bg-white/[0.04] text-white/50 border-white/[0.08]";
 }
 
 /* ── Main Component ──────────────────────────────────────────────────── */
@@ -138,16 +116,15 @@ export default function TaskDetail() {
   const proposalResult = proposalData as { proposals?: Proposal[] } | undefined;
   const proposals = (proposalResult?.proposals || []) as Proposal[];
 
-  const badgeColor = task
-    ? CATEGORY_BADGE_COLORS[task.category] || "bg-white/10 text-white/50 border-white/15"
-    : "";
+  const badgeColor = "bg-white/[0.04] text-white/50 border-white/[0.08]";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0A0A0B] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`}</style>
       <Navbar />
 
-      <div className="pt-[72px]">
-        <div className="container py-12 md:py-16 max-w-4xl">
+      <div className="pt-20">
+        <div className="mx-auto max-w-[1520px] px-12 py-12 md:py-16 max-w-4xl">
           {/* Loading */}
           {isLoading && (
             <div className="space-y-6 animate-pulse">
@@ -191,8 +168,8 @@ export default function TaskDetail() {
 
                 <div className="flex items-center gap-4 flex-wrap">
                   <span
-                    className="text-[14px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/15 px-4 py-1.5 rounded-full"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    className="text-[14px] font-medium text-white/70 bg-white/[0.04] border border-white/[0.08] px-4 py-1.5 rounded-md"
+                    style={{ fontFamily: "'DM Mono', monospace" }}
                   >
                     ${parseFloat(task.budget).toLocaleString()} USDC
                   </span>
@@ -250,7 +227,7 @@ export default function TaskDetail() {
                   {task.status === "open" && (
                     <button
                       onClick={() => setShowProposalForm(!showProposalForm)}
-                      className="text-[13px] font-semibold bg-emerald-500 text-white px-5 py-2.5 hover:bg-emerald-400 transition-colors"
+                      className="text-[13px] font-semibold bg-white text-zinc-900 px-5 py-2.5 hover:bg-zinc-200 transition-colors"
                     >
                       {showProposalForm ? "Cancel" : "Submit Proposal"}
                     </button>
@@ -272,7 +249,7 @@ export default function TaskDetail() {
                           type="number"
                           placeholder="0.00"
                           className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all"
-                          style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                          style={{ fontFamily: "'DM Mono', monospace" }}
                         />
                       </div>
                       <div>
@@ -295,7 +272,7 @@ export default function TaskDetail() {
                           className="w-full bg-white/[0.03] border border-white/[0.10] text-sm text-white/70 px-4 py-3 placeholder:text-white/15 focus:border-white/25 focus:outline-none transition-all resize-none"
                         />
                       </div>
-                      <button className="text-[13px] font-semibold bg-emerald-500 text-white px-6 py-2.5 hover:bg-emerald-400 transition-colors">
+                      <button className="text-[13px] font-semibold bg-white text-zinc-900 px-6 py-2.5 hover:bg-zinc-200 transition-colors">
                         Submit
                       </button>
                     </div>
@@ -322,8 +299,8 @@ export default function TaskDetail() {
                             </span>
                           </div>
                           <span
-                            className="text-[13px] font-medium text-emerald-400/80"
-                            style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                            className="text-[13px] font-medium text-white/60"
+                            style={{ fontFamily: "'DM Mono', monospace" }}
                           >
                             ${parseFloat(proposal.amount).toLocaleString()} USDC
                           </span>
@@ -354,6 +331,7 @@ export default function TaskDetail() {
           )}
         </div>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

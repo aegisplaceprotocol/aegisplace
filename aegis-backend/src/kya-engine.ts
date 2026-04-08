@@ -13,15 +13,15 @@ export interface KYAReport {
   grade: "A+" | "A" | "B" | "C" | "D" | "F" | "Unrated";
 
   identity: {
-    hasEndpoint: boolean;
-    endpointReachable: boolean;
-    endpointResponseMs: number;
+    hasPrivateSkill: boolean;
+    privateSkillReady: boolean;
+    skillFormat: "markdown" | "unknown";
     hasCreatorWallet: boolean;
     walletHasBalance: boolean;
     hasBond: boolean;
     bondAmount: number;
     hasDescription: boolean;
-    hasSchema: boolean;
+    hasMetadataUri: boolean;
     score: number; // 0-100
   };
 
@@ -76,35 +76,17 @@ export async function generateKYAReport(operatorId: number | string): Promise<KY
 
   // Identity checks
   const identity = {
-    hasEndpoint: !!(operator as any).endpointUrl,
-    endpointReachable: false,
-    endpointResponseMs: 0,
+    hasPrivateSkill: !!((operator as any).skill && (operator as any).skill.trim().length > 0),
+    privateSkillReady: !!((operator as any).skill && (operator as any).skill.trim().length > 0),
+    skillFormat: ((operator as any).skill && (operator as any).skill.trim().length > 0 ? "markdown" : "unknown") as "markdown" | "unknown",
     hasCreatorWallet: !!(operator as any).creatorWallet,
     walletHasBalance: false, // Would check Solana RPC
     hasBond: false,
     bondAmount: 0,
     hasDescription: !!((operator as any).description && (operator as any).description.length > 20),
-    hasSchema: !!((operator as any).requestSchema || (operator as any).responseSchema),
+    hasMetadataUri: !!(operator as any).onChainMetadataUri,
     score: 0,
   };
-
-  // Check endpoint reachability
-  if (identity.hasEndpoint) {
-    try {
-      const start = Date.now();
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch((operator as any).endpointUrl!, {
-        method: "HEAD",
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      identity.endpointReachable = res.ok || res.status < 500;
-      identity.endpointResponseMs = Date.now() - start;
-    } catch {
-      /* unreachable */
-    }
-  }
 
   // Check bonds
   const bond = await OperatorBond.findOne({
@@ -117,12 +99,12 @@ export async function generateKYAReport(operatorId: number | string): Promise<KY
   }
 
   identity.score = [
-    identity.hasEndpoint ? 20 : 0,
-    identity.endpointReachable ? 20 : 0,
+    identity.hasPrivateSkill ? 20 : 0,
+    identity.privateSkillReady ? 20 : 0,
     identity.hasCreatorWallet ? 15 : 0,
     identity.hasBond ? 15 : 0,
     identity.hasDescription ? 15 : 0,
-    identity.hasSchema ? 15 : 0,
+    identity.hasMetadataUri ? 15 : 0,
   ].reduce((a, b) => a + b, 0);
 
   // Behavior analysis

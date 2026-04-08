@@ -167,7 +167,7 @@ export default function TaskDelegation() {
           <div className="p-5 border border-white/[0.04] bg-white/[0.015]">
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">AUTOMATIC ROUTING</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
-              The protocol selects the highest-reputation operator for each step.
+              The protocol selects the highest-quality operator for each step.
               If an operator is degraded, the next-best alternative is routed automatically.
             </p>
           </div>

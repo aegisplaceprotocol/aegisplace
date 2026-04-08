@@ -27,10 +27,10 @@ const STACK_LAYERS = [
     highlight: false,
   },
   {
-    name: "Trust Layer",
-    desc: "Bonded validation, on-chain reputation, economic slashing. the missing piece",
-    techs: ["AEGIS Protocol", "6-Pillar Trust", "Bonded Validation", "cNFT Receipts"],
-    integration: "THE CORE. between 'services exist' and 'services are trustworthy'",
+    name: "Skills Marketplace",
+    desc: "Bonded operators, verified skills, pay-per-call on Solana. Safety built in.",
+    techs: ["AEGIS Protocol", "Bonded Validation", "NeMo Guardrails", "cNFT Receipts"],
+    integration: "The skills marketplace for Solana agents. Find, use, and pay for the best skills.",
     highlight: true,
   },
   {
@@ -73,15 +73,15 @@ const PROTOCOLS = [
     metric: "Compatible",
     status: "Integrated",
     statusColor: "green" as const,
-    detail: "A2A agents use Aegis to verify operator quality before delegation. Agent Cards expose trust scores.",
+    detail: "A2A agents use Aegis to verify operator quality before delegation. Agent Cards expose quality scores.",
   },
   {
     name: "ERC-8004",
-    desc: "On-chain agent identity standard. Metaplex Core NFTs with reputation",
+    desc: "On-chain agent identity standard. Metaplex Core NFTs with quality",
     metric: "Registry",
     status: "Active",
     statusColor: "green" as const,
-    detail: "Identity says WHO you are. Aegis says HOW GOOD you are. Complementary identity + trust layer.",
+    detail: "Identity says WHO you are. Aegis says HOW GOOD you are. Identity plus verified skills on Solana.",
   },
   {
     name: "x402",

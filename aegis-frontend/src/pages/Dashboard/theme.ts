@@ -25,9 +25,19 @@ export const T = {
   text20: "rgba(255,255,255,0.18)",
   text12: "rgba(255,255,255,0.10)",
 
-  // Functional - mint for positive, warm orange→red for negative
-  positive: "rgba(52,211,153,0.55)",
+  // Functional - emerald for positive, warm orange→red for negative
+  positive: "rgba(52,211,153,0.60)",
   negative: "rgba(220,100,60,0.50)",
+
+  // Emerald accent (primary brand color)
+  accent: "rgba(52,211,153,0.60)",
+  accentSubtle: "rgba(52,211,153,0.12)",
+  accentBorder: "rgba(52,211,153,0.25)",
+
+  // Tier backgrounds (operator quality tiers)
+  tierGold: "rgba(251,191,36,0.08)",
+  tierSilver: "rgba(148,163,184,0.06)",
+  tierBronze: "rgba(180,120,60,0.06)",
 
   white2: "rgba(255,255,255,0.02)",
   white4: "rgba(255,255,255,0.04)",

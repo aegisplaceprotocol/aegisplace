@@ -23,7 +23,7 @@ interface Skill {
   category: string;
   pricingModel: "Pay-per-call" | "Subscription" | "Free";
   pricePerCall: string;
-  trustScore: number;
+  qualityScore: number;
   monthlyInvocations: number;
   totalEarnings: string;
   rating: number;
@@ -43,90 +43,7 @@ interface Creator {
   avgRating: number;
 }
 
-/* ── Demo data ────────────────────────────────────────────────────────── */
-
-const SKILLS: Skill[] = [
-  {
-    id: "s1", name: "Contract Vulnerability Scanner", creator: "AuditDAO", creatorWallet: "0x7a3B...e91f",
-    category: "Security", pricingModel: "Pay-per-call", pricePerCall: "$0.05", trustScore: 97,
-    monthlyInvocations: 284200, totalEarnings: "$127,800", rating: 4.9,
-    description: "Scans smart contracts for 47 known vulnerability patterns. Catches reentrancy, overflow, access control, and logic bugs.",
-    composableWith: ["Risk Assessment Engine", "Report Generator"], dependents: ["DeFi Alpha Scanner", "Audit Pipeline"],
-    tags: ["security", "audit", "solidity"], version: "3.4.1", successRate: 99.7, avgLatency: "3.2s",
-  },
-  {
-    id: "s2", name: "50-DEX Swap Router", creator: "RouteMax", creatorWallet: "0x3b1C...c44d",
-    category: "Trading", pricingModel: "Pay-per-call", pricePerCall: "$0.02", trustScore: 96,
-    monthlyInvocations: 1413000, totalEarnings: "$282,600", rating: 4.8,
-    description: "Finds the best swap route across 50 DEXs simultaneously. Saves 2.3% per trade on average.",
-    composableWith: ["Gas Fee Predictor", "Token Analyzer"], dependents: ["DeFi Alpha Scanner"],
-    tags: ["defi", "swap", "routing"], version: "5.1.0", successRate: 99.4, avgLatency: "1.8s",
-  },
-  {
-    id: "s3", name: "Sentiment Pulse Engine", creator: "SentimentDAO", creatorWallet: "0x5f82...b22c",
-    category: "Analytics", pricingModel: "Subscription", pricePerCall: "$0.01", trustScore: 92,
-    monthlyInvocations: 1768000, totalEarnings: "$176,800", rating: 4.6,
-    description: "Real-time sentiment across Twitter, Discord, Telegram, and Reddit. Clear bullish/bearish scoring.",
-    composableWith: ["Signal Generator", "Portfolio Manager"], dependents: ["Alpha Scanner"],
-    tags: ["sentiment", "social", "analytics"], version: "4.2.0", successRate: 98.8, avgLatency: "2.4s",
-  },
-  {
-    id: "s4", name: "Gas Fee Oracle", creator: "GasWise", creatorWallet: "0x1d4A...f88a",
-    category: "Infrastructure", pricingModel: "Pay-per-call", pricePerCall: "$0.002", trustScore: 91,
-    monthlyInvocations: 1920000, totalEarnings: "$38,400", rating: 4.5,
-    description: "Predicts the cheapest time to transact in the next 24 hours. Saves 34% on gas fees.",
-    composableWith: ["Transaction Builder", "Swap Router"], dependents: ["Yield Strategy", "Bridge Finder"],
-    tags: ["gas", "optimization"], version: "1.9.3", successRate: 97.8, avgLatency: "0.8s",
-  },
-  {
-    id: "s5", name: "Whale Wallet Tracker", creator: "DeepSea", creatorWallet: "0xaa17...f77c",
-    category: "Analytics", pricingModel: "Subscription", pricePerCall: "$0.015", trustScore: 96,
-    monthlyInvocations: 2064000, totalEarnings: "$309,600", rating: 4.8,
-    description: "Tracks 5,000+ whale wallets across 8 chains with sub-second alerts.",
-    composableWith: ["Signal Generator", "Swap Router"], dependents: ["DeFi Alpha Scanner"],
-    tags: ["whale", "tracking", "alerts"], version: "7.3.0", successRate: 99.5, avgLatency: "0.4s",
-  },
-  {
-    id: "s6", name: "Code Review Agent", creator: "DevGuard", creatorWallet: "0x6b3F...a99d",
-    category: "Content", pricingModel: "Pay-per-call", pricePerCall: "$0.08", trustScore: 94,
-    monthlyInvocations: 116000, totalEarnings: "$92,800", rating: 4.7,
-    description: "Reviews code like a senior engineer. Catches bugs, suggests improvements, enforces best practices.",
-    composableWith: ["CI Pipeline Builder", "Test Generator"], dependents: ["Audit Pipeline"],
-    tags: ["code-review", "quality"], version: "4.1.0", successRate: 99.3, avgLatency: "6.2s",
-  },
-  {
-    id: "s7", name: "Yield Strategy Optimizer", creator: "YieldDAO", creatorWallet: "0x2e9D...c11b",
-    category: "Trading", pricingModel: "Pay-per-call", pricePerCall: "$0.03", trustScore: 95,
-    monthlyInvocations: 1258667, totalEarnings: "$377,600", rating: 4.8,
-    description: "Scans 200+ DeFi protocols for highest risk-adjusted yield. Auto-compounds and rebalances.",
-    composableWith: ["Risk Scorer", "Gas Fee Oracle"], dependents: ["Portfolio Rebalancer"],
-    tags: ["yield", "defi", "optimization"], version: "6.0.2", successRate: 98.9, avgLatency: "5.7s",
-  },
-  {
-    id: "s8", name: "NFT Rarity Ranker", creator: "RarityLabs", creatorWallet: "0x8c7E...d55e",
-    category: "Data", pricingModel: "Pay-per-call", pricePerCall: "$0.01", trustScore: 55,
-    monthlyInvocations: 504000, totalEarnings: "$50,400", rating: 4.4,
-    description: "Calculates true rarity of any NFT. Factors in trait combos, statistical outliers, and market weight.",
-    composableWith: ["Collection Analyzer", "Price Estimator"], dependents: [],
-    tags: ["nft", "rarity"], version: "2.1.0", successRate: 99.1, avgLatency: "1.2s",
-  },
-  {
-    id: "s9", name: "Open Translation Hub", creator: "LexiAI", creatorWallet: "0x9e2B...a77b",
-    category: "Content", pricingModel: "Free", pricePerCall: "Free", trustScore: 72,
-    monthlyInvocations: 59333, totalEarnings: "...", rating: 4.3,
-    description: "Community-driven translation for 40 languages with legal terminology support. Open source.",
-    composableWith: ["Document Parser", "Summary Generator"], dependents: ["Compliance Checker"],
-    tags: ["translation", "open-source"], version: "1.2.0", successRate: 97.2, avgLatency: "4.1s",
-  },
-];
-
-const TOP_CREATORS: Creator[] = [
-  { name: "YieldDAO", skills: 8, totalEarnings: "$377,600", avgRating: 4.8 },
-  { name: "DeepSea", skills: 5, totalEarnings: "$309,600", avgRating: 4.8 },
-  { name: "RouteMax", skills: 3, totalEarnings: "$282,600", avgRating: 4.8 },
-  { name: "SentimentDAO", skills: 6, totalEarnings: "$176,800", avgRating: 4.6 },
-  { name: "AuditDAO", skills: 7, totalEarnings: "$127,800", avgRating: 4.9 },
-];
+/* ── (demo arrays removed — data comes from trpc.operator.list) ───────── */
 
 const CATEGORIES = [
   { id: "All", label: "All" },
@@ -205,31 +122,31 @@ export default function SkillMarketplacePanel() {
     { staleTime: 60_000 },
   );
 
-  // Map API operators to skill cards, falling back to demo data
-  const skillItems: Skill[] = operatorsQuery.data
-    ? (operatorsQuery.data as any[]).map((op: any, i: number) => ({
-        id: String(op.id ?? `api-${i}`),
-        name: op.name ?? "Unknown Skill",
-        creator: op.creatorWallet ? `${op.creatorWallet.slice(0, 6)}...${op.creatorWallet.slice(-4)}` : "Unknown",
-        creatorWallet: op.creatorWallet ?? "0x0000...0000",
-        category: op.category ?? "Other",
-        pricingModel: (parseFloat(op.pricePerCall || "0") === 0 ? "Free" : "Pay-per-call") as Skill["pricingModel"],
-        pricePerCall: op.pricePerCall ? `$${op.pricePerCall}` : "Free",
-        trustScore: op.trustScore ?? 50,
-        monthlyInvocations: op.totalInvocations ?? 0,
-        totalEarnings: op.totalEarned ? `$${Number(op.totalEarned).toLocaleString()}` : "$0",
-        rating: op.trustScore ? Number((op.trustScore / 20).toFixed(1)) : 3.0,
-        description: op.description ?? op.tagline ?? "",
-        composableWith: [],
-        dependents: [],
-        tags: op.tags ?? [],
-        version: "1.0.0",
-        successRate: op.successfulInvocations && op.totalInvocations
-          ? Number(((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1))
-          : 95,
-        avgLatency: op.avgResponseMs ? `${(op.avgResponseMs / 1000).toFixed(1)}s` : "0s",
-      }))
-    : SKILLS;
+  const rawOperators: any[] = (operatorsQuery.data as any)?.operators ?? [];
+
+  // Map real operators to Skill interface
+  const skillItems: Skill[] = rawOperators.map((op: any, i: number) => ({
+    id: String(op.id ?? `api-${i}`),
+    name: op.name ?? "Unknown Skill",
+    creator: op.creatorWallet ? `${op.creatorWallet.slice(0, 6)}...${op.creatorWallet.slice(-4)}` : "Unknown",
+    creatorWallet: op.creatorWallet ?? "0x0000...0000",
+    category: op.category ?? "Other",
+    pricingModel: (parseFloat(op.pricePerCall || "0") === 0 ? "Free" : "Pay-per-call") as Skill["pricingModel"],
+    pricePerCall: op.pricePerCall ? `$${op.pricePerCall}` : "Free",
+    qualityScore: op.qualityScore ?? 50,
+    monthlyInvocations: op.totalInvocations ?? 0,
+    totalEarnings: op.totalEarned ? `$${Number(op.totalEarned).toLocaleString()}` : "$0",
+    rating: op.qualityScore ? Number((op.qualityScore / 20).toFixed(1)) : 3.0,
+    description: op.description ?? op.tagline ?? "",
+    composableWith: [],
+    dependents: [],
+    tags: op.tags ?? [],
+    version: "1.0.0",
+    successRate: op.successfulInvocations && op.totalInvocations
+      ? Number(((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1))
+      : 95,
+    avgLatency: op.avgResponseMs ? `${(op.avgResponseMs / 1000).toFixed(1)}s` : "0s",
+  }));
 
   const filtered = useMemo(() => {
     let result = skillItems.filter((s) => {
@@ -314,6 +231,16 @@ export default function SkillMarketplacePanel() {
       </div>
 
       {/* Skill cards grid */}
+      {operatorsQuery.isLoading && (
+        <div style={{ padding: "40px 0", textAlign: "center", fontSize: 12, color: T.text20 }}>
+          Loading skills...
+        </div>
+      )}
+      {!operatorsQuery.isLoading && skillItems.length === 0 && (
+        <div style={{ padding: "40px 0", textAlign: "center", fontSize: 12, color: T.text20 }}>
+          No skills registered yet.
+        </div>
+      )}
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
@@ -347,11 +274,11 @@ export default function SkillMarketplacePanel() {
                 <span style={{
                   fontSize: 18,
                   fontWeight: 500,
-                  color: trustColor(skill.trustScore),
+                  color: trustColor(skill.qualityScore),
                   fontVariantNumeric: "tabular-nums",
                   marginLeft: 12,
                 }}>
-                  {skill.trustScore}
+                  {skill.qualityScore}
                 </span>
               </div>
 
@@ -451,9 +378,9 @@ export default function SkillMarketplacePanel() {
                 <div style={{ fontSize: 20, fontWeight: 400, color: T.text50, marginTop: 4 }}>{selectedSkill.avgLatency}</div>
               </div>
               <div>
-                <div style={LABEL}>Trust Score</div>
-                <div style={{ fontSize: 20, fontWeight: 400, color: trustColor(selectedSkill.trustScore), marginTop: 4 }}>{selectedSkill.trustScore}/100</div>
-                <ProgressBar value={selectedSkill.trustScore} color={trustColor(selectedSkill.trustScore)} />
+                <div style={LABEL}>quality score</div>
+                <div style={{ fontSize: 20, fontWeight: 400, color: trustColor(selectedSkill.qualityScore), marginTop: 4 }}>{selectedSkill.qualityScore}/100</div>
+                <ProgressBar value={selectedSkill.qualityScore} color={trustColor(selectedSkill.qualityScore)} />
               </div>
               <div>
                 <div style={LABEL}>Version</div>
@@ -526,41 +453,69 @@ export default function SkillMarketplacePanel() {
         </Card>
       )}
 
-      {/* Creator Leaderboard */}
-      <Card>
-        <CardHead label="Top Creators by Earnings" />
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                {["#", "Creator", "Skills", "Total Earnings", "Avg Rating"].map((h, i) => (
-                  <th key={i} style={{
-                    ...LABEL,
-                    textAlign: i <= 1 ? "left" : "right",
-                    padding: "10px 16px",
-                    borderBottom: `1px solid ${T.border}`,
-                  }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {TOP_CREATORS.map((creator, i) => (
-                <tr key={creator.name} style={{ borderBottom: i < TOP_CREATORS.length - 1 ? `1px solid ${T.border}` : undefined }}>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: T.text20, fontWeight: 500 }}>{i + 1}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: T.text80 }}>{creator.name}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: T.text50, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{creator.skills}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: T.positive, textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{creator.totalEarnings}</td>
-                  <td style={{ padding: "12px 16px", textAlign: "right" }}>
-                    {renderStars(creator.avgRating)} <span style={{ fontSize: 11, color: T.text30, marginLeft: 4 }}>{creator.avgRating}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {/* Creator Leaderboard — derived from real operator data */}
+      {(() => {
+        const creatorMap: Record<string, { skills: number; totalEarningsRaw: number; ratingSum: number }> = {};
+        for (const s of skillItems) {
+          const key = s.creator;
+          if (!creatorMap[key]) creatorMap[key] = { skills: 0, totalEarningsRaw: 0, ratingSum: 0 };
+          creatorMap[key].skills += 1;
+          creatorMap[key].totalEarningsRaw += parseFloat(s.totalEarnings.replace(/[^0-9.]/g, "") || "0");
+          creatorMap[key].ratingSum += s.rating;
+        }
+        const topCreators: Creator[] = Object.entries(creatorMap)
+          .map(([name, v]) => ({
+            name,
+            skills: v.skills,
+            totalEarnings: `$${Math.round(v.totalEarningsRaw).toLocaleString()}`,
+            avgRating: v.skills > 0 ? Number((v.ratingSum / v.skills).toFixed(1)) : 0,
+          }))
+          .sort((a, b) => parseFloat(b.totalEarnings.replace(/[^0-9.]/g, "")) - parseFloat(a.totalEarnings.replace(/[^0-9.]/g, "")))
+          .slice(0, 5);
+
+        return (
+          <Card>
+            <CardHead label="Top Creators by Earnings" />
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    {["#", "Creator", "Skills", "Total Earnings", "Avg Rating"].map((h, i) => (
+                      <th key={i} style={{
+                        ...LABEL,
+                        textAlign: i <= 1 ? "left" : "right",
+                        padding: "10px 16px",
+                        borderBottom: `1px solid ${T.border}`,
+                      }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {topCreators.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "20px 16px", fontSize: 12, color: T.text20, textAlign: "center" }}>
+                        No creators yet.
+                      </td>
+                    </tr>
+                  ) : topCreators.map((creator, i) => (
+                    <tr key={creator.name} style={{ borderBottom: i < topCreators.length - 1 ? `1px solid ${T.border}` : undefined }}>
+                      <td style={{ padding: "12px 16px", fontSize: 12, color: T.text20, fontWeight: 500 }}>{i + 1}</td>
+                      <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: T.text80 }}>{creator.name}</td>
+                      <td style={{ padding: "12px 16px", fontSize: 13, color: T.text50, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{creator.skills}</td>
+                      <td style={{ padding: "12px 16px", fontSize: 13, color: T.positive, textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{creator.totalEarnings}</td>
+                      <td style={{ padding: "12px 16px", textAlign: "right" }}>
+                        {renderStars(creator.avgRating)} <span style={{ fontSize: 11, color: T.text30, marginLeft: 4 }}>{creator.avgRating}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

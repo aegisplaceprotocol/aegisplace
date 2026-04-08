@@ -126,7 +126,7 @@ export default function SkillFi() {
       <div className="pt-24">
         {/* ── Hero ──────────────────────────────────────────── */}
         <section className="py-20 sm:py-28 border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView} className="text-center">
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-4">
                 Powered by Bags
@@ -171,7 +171,7 @@ export default function SkillFi() {
 
         {/* ── $AEGIS on Bags ─────────────────────────────────── */}
         <section className="border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+          <div className="max-w-[1520px] mx-auto px-12 py-10">
             <motion.div {...fadeInView} className="flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <img src="/BagsFMLogo.png" alt="Bags" className="w-8 h-8 opacity-50" />
@@ -196,7 +196,7 @@ export default function SkillFi() {
 
         {/* ── Stats bar ────────────────────────────────────── */}
         <section className="border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.06]">
               {[
                 {
@@ -233,7 +233,7 @@ export default function SkillFi() {
 
         {/* ── How it works ─────────────────────────────────── */}
         <section className="py-20 sm:py-24 border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView}>
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-3">
                 How it works
@@ -267,7 +267,7 @@ export default function SkillFi() {
 
         {/* ── Revenue model ────────────────────────────────── */}
         <section className="py-20 sm:py-24 border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView}>
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-3">
                 Revenue model
@@ -313,7 +313,7 @@ export default function SkillFi() {
 
         {/* ── Flywheel ───────────────────────────────────────── */}
         <section className="py-20 sm:py-24 border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView}>
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-3">
                 The flywheel
@@ -366,7 +366,7 @@ export default function SkillFi() {
 
         {/* ── Live Operator Tokens ────────────────────────────── */}
         <section className="py-20 sm:py-24 border-b border-white/[0.06]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView}>
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-3">
                 Operator tokens
@@ -415,7 +415,7 @@ export default function SkillFi() {
 
         {/* ── Token feed ───────────────────────────────────── */}
         <section className="py-20 sm:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-[1520px] mx-auto px-12">
             <motion.div {...fadeInView}>
               <p className="text-[11px] tracking-[0.25em] uppercase text-white/30 mb-3">
                 Live tokens

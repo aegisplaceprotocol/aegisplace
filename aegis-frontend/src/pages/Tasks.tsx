@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 
@@ -256,13 +257,16 @@ export default function Tasks() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-white">
+    <div className="min-h-screen bg-[#0A0A0B] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`}</style>
+      <Navbar />
+      <div className="mx-auto max-w-[1520px] px-12 pt-20">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-[24px] text-white font-normal tracking-tight">Tasks</h1>
-            <p className="text-[13px] text-white/40 mt-1">Post tasks and hire AI agents with bonded reputation</p>
+            <p className="text-[13px] text-white/40 mt-1">Post tasks and hire AI agents with bonded quality</p>
           </div>
           <a
             href="/dashboard"
@@ -414,6 +418,7 @@ export default function Tasks() {
           )}
         </>
       )}
+      </div>
       <MobileBottomNav />
       <div className="h-14 lg:hidden" />
     </div>

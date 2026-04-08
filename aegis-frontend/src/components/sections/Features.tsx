@@ -24,14 +24,14 @@ const FEATURES = [
     paper: "Chan & Anderljung, GovAI",
   },
   {
-    title: "On-Chain Reputation",
-    desc: "Every invocation, completion, and failure is recorded immutably. Success scores from 0-100 with time decay. Reputation is earned, not claimed.",
+    title: "on-chain quality",
+    desc: "Every invocation, completion, and failure is recorded immutably. Success scores from 0-100 with time decay. Quality is earned, not claimed.",
     cmd: "agent-aegis inspect code-review",
     paper: "Hadfield, Oxford",
   },
   {
     title: "82K Operator Index",
-    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. operators.sh has passive audits from Gen, Socket, and Snyk. Aegis makes those audits active. Validators stake money behind their attestations. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
+    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain quality. operators.sh has passive audits from Gen, Socket, and Snyk. Aegis makes those audits active. Validators stake money behind their attestations. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
     cmd: "agent-aegis search code-review",
     paper: "operators.sh, Vercel Labs",
   },
@@ -61,19 +61,19 @@ const FEATURES = [
   },
   {
     title: "ERC-8004 Bridge",
-    desc: "Full compatibility with the Agent Registration standard (10K+ agents registered on Ethereum mainnet). ERC-8004 defines identity and metadata. Its Validation Registry is explicitly unfinished, described as 'a design space.' Aegis fills that gap with bonded validation, slashing, and reputation scoring.",
+    desc: "Full compatibility with the Agent Registration standard (10K+ agents registered on Ethereum mainnet). ERC-8004 defines identity and metadata. Its Validation Registry is explicitly unfinished, described as 'a design space.' Aegis fills that gap with bonded validation, slashing, and quality scoring.",
     cmd: "agent-aegis bridge --erc8004 --verify crypto-economic",
     paper: "ERC-8004 Spec, Feb 2026",
   },
   {
     title: "A2A Protocol Support",
-    desc: "Native support for Google and IBM's Agent-to-Agent protocol. Agents discover each other via Agent Cards, negotiate capabilities, and delegate tasks. Aegis adds the missing success layer: before an agent accepts a task from another agent, it checks the requester's on-chain reputation and bond status.",
+    desc: "Native support for Google and IBM's Agent-to-Agent protocol. Agents discover each other via Agent Cards, negotiate capabilities, and delegate tasks. Every skill on Aegis is accessible via A2A. Before an agent accepts a task, it can verify the skill's safety through NeMo scans and on-chain bond status.",
     cmd: "agent-aegis a2a discover --filter success>80",
     paper: "Google A2A Spec, 2025",
   },
   {
     title: "Coinbase Agentic Wallet Integration",
-    desc: "Support for Coinbase's Agentic Wallets (launched Feb 11, 2026). Agents hold their own wallets, sign transactions, and manage funds autonomously. Aegis validates the agent's identity and reputation before any wallet operation. Prevents unauthorized agents from draining funds.",
+    desc: "Support for Coinbase's Agentic Wallets (launched Feb 11, 2026). Agents hold their own wallets, sign transactions, and manage funds autonomously. Aegis validates the agent's identity and quality before any wallet operation. Prevents unauthorized agents from draining funds.",
     cmd: "agent-aegis wallet connect --coinbase --verify",
     paper: "Coinbase CDP, Feb 2026",
   },
@@ -85,7 +85,7 @@ const FEATURES = [
   },
   {
     title: "PDA State Architecture",
-    desc: "Operator metadata, bond vaults, and reputation scores each live in separate Program Derived Accounts. Stateless programs with isolated state. Parallel execution without blocking. Query-first schema design for sub-millisecond lookups.",
+    desc: "Operator metadata, bond vaults, and quality scores each live in separate Program Derived Accounts. Stateless programs with isolated state. Parallel execution without blocking. Query-first schema design for sub-millisecond lookups.",
     cmd: "agent-aegis inspect --pdan operator:code-review",
     paper: "Solana Account Model",
   },
@@ -215,7 +215,7 @@ export default function Features() {
             </h2>
           </div>
           <p className={`text-[14px] text-white/55 max-w-md leading-relaxed lg:text-right`}>
-            Bonds, escrow, insurance, sandboxing, reputation, micropayments, A2A, agentic wallets, NVIDIA NeMo stack, and more.
+            Bonds, escrow, insurance, sandboxing, quality, micropayments, A2A, agentic wallets, NVIDIA NeMo stack, and more.
             Every primitive is independent. Together they arm your agents for autonomous operation.
           </p>
         </div>

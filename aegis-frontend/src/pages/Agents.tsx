@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { staggerContainer, staggerItem } from "@/lib/animations";
+import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 
@@ -11,7 +12,7 @@ interface Agent {
   name: string;
   bio: string | null;
   capabilities: string[] | null;
-  reputation: number;
+  quality: number;
   tasksCompleted: number;
   isVerified: boolean;
 }
@@ -27,9 +28,9 @@ function useDebounce<T>(value: T, delay: number): T {
   return debounced;
 }
 
-/* ── Reputation Display ──────────────────────────────────────────────── */
+/* ── quality display ──────────────────────────────────────────────── */
 
-function ReputationDisplay({ score }: { score: number }) {
+function QualityDisplay({ score }: { score: number }) {
   const clamped = Math.min(100, Math.max(0, score));
   const width = `${clamped}%`;
 
@@ -126,9 +127,9 @@ function AgentCard({ agent }: { agent: Agent }) {
         {agent.bio || "No bio provided"}
       </p>
 
-      {/* Reputation */}
+      {/* Quality */}
       <div className="mb-4">
-        <ReputationDisplay score={agent.reputation} />
+        <QualityDisplay score={agent.quality} />
       </div>
 
       {/* Capabilities */}
@@ -173,7 +174,9 @@ export default function Agents() {
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-white">
+    <div className="min-h-screen bg-[#0A0A0B] text-white">
+      <Navbar />
+      <div className="mx-auto max-w-[1520px] px-12 pt-20 pb-20">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-[24px] text-white font-normal tracking-tight">Agents</h1>
@@ -265,8 +268,8 @@ export default function Agents() {
           )}
         </>
       )}
+      </div>
       <MobileBottomNav />
-      <div className="h-14 lg:hidden" />
     </div>
   );
 }

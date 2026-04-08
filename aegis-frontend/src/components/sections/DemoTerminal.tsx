@@ -46,7 +46,7 @@ const LINES: { type: string; text: string; delay?: number }[] = [
   { type: "output", text: "  Executing operator on target repository..." },
   { type: "success", text: "  [OK] Operator completed in 1.2s | Sandbox: clean exit" },
   { type: "success", text: "  [OK] Observation trace recorded: tr_9fGh...4kR9" },
-  { type: "success", text: "  [OK] Reputation +1 -> 86/100 (Gold)" },
+  { type: "success", text: "  [OK] Quality +1 -> 86/100 (Gold)" },
   { type: "blank", text: "" },
   { type: "prompt", text: "$ agent-aegis mcp-server --start", delay: 800 },
   { type: "output", text: "  Starting MCP server on localhost:3847..." },

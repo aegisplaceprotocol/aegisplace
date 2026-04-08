@@ -10,7 +10,7 @@ import {
 
 type Tab = "validators" | "status" | "stake" | "tiers";
 type Tier = "Apprentice" | "Journeyman" | "Master" | "Grandmaster";
-type SortBy = "reputation" | "stake" | "operators";
+type SortBy = "quality" | "stake" | "operators";
 
 const TIER_COLOR: Record<Tier, string> = {
   Apprentice: T.text50,
@@ -36,20 +36,20 @@ interface Validator {
   stakeNum: number;
   operators: number;
   commission: string;
-  reputation: number;
+  quality: number;
 }
 
 const VALIDATORS: Validator[] = [
-  { name: "aegis-sentinel-1", wallet: "4xK9...mR3f", tier: "Grandmaster", stake: "280,000", stakeNum: 280000, operators: 47, commission: "5.0%", reputation: 99.2 },
-  { name: "solana-guardian", wallet: "7nB2...pQ4a", tier: "Grandmaster", stake: "245,000", stakeNum: 245000, operators: 41, commission: "6.0%", reputation: 98.7 },
-  { name: "protocol-watcher", wallet: "2cD4...kL2m", tier: "Master", stake: "180,000", stakeNum: 180000, operators: 32, commission: "7.5%", reputation: 97.1 },
-  { name: "chain-validator-x", wallet: "9eF7...nH8v", tier: "Master", stake: "155,000", stakeNum: 155000, operators: 28, commission: "8.0%", reputation: 96.4 },
-  { name: "aegis-node-prime", wallet: "5gH1...jR6w", tier: "Master", stake: "132,000", stakeNum: 132000, operators: 25, commission: "8.5%", reputation: 95.8 },
-  { name: "validator-omega", wallet: "1iJ3...bT5x", tier: "Journeyman", stake: "85,000", stakeNum: 85000, operators: 18, commission: "9.0%", reputation: 93.2 },
-  { name: "trustless-node", wallet: "8kL5...dV9y", tier: "Journeyman", stake: "72,000", stakeNum: 72000, operators: 15, commission: "9.5%", reputation: 91.7 },
-  { name: "defi-sentinel", wallet: "3mN8...fX2z", tier: "Journeyman", stake: "58,000", stakeNum: 58000, operators: 12, commission: "10.0%", reputation: 89.4 },
-  { name: "new-validator-42", wallet: "6oP0...hZ4a", tier: "Apprentice", stake: "22,000", stakeNum: 22000, operators: 5, commission: "12.0%", reputation: 84.1 },
-  { name: "fresh-node", wallet: "4qR2...jB6c", tier: "Apprentice", stake: "10,500", stakeNum: 10500, operators: 2, commission: "15.0%", reputation: 78.3 },
+  { name: "aegis-sentinel-1", wallet: "4xK9...mR3f", tier: "Grandmaster", stake: "280,000", stakeNum: 280000, operators: 47, commission: "5.0%", quality: 99.2 },
+  { name: "solana-guardian", wallet: "7nB2...pQ4a", tier: "Grandmaster", stake: "245,000", stakeNum: 245000, operators: 41, commission: "6.0%", quality: 98.7 },
+  { name: "protocol-watcher", wallet: "2cD4...kL2m", tier: "Master", stake: "180,000", stakeNum: 180000, operators: 32, commission: "7.5%", quality: 97.1 },
+  { name: "chain-validator-x", wallet: "9eF7...nH8v", tier: "Master", stake: "155,000", stakeNum: 155000, operators: 28, commission: "8.0%", quality: 96.4 },
+  { name: "aegis-node-prime", wallet: "5gH1...jR6w", tier: "Master", stake: "132,000", stakeNum: 132000, operators: 25, commission: "8.5%", quality: 95.8 },
+  { name: "validator-omega", wallet: "1iJ3...bT5x", tier: "Journeyman", stake: "85,000", stakeNum: 85000, operators: 18, commission: "9.0%", quality: 93.2 },
+  { name: "trustless-node", wallet: "8kL5...dV9y", tier: "Journeyman", stake: "72,000", stakeNum: 72000, operators: 15, commission: "9.5%", quality: 91.7 },
+  { name: "defi-sentinel", wallet: "3mN8...fX2z", tier: "Journeyman", stake: "58,000", stakeNum: 58000, operators: 12, commission: "10.0%", quality: 89.4 },
+  { name: "new-validator-42", wallet: "6oP0...hZ4a", tier: "Apprentice", stake: "22,000", stakeNum: 22000, operators: 5, commission: "12.0%", quality: 84.1 },
+  { name: "fresh-node", wallet: "4qR2...jB6c", tier: "Apprentice", stake: "10,500", stakeNum: 10500, operators: 2, commission: "15.0%", quality: 78.3 },
 ];
 
 const TIER_CARDS: { tier: Tier; bond: string; maxOps: string; apy: string; features: string[] }[] = [
@@ -63,11 +63,11 @@ const TIER_CARDS: { tier: Tier; bond: string; maxOps: string; apy: string; featu
 
 export default function ValidatorsPanel() {
   const [tab, setTab] = useState<Tab>("validators");
-  const [sortBy, setSortBy] = useState<SortBy>("reputation");
+  const [sortBy, setSortBy] = useState<SortBy>("quality");
   const [isValidator] = useState(false);
 
   const validatorsQuery = trpc.validator.list.useQuery(
-    { limit: 50, sortBy: "reputation" },
+    { limit: 50, sortBy: "quality" },
     { staleTime: 60_000 },
   );
   const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 60_000 });
@@ -77,17 +77,17 @@ export default function ValidatorsPanel() {
     ? (validatorsQuery.data as any[]).map((v: any) => ({
         name: v.name ?? "Unknown",
         wallet: v.wallet ? `${v.wallet.slice(0, 4)}...${v.wallet.slice(-4)}` : "????...????",
-        tier: (v.reputationScore >= 95 ? "Grandmaster" : v.reputationScore >= 85 ? "Master" : v.reputationScore >= 75 ? "Journeyman" : "Apprentice") as Tier,
+        tier: (v.qualityScore >= 95 ? "Grandmaster" : v.qualityScore >= 85 ? "Master" : v.qualityScore >= 75 ? "Journeyman" : "Apprentice") as Tier,
         stake: (v.stakeLamports ? (Number(v.stakeLamports) / 1e9).toLocaleString() : "..."),
         stakeNum: v.stakeLamports ? Number(v.stakeLamports) / 1e9 : 0,
         operators: v.validatedCount ?? 0,
         commission: v.commissionBps ? `${(v.commissionBps / 100).toFixed(1)}%` : "5.0%",
-        reputation: v.reputationScore ?? 0,
+        quality: v.qualityScore ?? 0,
       }))
     : VALIDATORS;
 
   const sortedValidators = [...validatorItems].sort((a, b) => {
-    if (sortBy === "reputation") return b.reputation - a.reputation;
+    if (sortBy === "quality") return b.quality - a.quality;
     if (sortBy === "stake") return b.stakeNum - a.stakeNum;
     return b.operators - a.operators;
   });
@@ -126,7 +126,7 @@ export default function ValidatorsPanel() {
             action={
               <FilterChips
                 options={[
-                  { id: "reputation" as SortBy, label: "Reputation" },
+                  { id: "quality" as SortBy, label: "quality" },
                   { id: "stake" as SortBy, label: "Stake" },
                   { id: "operators" as SortBy, label: "Operators" },
                 ]}
@@ -136,7 +136,7 @@ export default function ValidatorsPanel() {
             }
           />
           <MiniTable
-            headers={["Validator", "Wallet", "Tier", "Stake", "Operators", "Commission", "Reputation"]}
+            headers={["Validator", "Wallet", "Tier", "Stake", "Operators", "Commission", "quality"]}
             rows={sortedValidators.map(v => [
               <span style={{ fontWeight: 500, color: T.text80 }}>{v.name}</span>,
               <MonoValue color={T.text50}>{v.wallet}</MonoValue>,
@@ -147,9 +147,9 @@ export default function ValidatorsPanel() {
               <span style={{
                 fontWeight: 500,
                 fontVariantNumeric: "tabular-nums",
-                color: v.reputation >= 95 ? T.positive : v.reputation >= 85 ? T.text50 : T.text50,
+                color: v.quality >= 95 ? T.positive : v.quality >= 85 ? T.text50 : T.text50,
               }}>
-                {v.reputation}
+                {v.quality}
               </span>,
             ])}
           />

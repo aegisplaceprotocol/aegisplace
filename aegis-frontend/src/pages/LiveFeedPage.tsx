@@ -98,7 +98,7 @@ export default function LiveFeedPage() {
       <div className="pt-24">
         {/* Hero */}
         <div className="border-b border-white/[0.04]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
+          <div className="mx-auto max-w-[1520px] px-12 py-12 md:py-16">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-4">
@@ -133,7 +133,7 @@ export default function LiveFeedPage() {
 
         {/* Stats Bar */}
         <div className="border-b border-white/[0.04] bg-white/[0.01]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-6">
+          <div className="mx-auto max-w-[1520px] px-12 py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
               <div>
                 <div className="text-xl font-normal text-white/90">{stats?.totalOperators || 0}</div>
@@ -164,7 +164,7 @@ export default function LiveFeedPage() {
         </div>
 
         {/* Main Content */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
+        <div className="mx-auto max-w-[1520px] px-12 py-12">
           <div className="grid lg:grid-cols-[1fr_380px] gap-12">
             {/* Left: Invocation Feed */}
             <div>
@@ -229,7 +229,7 @@ export default function LiveFeedPage() {
                                 <span>Caller: {inv.callerWallet ? `${inv.callerWallet.slice(0, 6)}...${inv.callerWallet.slice(-4)}` : "anon"}</span>
                                 <span>{inv.responseMs}ms</span>
                                 <span className={inv.trustDelta > 0 ? "text-zinc-300/60" : inv.trustDelta < 0 ? "text-[rgba(220,100,60,0.50)]/60" : ""}>
-                                  trust: {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
+                                  quality: {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
                                 </span>
                                 {/* Engagement: like count */}
                                 <span className="flex items-center gap-1 text-white/15 hover:text-white/30 cursor-default">
@@ -271,9 +271,9 @@ export default function LiveFeedPage() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="w-16 h-1 bg-white/[0.04] overflow-hidden">
-                          <div className="h-full" style={{ width: `${op.trustScore}%`, background: repColor(op.trustScore) }} />
+                          <div className="h-full" style={{ width: `${op.qualityScore}%`, background: repColor(op.qualityScore) }} />
                         </div>
-                        <span className="text-[10px] font-medium text-white/30 w-6 text-right">{op.trustScore}</span>
+                        <span className="text-[10px] font-medium text-white/30 w-6 text-right">{op.qualityScore}</span>
                       </div>
                     </Link>
                   ))}

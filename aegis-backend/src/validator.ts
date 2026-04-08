@@ -120,11 +120,10 @@ export function validateInvocation(input: ValidationInput): ValidationResult {
  */
 export function calculateFees(amountUsdc: number) {
   return {
-    creator: +(amountUsdc * 0.60).toFixed(8),
-    validators: +(amountUsdc * 0.15).toFixed(8),
-    stakers: +(amountUsdc * 0.12).toFixed(8),
-    treasury: +(amountUsdc * 0.08).toFixed(8),
-    insurance: +(amountUsdc * 0.03).toFixed(8),
-    burn: +(amountUsdc * 0.02).toFixed(8),
+    creator: +(amountUsdc * 0.85).toFixed(8),
+    validators: +(amountUsdc * 0.10).toFixed(8),
+    treasury: +(amountUsdc * 0.03).toFixed(8),
+    insurance: +(amountUsdc * 0.015).toFixed(8),
+    burn: +(amountUsdc * 0.005).toFixed(8),
   };
 }

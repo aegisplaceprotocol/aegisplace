@@ -1,3 +1,5 @@
+import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { useState, useCallback, CSSProperties } from "react";
 import { useLocation } from "wouter";
 import { T } from "./Dashboard/theme";
@@ -11,8 +13,7 @@ interface WizardState {
   name: string;
   description: string;
   category: string;
-  endpointUrl: string;
-  skipEndpoint: boolean;
+  privateSkill: string;
   pricePerCall: string;
   customPrice: string;
 }
@@ -41,12 +42,12 @@ const PRICE_PRESETS = [
 const s = {
   page: {
     minHeight: "100vh",
-    background: T.bg,
+    background: "#0A0A0B",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
-    padding: "60px 20px 100px",
-    fontFamily: "'Inter', system-ui, sans-serif",
+    padding: "20px 20px 100px",
+    fontFamily: "'DM Sans', system-ui, sans-serif",
   } satisfies CSSProperties,
   wrapper: {
     width: "100%",
@@ -124,17 +125,6 @@ const s = {
     fontSize: 14,
   } satisfies CSSProperties,
 };
-
-/* ── Helpers ───────────────────────────────────────────────── */
-
-function isValidUrl(str: string): boolean {
-  try {
-    const u = new URL(str);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 /* ── Sub-components ────────────────────────────────────────── */
 
@@ -231,57 +221,21 @@ function StepWhatWhere({
 function StepConnect({
   state, setState, onNext, onBack,
 }: { state: WizardState; setState: (s: WizardState) => void; onNext: () => void; onBack: () => void }) {
-  const urlOk = state.skipEndpoint || isValidUrl(state.endpointUrl);
   const price = state.pricePerCall === "custom" ? state.customPrice : state.pricePerCall;
   const priceOk = price !== "" && !isNaN(Number(price)) && Number(price) >= 0;
-  const valid = urlOk && priceOk;
+  const valid = state.privateSkill.trim().length > 0 && priceOk;
 
   return (
     <div>
       <div style={{ marginBottom: 20 }}>
-        <label style={s.label}>Paste your API endpoint URL</label>
-        <input
-          style={{
-            ...s.input,
-            borderColor: state.endpointUrl && !state.skipEndpoint
-              ? isValidUrl(state.endpointUrl) ? T.mint : T.red
-              : T.border,
-            opacity: state.skipEndpoint ? 0.4 : 1,
-          }}
-          placeholder="https://api.example.com/v1/skill"
-          value={state.endpointUrl}
-          disabled={state.skipEndpoint}
-          onChange={(e) => setState({ ...state, endpointUrl: e.target.value })}
+        <label style={s.label}>Private SKILL.md</label>
+        <textarea
+          style={{ ...s.input, minHeight: 220, resize: "vertical" as const, fontFamily: "'DM Mono', monospace", fontSize: 12 }}
+          placeholder="# Goal\n\nDescribe exactly how an agent should use this skill, implementation notes, expected inputs and outputs, constraints, and examples."
+          value={state.privateSkill}
+          onChange={(e) => setState({ ...state, privateSkill: e.target.value })}
         />
-        {state.endpointUrl && !state.skipEndpoint && !isValidUrl(state.endpointUrl) && (
-          <span style={{ color: T.red, fontSize: 12, marginTop: 4, display: "block" }}>
-            Enter a valid HTTP/HTTPS URL
-          </span>
-        )}
       </div>
-      <label
-        style={{
-          display: "flex", alignItems: "center", gap: 10,
-          color: T.text50, fontSize: 13, cursor: "pointer", marginBottom: 28,
-        }}
-      >
-        <span
-          onClick={() => setState({ ...state, skipEndpoint: !state.skipEndpoint, endpointUrl: "" })}
-          style={{
-            width: 36, height: 20, borderRadius: 4,
-            background: state.skipEndpoint ? T.mint : T.border,
-            position: "relative", cursor: "pointer", transition: "background 0.2s",
-            display: "inline-block", flexShrink: 0,
-          }}
-        >
-          <span style={{
-            position: "absolute", top: 2, left: state.skipEndpoint ? 18 : 2,
-            width: 16, height: 16, borderRadius: 8, background: "#fff",
-            transition: "left 0.2s",
-          }} />
-        </span>
-        I'll add an endpoint later
-      </label>
 
       <label style={s.label}>Price per call</label>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
@@ -393,9 +347,10 @@ function StepDeploy({
     };
     register.mutate({
       name: state.name,
+      description: state.description,
+      skill: state.privateSkill,
       tagline: state.description,
       category: categoryMap[state.category] || "other",
-      endpointUrl: state.skipEndpoint ? undefined : state.endpointUrl,
       pricePerCall: price,
     } as any);
   }, [state, price, register]);
@@ -431,7 +386,7 @@ function StepDeploy({
           ["Name", state.name],
           ["Description", state.description],
           ["Category", state.category],
-          ["Endpoint", state.skipEndpoint ? "Placeholder (add later)" : state.endpointUrl],
+          ["Private Skill", state.privateSkill ? `${state.privateSkill.slice(0, 80)}${state.privateSkill.length > 80 ? "..." : ""}` : "Not provided"],
           ["Price / call", price === "0" ? "Free" : `$${price}`],
         ] as [string, string][]).map(([k, v], i) => (
           <div key={i} style={s.summaryRow}>
@@ -479,8 +434,7 @@ export default function DeployWizard() {
     name: "",
     description: "",
     category: "",
-    endpointUrl: "",
-    skipEndpoint: false,
+    privateSkill: "",
     pricePerCall: "0.003",
     customPrice: "",
   });
@@ -496,11 +450,13 @@ export default function DeployWizard() {
 
   return (
     <div style={s.page}>
+      <Navbar />
+      <div style={{ height: 56 }} />
       <div style={s.wrapper}>
         <h1 style={s.heading}>Deploy a Skill</h1>
         <p style={s.sub}>
           {step === 1 && "Step 1 of 3. Define your skill"}
-          {step === 2 && "Step 2 of 3. Connect your endpoint"}
+          {step === 2 && "Step 2 of 3. Add the private SKILL.md"}
           {step === 3 && "Step 3 of 3. Review & deploy"}
         </p>
         <StepIndicator current={step} />

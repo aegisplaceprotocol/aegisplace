@@ -25,8 +25,8 @@ pub mod aegis {
     /// Initializes the global protocol configuration.
     ///
     /// Must be called exactly once. Sets the admin, treasury addresses,
-    /// AEGIS mint, USDC mint, and the 6-way fee schedule (must sum to 10000).
-    /// Default: [6000, 1500, 1200, 800, 300, 200] = 60/15/12/8/3/2
+    /// AEGIS mint, USDC mint, and the fee schedule (must sum to 10000).
+    /// Default: [8500, 1000, 0, 300, 150, 50] = 85/10/0/3/1.5/0.5
     pub fn initialize(ctx: Context<Initialize>, fee_bps: [u16; 6]) -> Result<()> {
         instructions::initialize::handler(ctx, fee_bps)
     }
@@ -39,23 +39,22 @@ pub mod aegis {
         ctx: Context<RegisterOperator>,
         name: String,
         slug: String,
-        endpoint_url: String,
         metadata_uri: String,
         price_usdc_base: u64,
         category: u8,
     ) -> Result<()> {
-        instructions::register_operator::handler(ctx, name, slug, endpoint_url, metadata_uri, price_usdc_base, category)
+        instructions::register_operator::handler(ctx, name, slug, metadata_uri, price_usdc_base, category)
     }
 
     /// Invokes an operator's skill, paying in USDC.
     ///
-    /// The payment is immediately split among 6 parties:
-    ///   - 60% to the skill creator
-    ///   - 15% to the validator pool
-    ///   - 12% to veAEGIS stakers
-    ///   - 8%  to the dynamic treasury
-    ///   - 3%  to the insurance fund
-    ///   - 2%  burned (permanently removed)
+    /// The payment is immediately split among the configured recipients:
+    ///   - 85% to the skill creator
+    ///   - 10% to the validator pool
+    ///   - 3%  to the dynamic treasury
+    ///   - 1.5% to the insurance fund
+    ///   - 0.5% burned (permanently removed)
+    ///   - the staker slot is currently configured to 0 bps
     ///
     /// An immutable InvocationReceipt is created on-chain.
     pub fn invoke_skill(ctx: Context<InvokeSkill>) -> Result<()> {
@@ -110,7 +109,16 @@ pub mod aegis {
         new_validator_pool: Option<Pubkey>,
         new_staker_pool: Option<Pubkey>,
         new_insurance_fund: Option<Pubkey>,
+        new_usdc_mint: Option<Pubkey>,
     ) -> Result<()> {
-        instructions::update_config::handler(ctx, new_fee_bps, new_treasury, new_validator_pool, new_staker_pool, new_insurance_fund)
+        instructions::update_config::handler(
+            ctx,
+            new_fee_bps,
+            new_treasury,
+            new_validator_pool,
+            new_staker_pool,
+            new_insurance_fund,
+            new_usdc_mint,
+        )
     }
 }

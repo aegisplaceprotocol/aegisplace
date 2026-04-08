@@ -85,10 +85,7 @@ const operatorSchema = new mongoose.Schema(
       default: "other",
       required: true,
     },
-    endpointUrl: { type: String, default: null, maxlength: 1024 },
-    httpMethod: { type: String, enum: ["GET", "POST", "PUT"], default: "POST", required: true },
-    requestSchema: { type: mongoose.Schema.Types.Mixed, default: null },
-    responseSchema: { type: mongoose.Schema.Types.Mixed, default: null },
+    skill: { type: String, default: null },
     pricePerCall: dec128("0.003"),
     creatorWallet: { type: String, required: true, maxlength: 64 },
     creatorId: { type: objectIdLike, default: null },
@@ -98,7 +95,7 @@ const operatorSchema = new mongoose.Schema(
     onChainOperatorId: { type: Number, default: null },
     onChainTxSignature: { type: String, default: null, maxlength: 128 },
     onChainMetadataUri: { type: String, default: null, maxlength: 1024 },
-    onChainCluster: { type: String, enum: ["devnet", "mainnet-beta", "testnet", "localnet"], default: null },
+    onChainCluster: { type: String, enum: ["devnet", "mainnet-beta", "testnet"], default: null },
     onChainRegisteredAt: { type: Date, default: null },
     onChainSyncStatus: {
       type: String,
@@ -141,12 +138,15 @@ const invocationSchema = new mongoose.Schema(
     creatorShare: dec128("0"),
     validatorShare: dec128("0"),
     treasuryShare: dec128("0"),
+    insuranceShare: dec128("0"),
     burnAmount: dec128("0"),
     responseMs: { type: Number, default: null },
     success: { type: Boolean, default: true, required: true },
     statusCode: { type: Number, default: null },
     trustDelta: { type: Number, default: 0, required: true },
     txSignature: { type: String, default: null, maxlength: 128 },
+    onChainReceiptPda: { type: String, default: null, maxlength: 64 },
+    settlementMethod: { type: String, enum: ["legacy_transfer", "aegis_program"], default: null },
     paymentToken: { type: String, default: null, maxlength: 512 },
     paymentVerified: { type: Boolean, default: false, required: true },
     guardrailInputPassed: { type: Boolean, default: true, required: true },
@@ -271,7 +271,10 @@ const paymentSchema = new mongoose.Schema(
     operatorShare: dec128("0"),
     protocolShare: dec128("0"),
     validatorShare: dec128("0"),
+    insuranceShare: dec128("0"),
     burnAmount: dec128("0"),
+    onChainReceiptPda: { type: String, default: null, maxlength: 64 },
+    settlementMethod: { type: String, enum: ["legacy_transfer", "aegis_program"], default: "legacy_transfer", required: true },
     status: { type: String, enum: ["pending", "settled", "failed", "refunded"], default: "pending", required: true },
     settledAt: { type: Date, default: null },
   },
@@ -599,6 +602,10 @@ export async function softDeleteOperator(id: number | string) {
 export async function getOperatorsByCreator(walletAddress: string) {
   const docs = await OperatorModel.find({ creatorWallet: walletAddress }).sort({ createdAt: -1 }).lean();
   return docs.map(toPlain);
+}
+
+export async function getMcpServerByUrl(serverUrl: string) {
+  return McpServerModel.findOne({ serverUrl }).lean();
 }
 
 export async function getOperatorsByUserId(userId: number | string) {
@@ -962,6 +969,12 @@ export async function createPayment(data: Record<string, any>): Promise<number |
   return doc._id;
 }
 
+export async function hasPaymentTxSignature(txSignature: string): Promise<boolean> {
+  if (!txSignature) return false;
+  const existing = await PaymentModel.exists({ txSignature });
+  return Boolean(existing);
+}
+
 export async function settlePayment(id: number | string, txSignature: string) {
   await PaymentModel.findByIdAndUpdate(id, {
     $set: { status: "settled", txSignature, settledAt: new Date() },
@@ -1055,7 +1068,7 @@ export async function getAuditLog(opts: { userId?: number; action?: string; limi
 export async function getProtocolStats() {
   const [totalOps, realOps, totalVals, totalDisp, openDisp, healthyOps, degradedOps] = await Promise.all([
     OperatorModel.countDocuments({ isActive: true }),
-    OperatorModel.countDocuments({ isActive: true, endpointUrl: { $ne: null } }),
+    OperatorModel.countDocuments({ isActive: true, skill: { $nin: [null, ""] } }),
     ValidatorModel.countDocuments({ status: "active" }),
     DisputeModel.countDocuments(),
     DisputeModel.countDocuments({ status: "open" }),

@@ -32,7 +32,7 @@ export interface ApiOperator {
   slug: string;
   category: string;
   pricePerCall: string;
-  trustScore: number;
+  qualityScore: number;
   totalInvocations: number;
   successRate: string;
 }
@@ -41,11 +41,11 @@ export interface ApiOperator {
 
 export const FEE_SPLIT = [
   { label: "Creator", pct: 85 },
-  { label: "Validators", pct: 15 },
-  { label: "Stakers", pct: 12 },
-  { label: "Treasury", pct: 8 },
-  { label: "Insurance", pct: 3 },
-  { label: "Burned", pct: 2 },
+  { label: "Validators", pct: 10 },
+  { label: "Stakers", pct: 3 },
+  { label: "Treasury", pct: 1.5 },
+  { label: "Insurance", pct: 0.5 },
+  { label: "Burned", pct: 0 },
 ];
 
 export interface NetworkHealthItem {

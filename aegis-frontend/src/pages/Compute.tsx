@@ -9,7 +9,7 @@ const LAYERS = [
   { layer: "Layer 4", name: "Models", desc: "Nemotron Nano/Super/Ultra foundation models", color: "#76B900" },
   { layer: "Layer 5", name: "Skills", desc: "Task-specific operators with NeMo Guardrails", color: "#A1A1AA" },
   { layer: "Layer 6", name: "Agents", desc: "Autonomous consumers", color: "#71717A" },
-  { layer: "Layer 7", name: "Trust", desc: "Aegis bonded validation + NeMo Evaluator", color: "#A1A1AA" },
+  { layer: "Layer 7", name: "Quality", desc: "Aegis bonded validation + NeMo Evaluator", color: "#A1A1AA" },
   { layer: "Layer 8", name: "Settlement", desc: "Solana", color: "#4A7A82" },
 ];
 
@@ -47,7 +47,7 @@ export default function Compute() {
 
       {/* Hero */}
       <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-white/20 bg-white/[0.04] mb-6">
             <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-pulse" />
             <span className="text-[11px] font-medium text-zinc-300/60 tracking-wider">IN DEVELOPMENT</span>
@@ -69,7 +69,7 @@ export default function Compute() {
 
       {/* AI Supply Chain */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-3xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The AI supply chain.
           </h2>
@@ -105,7 +105,7 @@ export default function Compute() {
 
       {/* Features */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-10">
             What this enables.
           </h2>
@@ -126,7 +126,7 @@ export default function Compute() {
 
       {/* The math */}
       <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-3xl">
           <div className="border border-white/[0.12] bg-white/[0.03] p-6 rounded sm:p-10">
             <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 uppercase mb-4">
               THE MATH

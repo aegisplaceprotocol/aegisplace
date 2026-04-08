@@ -1,4 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import {
   createAccount,
   createMint,
@@ -15,37 +18,61 @@ import {
 
 import aegisIdl from "../../target/idl/aegis.json";
 
-const RPC_URL = process.env.SOLANA_RPC_URL ?? "http://127.0.0.1:8899";
+const RPC_URL = process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
 const PROGRAM_ID = new PublicKey(
   process.env.AEGIS_PROGRAM_ID ?? aegisIdl.address,
 );
-const FEE_BPS = [6000, 1500, 1200, 800, 300, 200] as const;
+const DEVNET_USDC_MINT = new PublicKey("Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr");
+const FEE_BPS = [8500, 1000, 0, 300, 150, 50] as const;
 
 function getConfigPda(programId: PublicKey): PublicKey {
   return PublicKey.findProgramAddressSync([Buffer.from("config")], programId)[0];
 }
 
-async function ensureAirdrop(connection: Connection, publicKey: PublicKey, sol = 5) {
+function resolveKeypairPath(): string {
+  const configured = process.env.SOLANA_KEYPAIR || process.env.ANCHOR_WALLET;
+  if (configured?.trim()) {
+    return configured.replace(/^~(?=$|[\\/])/, os.homedir());
+  }
+
+  return path.join(os.homedir(), ".config", "solana", "id.json");
+}
+
+function loadAdminKeypair(): Keypair {
+  const keypairPath = resolveKeypairPath();
+  const secretKey = JSON.parse(fs.readFileSync(keypairPath, "utf8")) as number[];
+  return Keypair.fromSecretKey(Uint8Array.from(secretKey));
+}
+
+async function ensureAirdrop(connection: Connection, publicKey: PublicKey, sol = 0.25) {
   const balance = await connection.getBalance(publicKey, "confirmed");
   if (balance >= sol * LAMPORTS_PER_SOL) return balance;
 
-  const signature = await connection.requestAirdrop(publicKey, sol * LAMPORTS_PER_SOL);
-  const latestBlockhash = await connection.getLatestBlockhash("confirmed");
-  await connection.confirmTransaction(
-    {
-      signature,
-      blockhash: latestBlockhash.blockhash,
-      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-    },
-    "confirmed",
-  );
+  try {
+    const signature = await connection.requestAirdrop(publicKey, sol * LAMPORTS_PER_SOL);
+    const latestBlockhash = await connection.getLatestBlockhash("confirmed");
+    await connection.confirmTransaction(
+      {
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      },
+      "confirmed",
+    );
+  } catch (error) {
+    const refreshedBalance = await connection.getBalance(publicKey, "confirmed");
+    if (refreshedBalance > 0) {
+      return refreshedBalance;
+    }
+    throw error;
+  }
 
   return connection.getBalance(publicKey, "confirmed");
 }
 
 async function main() {
   const connection = new Connection(RPC_URL, "confirmed");
-  const admin = Keypair.generate();
+  const admin = loadAdminKeypair();
 
   const provider = new anchor.AnchorProvider(
     connection,
@@ -72,13 +99,7 @@ async function main() {
   console.log(`Admin wallet: ${admin.publicKey.toBase58()}`);
   console.log(`Admin balance: ${fundedBalance / LAMPORTS_PER_SOL} SOL`);
 
-  const usdcMint = await createMint(
-    connection,
-    admin,
-    admin.publicKey,
-    admin.publicKey,
-    6,
-  );
+  const usdcMint = DEVNET_USDC_MINT;
   const aegisMint = await createMint(
     connection,
     admin,
@@ -114,10 +135,10 @@ async function main() {
   const stakerAccount = await getAccount(connection, stakerPool, "confirmed");
   const insuranceAccount = await getAccount(connection, insuranceFund, "confirmed");
 
-  console.log("Localnet protocol initialized");
+  console.log(`Protocol initialized on ${RPC_URL}`);
   console.log(`Config PDA: ${configPda.toBase58()}`);
   console.log(`Program ID: ${PROGRAM_ID.toBase58()}`);
-  console.log(`USDC Mint: ${usdcMint.toBase58()}`);
+  console.log(`USDC Mint: ${usdcMint.toBase58()} (configured devnet payment mint)`);
   console.log(`AEGIS Mint: ${aegisMint.toBase58()}`);
   console.log(`Treasury Token Account: ${treasury.toBase58()} (owner ${treasuryAccount.owner.toBase58()})`);
   console.log(`Validator Pool Token Account: ${validatorPool.toBase58()} (owner ${validatorAccount.owner.toBase58()})`);

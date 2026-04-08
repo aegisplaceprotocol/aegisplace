@@ -14,10 +14,6 @@ pub enum AegisError {
     #[msg("Operator slug exceeds 64 bytes")]
     SlugTooLong,
 
-    /// Endpoint URL exceeds the 256-byte maximum.
-    #[msg("Endpoint URL exceeds 256 bytes")]
-    EndpointUrlTooLong,
-
     /// Metadata URI exceeds the 200-byte maximum.
     #[msg("Metadata URI exceeds 200 bytes")]
     MetadataUriTooLong,
@@ -106,7 +102,11 @@ pub enum AegisError {
     #[msg("Creator fee must be at least 4000 bps")]
     CreatorFeeTooLow,
 
-    /// Burn fee must be at least 100 bps (1%).
-    #[msg("Burn fee must be at least 100 bps")]
+    /// Burn fee must be at least 50 bps (0.5%).
+    #[msg("Burn fee must be at least 50 bps")]
     BurnFeeTooLow,
+
+    /// Updating the USDC mint requires replacing all protocol pool token accounts.
+    #[msg("Updating the USDC mint requires treasury, validator, staker, and insurance accounts for the new mint")]
+    MintMigrationRequiresAllPools,
 }

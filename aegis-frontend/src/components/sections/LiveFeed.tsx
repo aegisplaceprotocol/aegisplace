@@ -11,7 +11,7 @@ interface Invocation {
   amount: string;
   latency: string;
   status: "settled" | "validating" | "pending";
-  reputation: number;
+  quality: number;
   timestamp: number;
 }
 
@@ -46,8 +46,8 @@ function FeedRow({ inv, isNew }: { inv: Invocation; isNew: boolean }) {
         <span className="hidden sm:block text-[11px] font-medium text-white/30 truncate">{inv.caller}</span>
         <span className="text-[12px] font-medium text-zinc-300/70 sm:text-right">{inv.amount}</span>
         <span className="hidden sm:block text-[11px] font-medium text-white/25 text-right">{inv.latency}</span>
-        <span className={`hidden sm:block text-[10px] font-medium text-right ${inv.reputation >= 90 ? "text-zinc-300/60" : inv.reputation >= 80 ? "text-white/40" : "text-amber-400/50"}`}>
-          {inv.reputation}/100
+        <span className={`hidden sm:block text-[10px] font-medium text-right ${inv.quality >= 90 ? "text-zinc-300/60" : inv.quality >= 80 ? "text-white/40" : "text-amber-400/50"}`}>
+          {inv.quality}/100
         </span>
         <span className={`text-[10px] font-medium sm:text-right ${inv.status === "settled" ? "text-zinc-300/50" : inv.status === "validating" ? "text-amber-400/50" : "text-white/20"}`}>
           {inv.status}
@@ -71,7 +71,7 @@ function sseToInvocation(evt: LiveFeedEvent): Invocation | null {
     amount: `$${parseFloat((d.amountPaid as string) || "0").toFixed(4)}`,
     latency: `${d.responseMs || 0}ms`,
     status: (d.success as boolean) ? "settled" : "pending",
-    reputation: Math.max(0, Math.min(100, 75 + ((d.successDelta as number) || 0))),
+    quality: Math.max(0, Math.min(100, 75 + ((d.successDelta as number) || 0))),
     timestamp: (d.timestamp as number) || Date.now(),
   };
 }
@@ -120,7 +120,7 @@ export default function LiveFeed() {
         amount: `$${parseFloat(inv.amountPaid || "0").toFixed(4)}`,
         latency: `${inv.responseMs || 0}ms`,
         status: (inv.success ? "settled" : inv.responseMs === 0 ? "pending" : "validating") as Invocation["status"],
-        reputation: Math.max(0, Math.min(100, Math.round((inv.trustScore ?? 75)))),
+        quality: Math.max(0, Math.min(100, Math.round((inv.qualityScore ?? 75)))),
         timestamp: inv.createdAt ? new Date(inv.createdAt).getTime() : Date.now() - i * 3000,
       };
     });
@@ -228,7 +228,7 @@ export default function LiveFeed() {
             <div className="text-[10px] font-medium text-white/20 tracking-wider mb-2">.AEGIS.SOL IDENTITY</div>
             <p className="text-[13px] text-white/40 leading-relaxed">
               Agents register via Solana Name Service. <span className="font-medium text-zinc-300/50">translate.aegis.sol</span> resolves
-              to an operator's metadata, reputation score, and invocation history.
+              to an operator's metadata, quality score, and invocation history.
             </p>
           </div>
         </div>

@@ -70,7 +70,7 @@ export default function WhyAegisExists() {
             AI agents will be the primary consumers of software by 2027.
             Not humans clicking buttons. Machines calling APIs. When machines become the buyer,
             everything about commerce changes. They need structured discovery, not marketing pages.
-            Reputation data, not brand awareness. Instant settlement, not 30-day invoices.
+            quality data, not brand awareness. Instant settlement, not 30-day invoices.
           </p>
         </div>
 

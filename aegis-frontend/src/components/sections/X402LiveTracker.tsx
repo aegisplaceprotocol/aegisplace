@@ -403,9 +403,9 @@ export default function X402LiveTracker() {
           </div>
           <div className="p-4 border border-white/[0.04] bg-white/[0.01]">
             <div className="text-[10px] font-medium text-zinc-300/30 tracking-wider mb-2">AEGIS OPPORTUNITY</div>
-            <div className="text-[13px] font-normal text-white/70 mb-1">Zero success layer</div>
+            <div className="text-[13px] font-normal text-white/70 mb-1">Zero skills marketplace</div>
             <p className="text-[11px] text-white/25 leading-relaxed">
-              104K daily transactions with no validation, no bonding, no reputation scoring. Every transaction is a potential Aegis customer.
+              104K daily transactions with no validation, no bonding, no quality scoring. Every transaction is a potential Aegis customer.
             </p>
           </div>
         </div>

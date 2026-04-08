@@ -13,7 +13,10 @@
     "check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "seed:real": "tsx scripts/seed-real-operators.ts",
-    "init:localnet": "tsx scripts/init-localnet.ts"
+    "fund:devnet-usdc": "tsx scripts/fund-devnet-usdc.ts",
+    "init:devnet": "tsx scripts/init-devnet.ts",
+    "migrate:devnet-usdc": "tsx scripts/migrate-devnet-usdc.ts",
+    "deploy:devnet": "bash scripts/deploy-devnet.sh"
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",

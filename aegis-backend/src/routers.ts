@@ -24,32 +24,25 @@ import {
   getGuardrailViolationTypes,
   getRecentGuardrailViolations,
 } from "./db";
-import { validateInvocation, calculateFees } from "./validator";
-import { checkInput, checkOutput } from "./guardrails";
-import { prepareSkillRegistrationPlan, verifyPayment } from "./solana";
-import { validateEndpoint } from "./operator-health";
+import { prepareSkillRegistrationPlan } from "./solana";
 import { ENV } from "./_core/env";
 import { broadcastEvent } from "./sse";
+import { executeInvocation, InvocationError } from "./invoke-engine";
 
 function sameId(left: unknown, right: unknown): boolean {
   if (left == null || right == null) return false;
   return String(left) === String(right);
 }
 
-function isPrivateUrl(urlStr: string): boolean {
-  try {
-    const u = new URL(urlStr);
-    const host = u.hostname;
-    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0" || host === "::1") return true;
-    if (host === "169.254.169.254") return true; // AWS/GCP metadata
-    if (host === "100.100.100.200") return true; // Alibaba metadata
-    if (host.startsWith("10.")) return true;
-    if (host.startsWith("192.168.")) return true;
-    if (host.startsWith("172.") && parseInt(host.split(".")[1]) >= 16 && parseInt(host.split(".")[1]) <= 31) return true;
-    if (host.endsWith(".internal") || host.endsWith(".local")) return true;
-    if (u.protocol !== "http:" && u.protocol !== "https:") return true;
-    return false;
-  } catch { return true; }
+function normalizeOperatorListingInput<T extends {
+  description?: string;
+  skill?: string;
+}>(input: T) {
+  return {
+    ...input,
+    description: input.description?.trim() || null,
+    skill: input.skill?.trim() || null,
+  };
 }
 import { getTrustBreakdown } from "./trust-engine";
 import { getCreatorEarnings, getCreatorAnalytics, getCreatorOperators } from "./earnings";
@@ -144,7 +137,6 @@ export const appRouter = router({
         slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/),
         creatorWallet: z.string().min(32).max(64),
         apiBaseUrl: z.string().url(),
-        endpointUrl: z.string().url().optional(),
       }))
       .query(async ({ input, ctx }) => {
         const existing = await getOperatorBySlug(input.slug);
@@ -159,16 +151,6 @@ export const appRouter = router({
           });
         }
 
-        if (input.endpointUrl) {
-          const endpointCheck = await validateEndpoint(input.endpointUrl);
-          if (!endpointCheck.reachable) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Endpoint validation failed: ${endpointCheck.error || "Endpoint did not respond within 15 seconds"}`,
-            });
-          }
-        }
-
         return prepareSkillRegistrationPlan(input);
       }),
 
@@ -177,17 +159,14 @@ export const appRouter = router({
         name: z.string().min(2).max(256),
         slug: z.string().min(2).max(128).regex(/^[a-z0-9-]+$/),
         tagline: z.string().max(512).optional(),
-        description: z.string().optional(),
+        description: z.string().min(1),
+        skill: z.string().min(1),
         category: z.enum([
           "code-review", "sentiment-analysis", "data-extraction",
           "image-generation", "text-generation", "translation",
           "summarization", "classification", "search",
           "financial-analysis", "security-audit", "other"
         ]),
-        endpointUrl: z.string().url().optional(),
-        httpMethod: z.enum(["GET", "POST", "PUT"]).optional(),
-        requestSchema: z.any().optional(),
-        responseSchema: z.any().optional(),
         pricePerCall: z.string().optional(),
         creatorWallet: z.string().min(32).max(64),
         tags: z.array(z.string()).optional(),
@@ -200,7 +179,7 @@ export const appRouter = router({
         onChainOperatorId: z.number().int().min(0).optional(),
         onChainTxSignature: z.string().min(32).max(128).optional(),
         onChainMetadataUri: z.string().url().optional(),
-        onChainCluster: z.enum(["devnet", "mainnet-beta", "testnet", "localnet"]).optional(),
+        onChainCluster: z.enum(["devnet", "mainnet-beta", "testnet"]).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Rate limit: 5 operator registrations per hour
@@ -219,21 +198,20 @@ export const appRouter = router({
           });
         }
 
-        // Validate endpoint URL is reachable before accepting registration
-        if (input.endpointUrl) {
-          const endpointCheck = await validateEndpoint(input.endpointUrl);
-          if (!endpointCheck.reachable) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Endpoint validation failed: ${endpointCheck.error || "Endpoint did not respond within 15 seconds"}. Please ensure your endpoint is reachable before registering.`,
-            });
-          }
+        if (!input.description.trim()) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Public description is required" });
         }
 
+        if (!input.skill.trim()) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Private skill markdown is required" });
+        }
+
+        const normalizedInput = normalizeOperatorListingInput(input);
+
         const operator = await createOperator({
-          ...input,
+          ...normalizedInput,
           creatorId: ctx.user.id,
-          pricePerCall: input.pricePerCall || "0.003",
+          pricePerCall: normalizedInput.pricePerCall || "0.003",
           trustScore: 50,
           totalInvocations: 0,
           successfulInvocations: 0,
@@ -241,10 +219,10 @@ export const appRouter = router({
           avgResponseMs: 0,
           isActive: true,
           isVerified: false,
-          healthStatus: input.endpointUrl ? "healthy" : "unknown",
+          healthStatus: normalizedInput.skill ? "healthy" : "unknown",
           consecutiveFailures: 0,
-          onChainRegisteredAt: input.onChainTxSignature ? new Date() : null,
-          onChainSyncStatus: input.onChainTxSignature ? "confirmed" : "unregistered",
+          onChainRegisteredAt: normalizedInput.onChainTxSignature ? new Date() : null,
+          onChainSyncStatus: normalizedInput.onChainTxSignature ? "confirmed" : "unregistered",
         });
 
         await logAudit({
@@ -272,10 +250,7 @@ export const appRouter = router({
         name: z.string().min(2).max(256).optional(),
         tagline: z.string().max(512).optional(),
         description: z.string().optional(),
-        endpointUrl: z.string().url().optional(),
-        httpMethod: z.enum(["GET", "POST", "PUT"]).optional(),
-        requestSchema: z.any().optional(),
-        responseSchema: z.any().optional(),
+        skill: z.string().optional(),
         pricePerCall: z.string().optional(),
         isActive: z.boolean().optional(),
         tags: z.array(z.string()).optional(),
@@ -299,7 +274,12 @@ export const appRouter = router({
           details: data,
         });
 
-        return updateOperator(id, data);
+        const normalizedData: Record<string, any> = normalizeOperatorListingInput(data);
+        if (Object.prototype.hasOwnProperty.call(data, "skill")) {
+          normalizedData.healthStatus = normalizedData.skill ? "healthy" : "unknown";
+        }
+
+        return updateOperator(id, normalizedData);
       }),
 
     /** Soft-delete an operator (creator or admin) */
@@ -375,6 +355,8 @@ export const appRouter = router({
         payload: z.any().optional(),
         paymentToken: z.string().optional(),
         txSignature: z.string().optional(),
+        receiptPda: z.string().optional(),
+        settlementMethod: z.enum(["legacy_transfer", "aegis_program"]).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Rate limit: 60 invocations per minute per IP
@@ -385,279 +367,46 @@ export const appRouter = router({
           throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: `Rate limit exceeded. ${rl.remaining} requests remaining. Resets at ${rl.resetAt.toISOString()}` });
         }
 
-        const operator = await getOperatorById(input.operatorId);
-        if (!operator) throw new TRPCError({ code: "NOT_FOUND", message: "Operator not found" });
-        if (!operator.isActive) throw new TRPCError({ code: "BAD_REQUEST", message: "Operator is not active" });
-
-        const price = parseFloat(operator.pricePerCall);
-        const fees = calculateFees(price);
-
-        // ── Guardrail input check ──
-        let guardrailInputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
-        let guardrailOutputResult = { passed: true, violations: [] as string[], latencyMs: 0 };
-        let totalGuardrailLatencyMs = 0;
-
-        guardrailInputResult = await checkInput(operator.category, input.payload);
-        totalGuardrailLatencyMs += guardrailInputResult.latencyMs;
-
-        // If input guardrail blocked, record and return immediately
-        if (!guardrailInputResult.passed) {
-          const invocationId = await recordInvocation({
-            operatorId: operator.id,
-            callerWallet: input.callerWallet || null,
-            amountPaid: "0",
-            creatorShare: "0",
-            validatorShare: "0",
-            treasuryShare: "0",
-            burnAmount: "0",
-            responseMs: 0,
-            success: false,
-            statusCode: 403,
-            trustDelta: 0,
+        try {
+          const result = await executeInvocation({
+            operatorId: input.operatorId,
+            callerWallet: input.callerWallet,
+            payload: input.payload,
+            txSignature: input.txSignature,
+            receiptPda: input.receiptPda,
             paymentToken: input.paymentToken,
-            guardrailInputPassed: false,
-            guardrailOutputPassed: true,
-            guardrailViolations: guardrailInputResult.violations,
-            guardrailLatencyMs: totalGuardrailLatencyMs,
-          });
-
-          broadcastEvent("invocation", {
-            invocationId,
-            operatorId: operator.id,
-            operatorName: operator.name,
-            operatorSlug: operator.slug,
-            callerWallet: input.callerWallet || null,
-            success: false,
-            responseMs: 0,
-            amountPaid: "0",
-            trustDelta: 0,
+            settlementMethod: input.settlementMethod,
+            source: "trpc",
           });
 
           return {
-            success: false,
-            invocationId,
-            operatorId: operator.id,
-            operatorName: operator.name,
-            responseMs: 0,
-            statusCode: 403,
-            response: { error: "Blocked by Aegis NeMo Guardrails safety check", violations: guardrailInputResult.violations },
-            validation: { score: 0, trustDelta: 0, newTrustScore: operator.trustScore, flags: ["guardrail_input_blocked"] },
-            fees: { total: 0, creator: 0, validator: 0, treasury: 0, burn: 0 },
-            guardrails: {
-              inputPassed: false,
-              outputPassed: true,
-              violations: guardrailInputResult.violations,
-              latencyMs: totalGuardrailLatencyMs,
+            success: result.success,
+            invocationId: result.invocationId,
+            operatorId: input.operatorId,
+            operatorName: result.operatorName,
+            responseMs: result.responseMs,
+            statusCode: result.statusCode,
+            response: result.response,
+            validation: result.validation,
+            fees: {
+              total: parseFloat(result.fees.total),
+              creator: parseFloat(result.fees.creator),
+              validators: parseFloat(result.fees.validator),
+              treasury: parseFloat(result.fees.treasury),
+              insurance: parseFloat(result.fees.insurance),
+              burn: parseFloat(result.fees.burned),
             },
+            guardrails: result.guardrails,
           };
-        }
-
-        // ── Payment verification ──
-        let paymentVerified = false;
-
-        if (input.txSignature) {
-          // Verify on-chain USDC payment
-          if (!input.callerWallet) {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "callerWallet is required when providing txSignature" });
-          }
-          if (!ENV.treasuryWallet) {
-            throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Treasury wallet not configured" });
-          }
-
-          const verification = await verifyPayment(
-            input.txSignature,
-            price,
-            input.callerWallet,
-            ENV.treasuryWallet,
-          );
-
-          if (!verification.verified) {
+        } catch (error) {
+          if (error instanceof InvocationError) {
             throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `Payment verification failed: ${verification.error}`,
+              code: error.statusCode === 404 ? "NOT_FOUND" : error.statusCode === 402 ? "PRECONDITION_FAILED" : error.statusCode === 409 ? "CONFLICT" : error.statusCode >= 500 ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST",
+              message: error.message,
             });
           }
-          paymentVerified = true;
-        } else if (operator.endpointUrl && price > 0) {
-          // Real operator with a price requires payment - demo operators (no endpoint) are free
-          throw new TRPCError({
-            code: "PRECONDITION_FAILED",
-            message: "This operator requires payment. Provide a txSignature for an on-chain USDC transfer to the treasury wallet.",
-          });
+          throw error;
         }
-
-        let responseMs = 0;
-        let statusCode = 200;
-        let responseBody: unknown = null;
-        let success = true;
-
-        // Call the real endpoint if it exists
-        if (operator.endpointUrl) {
-          if (isPrivateUrl(operator.endpointUrl)) {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid operator endpoint" });
-          }
-          const start = Date.now();
-          try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
-
-            const res = await fetch(operator.endpointUrl, {
-              method: operator.httpMethod || "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "X-Aegis-Operator-Id": String(operator.id),
-                "X-Aegis-Caller": input.callerWallet || "anonymous",
-              },
-              body: input.payload ? JSON.stringify(input.payload) : undefined,
-              signal: controller.signal,
-            });
-
-            clearTimeout(timeout);
-            responseMs = Date.now() - start;
-            statusCode = res.status;
-
-            try {
-              responseBody = await res.json();
-            } catch {
-              responseBody = await res.text();
-            }
-
-            success = statusCode >= 200 && statusCode < 400;
-          } catch (err: any) {
-            responseMs = Date.now() - start;
-            statusCode = 0;
-            success = false;
-            responseBody = { error: err.message || "Request failed" };
-          }
-        } else {
-          // No endpoint deployed - operator must configure an endpoint URL
-          responseMs = 0;
-          statusCode = 503;
-          success = false;
-          responseBody = {
-            error: "OPERATOR_NOT_DEPLOYED",
-            message: "This operator is not yet deployed.",
-          };
-        }
-
-        // ── Guardrail output check ──
-        if (success) {
-          guardrailOutputResult = await checkOutput(operator.category, responseBody);
-          totalGuardrailLatencyMs += guardrailOutputResult.latencyMs;
-
-          if (!guardrailOutputResult.passed) {
-            success = false;
-          }
-        }
-
-        // Validate the response
-        const validation = validateInvocation({
-          responseMs,
-          statusCode,
-          responseBody,
-          expectedSchema: operator.responseSchema as Record<string, unknown> | undefined,
-        });
-
-        // Apply guardrail output penalty to trust delta
-        let trustDelta = validation.trustDelta;
-        if (!guardrailOutputResult.passed) {
-          trustDelta = -5;
-        }
-
-        // Combine all guardrail violations
-        const allViolations = [
-          ...guardrailInputResult.violations,
-          ...guardrailOutputResult.violations,
-        ];
-
-        // Record the invocation
-        const invocationId = await recordInvocation({
-          operatorId: operator.id,
-          callerWallet: input.callerWallet || null,
-          amountPaid: price.toFixed(8),
-          creatorShare: fees.creator.toFixed(8),
-          validatorShare: fees.validators.toFixed(8),
-          treasuryShare: fees.treasury.toFixed(8),
-          burnAmount: fees.burn.toFixed(8),
-          stakersShare: fees.stakers.toFixed(8),
-          insuranceShare: fees.insurance.toFixed(8),
-          responseMs,
-          success,
-          statusCode,
-          trustDelta,
-          txSignature: input.txSignature || null,
-          paymentToken: input.paymentToken,
-          paymentVerified,
-          guardrailInputPassed: guardrailInputResult.passed,
-          guardrailOutputPassed: guardrailOutputResult.passed,
-          guardrailViolations: allViolations.length > 0 ? allViolations : undefined,
-          guardrailLatencyMs: totalGuardrailLatencyMs,
-        });
-
-        // Update trust score
-        const newTrust = Math.max(0, Math.min(100, operator.trustScore + trustDelta));
-        await updateOperator(operator.id, { trustScore: newTrust });
-
-        // Create payment record
-        await createPayment({
-          invocationId,
-          txSignature: input.txSignature || input.paymentToken || "awaiting_confirmation",
-          totalAmount: price.toFixed(8),
-          operatorShare: fees.creator.toFixed(8),
-          protocolShare: fees.treasury.toFixed(8),
-          validatorShare: fees.validators.toFixed(8),
-          burnAmount: fees.burn.toFixed(8),
-          stakersShare: fees.stakers.toFixed(8),
-          insuranceShare: fees.insurance.toFixed(8),
-          status: paymentVerified ? "settled" : (input.paymentToken ? "settled" : "pending"),
-          settledAt: paymentVerified || input.paymentToken ? new Date() : undefined,
-        });
-
-        broadcastEvent("invocation", {
-          invocationId,
-          operatorId: operator.id,
-          operatorName: operator.name,
-          operatorSlug: operator.slug,
-          callerWallet: input.callerWallet || null,
-          success,
-          responseMs,
-          amountPaid: price.toFixed(8),
-          trustDelta,
-        });
-
-        return {
-          success,
-          invocationId,
-          operatorId: operator.id,
-          operatorName: operator.name,
-          responseMs,
-          statusCode,
-          response: responseBody,
-          validation: {
-            score: validation.score,
-            trustDelta,
-            newTrustScore: newTrust,
-            flags: [
-              ...validation.flags,
-              ...(!guardrailOutputResult.passed ? ["guardrail_output_blocked"] : []),
-            ],
-          },
-          fees: {
-            total: price,
-            creator: fees.creator,
-            validators: fees.validators,
-            stakers: fees.stakers,
-            treasury: fees.treasury,
-            insurance: fees.insurance,
-            burn: fees.burn,
-          },
-          guardrails: {
-            inputPassed: guardrailInputResult.passed,
-            outputPassed: guardrailOutputResult.passed,
-            violations: allViolations,
-            latencyMs: totalGuardrailLatencyMs,
-          },
-        };
       }),
 
     recent: publicProcedure
@@ -1345,8 +1094,8 @@ export const appRouter = router({
     status: publicProcedure
       .input(z.object({ serverUrl: z.string() }))
       .query(async ({ input }) => {
-        const { McpServer } = await import("./db");
-        return McpServer.findOne({ serverUrl: input.serverUrl }).lean();
+        const { getMcpServerByUrl } = await import("./db");
+        return getMcpServerByUrl(input.serverUrl);
       }),
   }),
 });

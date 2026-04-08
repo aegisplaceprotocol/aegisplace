@@ -14,7 +14,7 @@ const MCP_TOOLS = [
   { name: "aegis_list_operators",   desc: "List all registered skill operators with filters" },
   { name: "aegis_get_operator",     desc: "Get full metadata for a specific operator by slug" },
   { name: "aegis_invoke_skill",     desc: "Execute a skill operator and return the result" },
-  { name: "aegis_get_trust_score",  desc: "Retrieve on-chain trust score for an operator" },
+  { name: "aegis_get_trust_score",  desc: "Retrieve on-chain quality score for an operator" },
   { name: "aegis_search_operators", desc: "Semantic search across operator names and descriptions" },
   { name: "aegis_get_health",       desc: "Check protocol health and network status" },
   { name: "aegis_get_stats",        desc: "Fetch aggregate protocol statistics" },

@@ -79,7 +79,7 @@ export default function Connect() {
       <Navbar />
       <div className="pt-24 pb-12">
         {/* Hero */}
-        <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center pb-16">
+        <motion.div {...fadeInView} className="mx-auto max-w-[1520px] px-12 text-center pb-16">
           <h1 className="text-4xl md:text-5xl font-normal tracking-[-0.02em] text-white/90 mb-4">
             Connect to AegisX
           </h1>
@@ -90,7 +90,7 @@ export default function Connect() {
         </motion.div>
 
         {/* MCP Config */}
-        <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <motion.div {...fadeInView} className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-4">
             MCP Configuration
           </div>
@@ -98,7 +98,7 @@ export default function Connect() {
         </motion.div>
 
         {/* OWS Section */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="border border-white/[0.06] bg-white/[0.01] p-6">
             <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-3">
               Open Wallet Standard
@@ -130,7 +130,7 @@ export default function Connect() {
         </div>
 
         {/* Compatible With */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             Compatible Clients
           </div>
@@ -146,7 +146,7 @@ export default function Connect() {
         </div>
 
         {/* Tools */}
-        <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <motion.div {...fadeInView} className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             61 Tools Available
           </div>

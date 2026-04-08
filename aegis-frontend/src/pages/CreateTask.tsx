@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { fadeInView } from "@/lib/animations";
 import RequireWallet from "@/components/RequireWallet";
 import { trpc } from "@/lib/trpc";
@@ -83,19 +84,15 @@ function CreateTaskForm() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0A0A0B] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');`}</style>
       <Navbar />
 
-      <div className="pt-[72px]">
-        <div className="container py-12 md:py-16 max-w-2xl">
+      <div className="pt-20">
+        <div className="mx-auto max-w-[1520px] px-12 py-12 md:py-16 max-w-2xl">
           {/* Header */}
           <motion.div {...fadeInView} className="mb-10">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
-                CREATE TASK
-              </span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white/95 tracking-tight mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-white/92 tracking-tight mb-3">
               Post a New Task
             </h1>
             <p className="text-base text-white/30 leading-relaxed">
@@ -224,13 +221,14 @@ function CreateTaskForm() {
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="w-full text-[14px] font-semibold bg-emerald-500 text-white py-4 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors "
+              className="w-full text-[14px] font-semibold bg-white text-zinc-900 py-4 hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createMutation.isPending ? "Creating..." : "Create Task"}
             </button>
           </motion.form>
         </div>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

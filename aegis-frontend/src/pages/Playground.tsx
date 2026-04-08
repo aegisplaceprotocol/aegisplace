@@ -16,8 +16,8 @@ interface Operator {
   invocations: number;
   successRate: number;
   avgLatencyMs: number;
-  reputation: number;
-  trustScore: number;
+  quality: number;
+  qualityScore: number;
   priceDisplay: string;
   validators: number;
   status: string;
@@ -45,7 +45,7 @@ interface WalletState {
   sol: number;
   usdc: number;
   aegis: number;
-  reputation: number;
+  quality: number;
   tier: string;
   invocations: number;
 }
@@ -55,7 +55,7 @@ const INITIAL_WALLET: WalletState = {
   sol: 2.0,
   usdc: 25.0,
   aegis: 0,
-  reputation: 0,
+  quality: 0,
   tier: "Unranked",
   invocations: 0,
 };
@@ -283,7 +283,7 @@ function processCommand(
 
         for (const s of shown) {
           const name = padRight(s.name, 28);
-          const score = padRight(`${s.reputation}/100`, 8);
+          const score = padRight(`${s.quality}/100`, 8);
           const price = padRight(s.priceDisplay, 16);
           const vals = padRight(`${s.validators} bonded`, 12);
           const status = s.status;
@@ -358,14 +358,14 @@ function processCommand(
       add("output", `  Executing operator...`);
       add("success", `  [OK] Operator completed in ${duration}s | Sandbox: clean exit`);
       add("success", `  [OK] Observation trace recorded: tr_${randomTxHash()}`);
-      add("success", `  [OK] Reputation +1 -> ${wallet.reputation + 1}/100`);
+      add("success", `  [OK] Quality +1 -> ${wallet.quality + 1}/100`);
 
       // Update wallet
       setWallet((prev) => ({
         ...prev,
         usdc: Math.max(0, prev.usdc - usdcCost),
         invocations: prev.invocations + 1,
-        reputation: Math.min(100, prev.reputation + 1),
+        quality: Math.min(100, prev.quality + 1),
         tier: prev.invocations + 1 >= 50 ? "Gold" : prev.invocations + 1 >= 10 ? "Silver" : prev.invocations + 1 >= 3 ? "Bronze" : "Unranked",
       }));
 
@@ -399,7 +399,7 @@ function processCommand(
       add("result", `  Category:      ${operator.category}`);
       add("result", `  Price:         ${operator.priceDisplay} per invocation`);
       add("result", `  Bond:          ${operator.bond}`);
-      add("result", `  Reputation:    ${operator.reputation}/100 (${operator.tier})`);
+      add("result", `  Quality:     ${operator.quality}/100 (${operator.tier})`);
       add("result", `  Invocations:   ${operator.invocations.toLocaleString()}`);
       add("result", `  Validators:    ${operator.validators} bonded`);
       add("result", `  Avg Score:     ${operator.avgScore}/5.0`);
@@ -451,7 +451,7 @@ function processCommand(
       add("balance", `  $AEGIS: ${wallet.aegis.toFixed(2)}`);
       add("blank", "");
       add("result", `  Address:     ${wallet.address}`);
-      add("result", `  Reputation:  ${wallet.reputation}/100 (${wallet.tier})`);
+      add("result", `  Quality:   ${wallet.quality}/100 (${wallet.tier})`);
       add("result", `  Invocations: ${wallet.invocations}`);
       add("result", `  Network:     Solana (devnet)`);
       add("blank", "");
@@ -497,7 +497,7 @@ function processCommand(
       add("result", "  - Avg Tx Cost:      $0.00025");
       add("result", "  - Finality:         ~400ms");
       add("blank", "");
-      add("dim", "  Source: operators.sh (82K+) -- Vercel Labs Open Agent Operators Ecosystem");
+      add("dim", "  Source: operators.sh (82K+). Vercel Labs Open Agent Operators Ecosystem");
       add("dim", "  Built on the x402 open standard (HTTP 402 micropayments)");
       add("blank", "");
       break;
@@ -516,7 +516,7 @@ function processCommand(
         const name = padRight(s.name, 28);
         const author = padRight(s.author.slice(0, 15), 16);
         const cat = padRight(s.category, 16);
-        const rep = padRight(`${s.reputation}/100`, 8);
+        const rep = padRight(`${s.quality}/100`, 8);
         add("table-row", `  ${num} ${name} ${author} ${cat} ${rep} ${s.status}`);
       }
 
@@ -693,7 +693,7 @@ function processCommand(
       };
 
       const w = missionWeights[mission] || missionWeights.general;
-      const rep = operator.reputation;
+      const rep = operator.quality;
       const age = Math.max(1, Math.floor((Date.now() - new Date(operator.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
       const successRate2 = operator.recentInvocations.length > 0
         ? operator.recentInvocations.filter(i => i.status === "completed").length / operator.recentInvocations.length
@@ -1022,7 +1022,7 @@ function processCommand(
         ...prev,
         usdc: Math.max(0, prev.usdc - totalCost),
         invocations: prev.invocations + operators.length,
-        reputation: Math.min(100, prev.reputation + operators.length),
+        quality: Math.min(100, prev.quality + operators.length),
         tier: prev.invocations + operators.length >= 50 ? "Gold" : prev.invocations + operators.length >= 10 ? "Silver" : prev.invocations + operators.length >= 3 ? "Bronze" : "Unranked",
       }));
 
@@ -1117,7 +1117,7 @@ function processCommand(
         ...prev,
         aegis: Math.max(0, prev.aegis - cost),
         invocations: prev.invocations + experiments,
-        reputation: Math.min(100, prev.reputation + 5),
+        quality: Math.min(100, prev.quality + 5),
       }));
 
       break;
@@ -1263,10 +1263,10 @@ function processCommand(
       add("output", "  STEP 1/3: VALIDATING SKILL PACKAGE");
       add("divider", "  ────────────────────────────────────────────────────");
       add("output", `  Scanning ${skillName}/...`);
-      add("success", "  [OK] SKILL.md found -- description and usage docs present");
-      add("success", "  [OK] handler.ts found -- entry point validated");
-      add("success", "  [OK] test/ directory found -- 12 test cases, all passing");
-      add("success", "  [OK] aegis.sandbox block found -- permissions declared");
+      add("success", "  [OK] SKILL.md found. Description and usage docs present");
+      add("success", "  [OK] handler.ts found. Entry point validated");
+      add("success", "  [OK] test/ directory found. 12 test cases, all passing");
+      add("success", "  [OK] aegis.sandbox block found. Permissions declared");
       add("success", "  [OK] No secrets or API keys detected in source");
       add("success", "  [OK] Package size: 24KB (under 1MB limit)");
       add("blank", "");
@@ -1293,7 +1293,7 @@ function processCommand(
       add("output", "  Creating marketplace listing...");
       add("success", "  [OK] Listing live on Aegis Skill Marketplace");
       add("output", "  Requesting initial validation...");
-      add("success", "  [OK] 3 validators assigned -- review period: 24 hours");
+      add("success", "  [OK] 3 validators assigned. Review period: 24 hours");
       add("blank", "");
 
       // Summary
@@ -1351,12 +1351,12 @@ export default function Playground() {
         tags,
         pricePerCall: o.pricePerCall ?? "0.010",
         author: creatorWallet.slice(0, 8),
-        tier: (o.trustScore ?? 0) >= 90 ? "Elite" : (o.trustScore ?? 0) >= 75 ? "Pro" : "Standard",
+        tier: (o.qualityScore ?? 0) >= 90 ? "Elite" : (o.qualityScore ?? 0) >= 75 ? "Pro" : "Standard",
         invocations: o.totalInvocations ?? 0,
         successRate: o.totalInvocations ? ((o.successfulInvocations ?? 0) / o.totalInvocations * 100) : 100,
         avgLatencyMs: o.avgResponseMs ?? 1000,
-        reputation: o.trustScore ?? 50,
-        trustScore: o.trustScore ?? 50,
+        quality: o.qualityScore ?? 50,
+        qualityScore: o.qualityScore ?? 50,
         priceDisplay: `$${priceNum.toFixed(3)} USDC`,
         validators: 3,
         status: o.isActive === false ? "inactive" : "active",
@@ -1595,13 +1595,14 @@ export default function Playground() {
   };
 
   return (
-    <div className="min-h-screen bg-[oklch(0.09_0.005_285)]">
+    <div className="min-h-screen bg-[#0A0A0B]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
       <Navbar />
 
       <div className="pt-24">
         {/* Header */}
         <div className="border-b border-white/[0.06]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 lg:py-20">
+          <div className="mx-auto max-w-[1520px] px-12 py-16 lg:py-20">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
               <div>
                 <div className="text-[11px] font-mono text-zinc-300/40 tracking-[0.2em] mb-4">PLAYGROUND</div>
@@ -1630,7 +1631,7 @@ export default function Playground() {
         </div>
 
         {/* Terminal */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10 lg:py-14">
+        <div className="mx-auto max-w-[1520px] px-12 py-10 lg:py-14">
           <div
             className="border border-white/[0.08] overflow-hidden"
             style={{ boxShadow: "0 0 120px rgba(161,161,170,0.03), 0 4px 60px rgba(0,0,0,0.4)" }}
@@ -1638,7 +1639,7 @@ export default function Playground() {
             {/* Title bar */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/50" />
+                <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/50" />
                 <div className="w-2.5 h-2.5 rounded-full bg-white/35" />
                 <span className="font-mono text-[11px] text-white/18 ml-3">
@@ -1668,7 +1669,7 @@ export default function Playground() {
             <div
               ref={scrollRef}
               onClick={focusInput}
-              className="p-6 lg:p-8 font-mono text-[11px] lg:text-[12px] leading-[1.9] min-h-[500px] max-h-[70vh] overflow-y-auto bg-[oklch(0.08_0.005_285)] cursor-text"
+              className="p-6 lg:p-8 font-mono text-[11px] lg:text-[12px] leading-[1.9] min-h-[500px] max-h-[70vh] overflow-y-auto bg-[#080809] cursor-text"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "rgba(161,161,170,0.1) transparent",
@@ -1735,7 +1736,7 @@ export default function Playground() {
               { label: "YOUR INVOCATIONS", value: String(wallet.invocations) },
               { label: "NETWORK", value: "Solana devnet" },
             ].map((stat) => (
-              <div key={stat.label} className="bg-[oklch(0.09_0.005_285)] p-5 lg:p-6">
+              <div key={stat.label} className="bg-[#0A0A0B] p-5 lg:p-6">
                 <div className="text-[10px] font-mono text-white/15 tracking-wider">{stat.label}</div>
                 <div className="text-[18px] font-normal text-white/60 mt-1 tracking-tight">{stat.value}</div>
               </div>

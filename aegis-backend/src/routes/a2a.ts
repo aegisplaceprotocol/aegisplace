@@ -68,8 +68,8 @@ router.post("/", async (req: Request, res: Response) => {
           invokeUrl: `/api/v1/operators/${op.slug}/invoke`,
           pricePerCall: op.pricePerCall?.toString?.() || "0.01",
           currency: "USDC",
-          method: op.httpMethod || "POST",
-          message: "Use the invokeUrl to execute this skill with x402 payment",
+          method: "POST",
+          message: "Use the invokeUrl to unlock this skill's private SKILL.md with x402 payment",
         };
         break;
       }

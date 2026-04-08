@@ -122,7 +122,7 @@ function _MissionBuilder() {
       <Navbar />
 
       <main className="pt-24 pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1520px] mx-auto">
           {/* Header */}
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-4">
@@ -319,7 +319,7 @@ function _MissionBuilder() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-medium text-white/20 tracking-wider block mb-2">MIN TRUST SCORE</label>
+                    <label className="text-[10px] font-medium text-white/20 tracking-wider block mb-2">MIN quality score</label>
                     <input
                       type="range"
                       min={0}

@@ -10,7 +10,7 @@ export default function OpsDashboard() {
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
       <div className="pt-24 pb-20">
-        <div className="container max-w-4xl text-center">
+        <div className="container max-w-[1520px] px-12 text-center">
           <h1 className="text-4xl font-bold text-white mb-4">Ops Dashboard</h1>
           <p className="text-white/30">Live protocol telemetry. coming soon.</p>
         </div>

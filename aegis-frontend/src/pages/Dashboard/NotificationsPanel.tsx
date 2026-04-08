@@ -42,7 +42,7 @@ const ALERT_TOGGLES: AlertToggle[] = [
   { id: "earnings-milestones", label: "Earnings Milestones", description: "Notify at $100, $1K, $10K earned", defaultOn: true },
   { id: "dispute-filed", label: "Dispute Filed", description: "When a dispute is filed against your operator", defaultOn: true },
   { id: "guardrail-blocks", label: "Guardrail Blocks", description: "When NeMo blocks an invocation", defaultOn: false },
-  { id: "low-trust", label: "Low Trust Score", description: "When trust drops below 70", defaultOn: true },
+  { id: "low-trust", label: "Low quality score", description: "When trust drops below 70", defaultOn: true },
   { id: "new-dependent", label: "New Dependent", description: "When a skill registers dependency on yours", defaultOn: false },
   { id: "weekly-summary", label: "Weekly Summary", description: "Email digest every Monday", defaultOn: true },
 ];
@@ -61,7 +61,7 @@ const ALERT_HISTORY: AlertHistoryItem[] = [
   { id: "ah3", type: "Dispute Filed", message: "Dispute #D-0047 against Mistral Coder", timestamp: "1 hr ago", read: false },
   { id: "ah4", type: "Earnings Milestone", message: "You reached $1,000 in total earnings!", timestamp: "3 hrs ago", read: true },
   { id: "ah5", type: "Guardrail Block", message: "NeMo blocked PII in request to Llama Guard", timestamp: "5 hrs ago", read: true },
-  { id: "ah6", type: "Low Trust Score", message: "DeepSeek Math trust dropped to 68", timestamp: "8 hrs ago", read: true },
+  { id: "ah6", type: "Low quality score", message: "DeepSeek Math trust dropped to 68", timestamp: "8 hrs ago", read: true },
   { id: "ah7", type: "New Dependent", message: "Yield Strategy now depends on Gas Fee Oracle", timestamp: "12 hrs ago", read: true },
   { id: "ah8", type: "Weekly Summary", message: "Your weekly digest is ready", timestamp: "2 days ago", read: true },
 ];

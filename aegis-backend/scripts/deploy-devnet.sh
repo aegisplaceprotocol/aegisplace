@@ -1,17 +1,21 @@
 #!/bin/bash
-# Deploy all 3 Aegis programs to Solana Devnet
-# Run: bash scripts/deploy-devnet.sh
+# Deploy all 3 Aegis programs to Solana Devnet.
+# WSL: bash aegis-backend/scripts/deploy-devnet.sh
 
 set -e
 
 echo "=== Aegis Protocol Devnet Deployment ==="
 echo ""
 
-DEPLOY_DIR="/root/aegis/aegis-build"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 KEYPAIR="${SOLANA_KEYPAIR:-$HOME/.config/solana/id.json}"
 DEVNET_URL="https://api.devnet.solana.com"
+AEGIS_PROGRAM_ID="HiDGqc9NX4dbERfqAyq2skF3Tk5vWEjXwsrrtSWxi19v"
+ROYALTY_PROGRAM_ID="8KAWrDAwgGihNr49VRu2Wvsf8n1dHkjFtUt53M1D9T7a"
+GOVERNANCE_PROGRAM_ID="G15ETEBeHKaCvfDHmpdE9o6XEfy3bBDCGcG5kAsGXdrD"
 
-cd "$DEPLOY_DIR"
+cd "$REPO_ROOT"
 
 # Check balance
 echo "Wallet: $(solana-keygen pubkey $KEYPAIR)"
@@ -58,17 +62,17 @@ echo ""
 echo "=== Verification ==="
 echo ""
 echo "--- aegis ---"
-solana program show 7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR --url $DEVNET_URL
+solana program show $AEGIS_PROGRAM_ID --url $DEVNET_URL
 echo ""
 echo "--- royalty_registry ---"
-solana program show FrXBFm4WdqBHosZJ8rMyT9FHNvRXuSVzxqGBbH7nCWs6 --url $DEVNET_URL
+solana program show $ROYALTY_PROGRAM_ID --url $DEVNET_URL
 echo ""
 echo "--- aegis_governance ---"
-solana program show 6TwiJJSscSFpSQA1PU8uYoJHGwgxaprEPJSpKfRireSn --url $DEVNET_URL
+solana program show $GOVERNANCE_PROGRAM_ID --url $DEVNET_URL
 echo ""
 
 echo "=== Deployment Complete ==="
 echo "Program IDs:"
-echo "  aegis:            7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR"
-echo "  royalty_registry: FrXBFm4WdqBHosZJ8rMyT9FHNvRXuSVzxqGBbH7nCWs6"
-echo "  aegis_governance: 6TwiJJSscSFpSQA1PU8uYoJHGwgxaprEPJSpKfRireSn"
+echo "  aegis:            $AEGIS_PROGRAM_ID"
+echo "  royalty_registry: $ROYALTY_PROGRAM_ID"
+echo "  aegis_governance: $GOVERNANCE_PROGRAM_ID"

@@ -45,9 +45,9 @@ const FEATURES: Feature[] = [
     color: T.positive,
   },
   {
-    title: "On-Chain Reputation",
+    title: "on-chain quality",
     shortDesc: "Immutable invocation, completion, and failure records.",
-    desc: "Every invocation, completion, and failure is recorded immutably. Success scores from 0-100 with time decay. Reputation is earned, not claimed.",
+    desc: "Every invocation, completion, and failure is recorded immutably. Success scores from 0-100 with time decay. quality is earned, not claimed.",
     cmd: "agent-aegis inspect code-review",
     paper: "Hadfield, Oxford",
     category: "Identity",
@@ -55,8 +55,8 @@ const FEATURES: Feature[] = [
   },
   {
     title: "82K Operator Index",
-    shortDesc: "Wraps operators.sh with bonded validation and reputation.",
-    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain reputation. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
+    shortDesc: "Wraps operators.sh with bonded validation and quality.",
+    desc: "The Aegis Index wraps operators.sh (82K+ operators from Vercel Labs) with bonded validation, x402 micropayments, and on-chain quality. Compatible with AegisX, Codex CLI, ChatGPT, Cursor, and Agent Aegis.",
     cmd: "agent-aegis search code-review",
     paper: "operators.sh, Vercel Labs",
     category: "Infrastructure",
@@ -110,7 +110,7 @@ const FEATURES: Feature[] = [
   {
     title: "A2A Protocol Support",
     shortDesc: "Native Google/IBM Agent-to-Agent protocol support.",
-    desc: "Agents discover each other via Agent Cards, negotiate capabilities, and delegate tasks. Aegis adds the missing trust layer: before an agent accepts a task, it checks the requester's on-chain reputation.",
+    desc: "Agents discover each other via Agent Cards, negotiate capabilities, and delegate tasks. Aegis verifies operator skills on-chain before an agent accepts or delegates any task.",
     cmd: "agent-aegis a2a discover --filter success>80",
     paper: "Google A2A Spec, 2025",
     category: "Infrastructure",
@@ -119,7 +119,7 @@ const FEATURES: Feature[] = [
   {
     title: "Coinbase Agentic Wallet Integration",
     shortDesc: "Agents hold their own wallets and sign transactions.",
-    desc: "Support for Coinbase's Agentic Wallets. Agents hold their own wallets, sign transactions, and manage funds autonomously. Aegis validates identity and reputation before any wallet operation.",
+    desc: "Support for Coinbase's Agentic Wallets. Agents hold their own wallets, sign transactions, and manage funds autonomously. Aegis validates identity and quality before any wallet operation.",
     cmd: "agent-aegis wallet connect --coinbase --verify",
     paper: "Coinbase CDP, Feb 2026",
     category: "Payment",
@@ -137,7 +137,7 @@ const FEATURES: Feature[] = [
   {
     title: "PDA State Architecture",
     shortDesc: "Isolated Program Derived Accounts for parallel execution.",
-    desc: "Operator metadata, bond vaults, and reputation scores each live in separate Program Derived Accounts. Stateless programs with isolated state. Parallel execution without blocking.",
+    desc: "Operator metadata, bond vaults, and quality scores each live in separate Program Derived Accounts. Stateless programs with isolated state. Parallel execution without blocking.",
     cmd: "agent-aegis inspect --pdan operator:code-review",
     paper: "Solana Account Model",
     category: "Infrastructure",
@@ -155,7 +155,7 @@ const FEATURES: Feature[] = [
   {
     title: "Aegis Insurance Fund",
     shortDesc: "Protocol-level consumer protection and restitution.",
-    desc: "A slice of treasury funds an insurance pool. If a bonded Operator causes demonstrable damage, the consumer files a claim and gets compensated. Beyond slashing -- actual restitution.",
+    desc: "A slice of treasury funds an insurance pool. If a bonded Operator causes demonstrable damage, the consumer files a claim and gets compensated. Beyond slashing, actual restitution.",
     cmd: "agent-aegis claim --operator bad-actor --evidence tx:abc123",
     paper: "Protocol Insurance Design",
     category: "Payment",
@@ -276,7 +276,7 @@ export default function ArsenalPanel() {
     <div>
       <PageHeader
         title="Protocol Arsenal"
-        subtitle="24 technologies powering the Aegis trust layer"
+        subtitle="24 technologies powering the Aegis skills marketplace"
       />
 
       <div style={{ marginBottom: 24 }}>

@@ -207,7 +207,7 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-transparent text-white">
       <Navbar />
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pt-24 pb-12">
+      <div className="mx-auto max-w-[1520px] px-12 pt-24 pb-12">
         {/* Header */}
         <motion.div {...fadeInView} className="mb-10">
           <h1 className="text-[32px] font-normal tracking-tight text-white/90">
@@ -391,7 +391,7 @@ export default function Analytics() {
 
               <div className="bg-white/[0.01] border border-white/[0.06] p-6">
                 <h2 className="text-[10px] font-medium text-white/20 tracking-[0.15em] mb-4">
-                  TRUST SCORE DISTRIBUTION
+                  quality score DISTRIBUTION
                 </h2>
                 <div className="space-y-3">
                   {TRUST_DISTRIBUTION.map(tier => (

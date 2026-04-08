@@ -75,7 +75,7 @@ const STAKING_TIERS = [
     maxOperators: 5,
     slashRisk: "2%",
     requirements: ["Wallet with 2,500 $AEGIS", "Complete validator quiz", "No prior slashing events"],
-    perks: ["Validate up to 5 operators", "Basic reputation badge", "Community Discord access"],
+    perks: ["Validate up to 5 operators", "Basic quality badge", "Community Discord access"],
   },
   {
     tier: "Journeyman",
@@ -150,7 +150,7 @@ const ONBOARDING_STEPS = [
 
 /* ── Main component ────────────────────────────────────────────────────── */
 export default function Validators() {
-  const [sortBy, setSortBy] = useState<"reputation" | "stake" | "validated" | "newest">("reputation");
+  const [sortBy, setSortBy] = useState<"quality" | "stake" | "validated" | "newest">("quality");
   const [filterTier, setFilterTier] = useState<string>("all");
   const [activeOnboardStep, setActiveOnboardStep] = useState(0);
   const [copied, setCopied] = useState(-1);
@@ -175,7 +175,7 @@ export default function Validators() {
   /* Stats */
   const totalBonded = validators.reduce((s: number, v: ValidatorItem) => s + (v.stakeLamports || 0), 0);
   const totalValidated = validators.reduce((s: number, v: ValidatorItem) => s + (v.validatedCount || 0), 0);
-  const avgScore = validators.length > 0 ? validators.reduce((s: number, v: ValidatorItem) => s + (v.reputationScore || 0), 0) / validators.length : 0;
+  const avgScore = validators.length > 0 ? validators.reduce((s: number, v: ValidatorItem) => s + (v.qualityScore || 0), 0) / validators.length : 0;
   const grandmasters = validators.filter((v: ValidatorItem) => getTier(v.stakeLamports) === "Grandmaster").length;
 
   const handleCopy = (idx: number, code: string) => {
@@ -197,7 +197,7 @@ export default function Validators() {
 
       {/* ── Hero Stats ──────────────────────────────────────────────── */}
       <section className="pt-32 pb-20">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <span className="inline-flex items-center gap-2 text-[11px] font-medium text-zinc-500 bg-zinc-800/40 border border-white/[0.06]/30 rounded-full px-4 py-1.5 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[rgba(52,211,153,0.40)] animate-pulse" />
             Validator Network
@@ -208,7 +208,7 @@ export default function Validators() {
           </h1>
 
           <p className="mt-5 text-zinc-500 text-lg max-w-2xl leading-relaxed">
-            Every operator in the Aegis registry is attested by bonded validators who stake $AEGIS against their reputation. Rank up from Apprentice to Grandmaster. Negligent validation triggers slashing.
+            Every operator in the Aegis registry is attested by bonded validators who stake $AEGIS against their quality. Rank up from Apprentice to Grandmaster. Negligent validation triggers slashing.
           </p>
 
           {/* Stat grid */}
@@ -231,7 +231,7 @@ export default function Validators() {
 
       {/* ── Leaderboard ─────────────────────────────────────────────── */}
       <section className="pb-20">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
             <div>
               <span className="text-[11px] font-medium text-zinc-500 mb-2 block">Leaderboard</span>
@@ -286,8 +286,8 @@ export default function Validators() {
                   <button onClick={() => setSortBy("stake")} className={`text-[10px] font-medium text-left transition-colors ${sortBy === "stake" ? "text-zinc-300" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Stake {sortBy === "stake" && "\u2193"}
                   </button>
-                  <button onClick={() => setSortBy("reputation")} className={`text-[10px] font-medium text-left transition-colors ${sortBy === "reputation" ? "text-zinc-300" : "text-zinc-500 hover:text-zinc-300"}`}>
-                    Score {sortBy === "reputation" && "\u2193"}
+                  <button onClick={() => setSortBy("quality")} className={`text-[10px] font-medium text-left transition-colors ${sortBy === "quality" ? "text-zinc-300" : "text-zinc-500 hover:text-zinc-300"}`}>
+                    Score {sortBy === "quality" && "\u2193"}
                   </button>
                   <button onClick={() => setSortBy("validated")} className={`text-[10px] font-medium text-left transition-colors ${sortBy === "validated" ? "text-zinc-300" : "text-zinc-500 hover:text-zinc-300"}`}>
                     Validated {sortBy === "validated" && "\u2193"}
@@ -320,7 +320,7 @@ export default function Validators() {
                         </span>
                       </div>
                       <div className="text-[13px] font-medium text-zinc-400">{formatStake(v.stakeLamports)}</div>
-                      <ScoreBar score={v.reputationScore} />
+                      <ScoreBar score={v.qualityScore} />
                       <div className="text-[13px] font-medium text-zinc-500">{v.validatedCount}</div>
                       <div className="text-[13px] font-medium text-zinc-500">{v.slashedCount}</div>
                       <div className="flex items-center gap-1.5">
@@ -344,7 +344,7 @@ export default function Validators() {
 
       {/* ── Staking Economics ───────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]/30">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <span className="text-[11px] font-medium text-zinc-500 mb-2 block">Economics</span>
           <h2 className="text-3xl font-normal text-white tracking-tight">
             Rank up. Earn more.
@@ -476,7 +476,7 @@ export default function Validators() {
 
       {/* ── Become a Validator ──────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]/30">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <span className="text-[11px] font-medium text-zinc-500 mb-2 block">Onboarding</span>
           <h2 className="text-3xl font-normal text-white tracking-tight">
             Become a Validator
@@ -597,7 +597,7 @@ export default function Validators() {
 
       {/* ── CTA ─────────────────────────────────────────────────────── */}
       <section className="py-20 border-t border-white/[0.06]/30">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center">
+        <div className="mx-auto max-w-[1520px] px-12 text-center">
           <h2 className="text-2xl font-normal text-white tracking-tight">
             Ready to secure the protocol?
           </h2>

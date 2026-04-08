@@ -12,7 +12,6 @@ pub fn handler(
     ctx: Context<RegisterOperator>,
     name: String,
     slug: String,
-    endpoint_url: String,
     metadata_uri: String,
     price_usdc_base: u64,
     category: u8,
@@ -20,7 +19,6 @@ pub fn handler(
     // Validate input lengths.
     require!(name.len() <= 64, AegisError::NameTooLong);
     require!(slug.len() <= 64, AegisError::SlugTooLong);
-    require!(endpoint_url.len() <= 256, AegisError::EndpointUrlTooLong);
     require!(metadata_uri.len() <= 200, AegisError::MetadataUriTooLong);
     require!(price_usdc_base > 0, AegisError::ZeroPrice);
     // Minimum price: 10,000 base units = $0.01 USDC (6 decimals).
@@ -40,7 +38,6 @@ pub fn handler(
     operator.operator_id = operator_id;
     operator.name = name.clone();
     operator.slug = slug.clone();
-    operator.endpoint_url = endpoint_url.clone();
     operator.metadata_uri = metadata_uri.clone();
     operator.price_usdc_base = price_usdc_base;
     operator.category = category;
@@ -63,7 +60,6 @@ pub fn handler(
         creator: operator.creator,
         name,
         slug,
-        endpoint_url,
         metadata_uri,
         price_usdc_base,
         category,

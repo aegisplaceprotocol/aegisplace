@@ -1,0 +1,606 @@
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { toast } from "sonner";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
+import { API_BASE_URL } from "@/lib/api";
+import {
+  sanitizeSlug,
+  sendSkillRegistrationTransaction,
+  type PreparedSkillRegistrationPlan,
+} from "@/lib/solanaSkillRegistry";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+
+const CATEGORY_OPTIONS = [
+  ["code-review", "Code Review"],
+  ["sentiment-analysis", "Sentiment Analysis"],
+  ["data-extraction", "Data Extraction"],
+  ["image-generation", "Image Generation"],
+  ["text-generation", "Text Generation"],
+  ["translation", "Translation"],
+  ["summarization", "Summarization"],
+  ["classification", "Classification"],
+  ["search", "Search"],
+  ["financial-analysis", "Financial Analysis"],
+  ["security-audit", "Security Audit"],
+  ["other", "Other"],
+] as const;
+
+type OnChainCluster = "devnet" | "mainnet-beta" | "testnet";
+
+export function SkillUploadPanel({
+  onSuccess,
+}: {
+  onSuccess?: (slug: string) => void;
+}) {
+  const [, navigate] = useLocation();
+  const { connection } = useConnection();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { isAuthenticated, user, refresh, loading: authLoading } = useAuth();
+  const utils = trpc.useUtils();
+  const registerMutation = trpc.operator.register.useMutation();
+  const [step, setStep] = useState(1);
+  const [skillName, setSkillName] = useState("");
+  const [skillSlug, setSkillSlug] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [publicDescription, setPublicDescription] = useState("");
+  const [privateSkill, setPrivateSkill] = useState("");
+  const [skillCategory, setSkillCategory] = useState("other");
+  const [priceAmount, setPriceAmount] = useState("0.050000");
+  const [tags, setTags] = useState("");
+  const [iconUrl, setIconUrl] = useState("");
+  const [docsUrl, setDocsUrl] = useState("");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const userWalletAddress = (user as { walletAddress?: string } | null)?.walletAddress ?? "";
+  const walletAddress = publicKey?.toBase58() ?? userWalletAddress;
+  const sessionWallet = userWalletAddress;
+  const apiBaseUrl = useMemo(() => {
+    if (API_BASE_URL) return API_BASE_URL;
+    if (typeof window !== "undefined") return window.location.origin;
+    return "";
+  }, []);
+  const slugValue = sanitizeSlug(skillSlug || skillName);
+  const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
+  const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
+  const canAdvance =
+    (step === 1 && Boolean(skillName.trim() && slugValue && skillCategory)) ||
+    (step === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && priceAmount.trim())) ||
+    step === 3 ||
+    step === 4;
+
+  useEffect(() => {
+    if (!connected || !publicKey || authReady) return;
+
+    const handleWalletAuthenticated = (event: Event) => {
+      const customEvent = event as CustomEvent<{ wallet?: string }>;
+      if (!customEvent.detail?.wallet || customEvent.detail.wallet === publicKey.toBase58()) {
+        void refresh();
+      }
+    };
+
+    window.addEventListener("aegis:wallet-authenticated", handleWalletAuthenticated as EventListener);
+    return () => {
+      window.removeEventListener("aegis:wallet-authenticated", handleWalletAuthenticated as EventListener);
+    };
+  }, [authReady, connected, publicKey, refresh]);
+
+  async function handleUpload() {
+    if (!connected || !publicKey || !sendTransaction) {
+      toast.error("Connect a Solana wallet before uploading a skill");
+      return;
+    }
+
+    if (!authReady) {
+      toast.error("Authenticate with your wallet before publishing a skill");
+      return;
+    }
+
+    if (!slugValue) {
+      toast.error("Provide a valid skill slug");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const plan = await utils.operator.prepareRegistration.fetch({
+        slug: slugValue,
+        creatorWallet: walletAddress,
+        apiBaseUrl,
+      }) as PreparedSkillRegistrationPlan;
+
+      const txSignature = await sendSkillRegistrationTransaction({
+        connection,
+        sendTransaction,
+        creatorWallet: walletAddress,
+        plan,
+        payload: {
+          name: skillName.trim(),
+          slug: slugValue,
+          metadataUri: plan.metadataUri,
+          pricePerCall: priceAmount,
+          category: skillCategory,
+        },
+      });
+
+      await registerMutation.mutateAsync({
+        name: skillName.trim(),
+        slug: slugValue,
+        tagline: tagline.trim() || undefined,
+        description: publicDescription.trim(),
+        skill: privateSkill.trim(),
+        category: skillCategory as any,
+        pricePerCall: priceAmount,
+        creatorWallet: walletAddress,
+        tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+        iconUrl: iconUrl.trim() || undefined,
+        docsUrl: docsUrl.trim() || undefined,
+        githubUrl: githubUrl.trim() || undefined,
+        onChainProgramId: plan.programId,
+        onChainConfigPda: plan.configPda,
+        onChainOperatorPda: plan.operatorPda,
+        onChainOperatorId: plan.operatorId,
+        onChainTxSignature: txSignature,
+        onChainMetadataUri: plan.metadataUri,
+        onChainCluster: plan.cluster as OnChainCluster,
+      });
+
+      await Promise.all([
+        utils.operator.list.invalidate(),
+        utils.operator.mine.invalidate(),
+      ]);
+
+      toast.success("Skill registered on Solana and published to the marketplace");
+      if (onSuccess) {
+        onSuccess(slugValue);
+      } else {
+        navigate(`/marketplace/${slugValue}`);
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to upload skill");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const inputClass = "w-full px-4 py-3 text-sm text-white/75 placeholder:text-white/20 transition-colors focus:outline-none";
+  const inputStyle = {
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "5px",
+  };
+  const inputFocusStyle = { borderColor: "rgba(16,185,129,0.40)" };
+  const shellStyle = {
+    background: "#0d0d0f",
+    border: "1px solid rgba(255,255,255,0.10)",
+    borderRadius: "6px",
+    boxShadow: "0 0 60px rgba(0,0,0,0.8), 0 0 24px rgba(16,185,129,0.05)",
+    height: "min(720px, calc(100vh - 2rem))",
+  } as const;
+  const cardStyle = {
+    border: "1px solid rgba(255,255,255,0.06)",
+    borderRadius: "5px",
+    background: "rgba(255,255,255,0.03)",
+  } as const;
+
+  return (
+    <div className="flex w-full max-w-xl flex-col overflow-hidden" style={shellStyle} data-lenis-prevent>
+      <div className="border-b border-white/6 p-4">
+        <h2 className="text-lg font-medium tracking-[-0.025em] text-white/95">Upload Your Skill</h2>
+        <div className="mt-1 flex items-center gap-2">
+          {[1, 2, 3, 4].map((currentStep) => (
+            <div key={currentStep} className="flex items-center gap-1">
+              <div
+                className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold transition-all"
+                style={{
+                  background: currentStep <= step ? "#10B981" : "rgba(255,255,255,0.06)",
+                  color: currentStep <= step ? "#000" : "rgba(255,255,255,0.30)",
+                  boxShadow: currentStep === step ? "0 0 10px rgba(16,185,129,0.35)" : "none",
+                }}
+              >
+                {currentStep}
+              </div>
+              {currentStep < 4 ? (
+                <div
+                  className="h-px w-6 transition-all"
+                  style={{ background: currentStep < step ? "#10B981" : "rgba(255,255,255,0.08)" }}
+                />
+              ) : null}
+            </div>
+          ))}
+          <span className="ml-1 text-[10px] text-white/35">Step {step} of 4</span>
+        </div>
+      </div>
+
+      <div className="h-0.5 bg-white/4">
+        <div
+          className="h-full transition-all duration-500"
+          style={{
+            width: `${(step / 4) * 100}%`,
+            background: "#10B981",
+            boxShadow: "0 0 8px rgba(16,185,129,0.5)",
+          }}
+        />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-4" data-lenis-prevent>
+        <div className="space-y-4">
+        {step === 1 ? (
+          <>
+            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Basic Info</div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Skill Name</label>
+              <input
+                type="text"
+                value={skillName}
+                onChange={(event) => {
+                  setSkillName(event.target.value);
+                  if (!skillSlug) setSkillSlug(sanitizeSlug(event.target.value));
+                }}
+                placeholder="e.g. Smart Contract Auditor"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Slug</label>
+              <input
+                type="text"
+                value={skillSlug}
+                onChange={(event) => setSkillSlug(sanitizeSlug(event.target.value))}
+                placeholder="e.g. smart-contract-auditor"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Tagline</label>
+              <input
+                type="text"
+                value={tagline}
+                onChange={(event) => setTagline(event.target.value)}
+                placeholder="One-line value proposition for the marketplace card"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Category</label>
+              <div className="flex flex-wrap gap-1.5">
+                {CATEGORY_OPTIONS.map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setSkillCategory(value)}
+                    className="px-3 py-1.5 text-[11px] font-medium transition-all"
+                    style={skillCategory === value ? {
+                      background: "rgba(16,185,129,0.12)",
+                      color: "#10B981",
+                      border: "1px solid rgba(16,185,129,0.30)",
+                      borderRadius: "4px",
+                    } : {
+                      background: "transparent",
+                      color: "rgba(255,255,255,0.35)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {step === 2 ? (
+          <>
+            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Public Description, Private Skill & Pricing</div>
+            <p className="mb-3 text-xs text-white/45">Write a public marketplace description, then add the private SKILL.md content buyers unlock after payment.</p>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Public Description (.md)</label>
+              <textarea
+                value={publicDescription}
+                onChange={(event) => setPublicDescription(event.target.value)}
+                placeholder="# Smart Contract Auditor\n\nExplain what the skill does publicly, what outcomes it helps with, and why someone should buy access."
+                rows={6}
+                className={`${inputClass} resize-none font-mono text-xs`}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Private Skill (SKILL.md)</label>
+              <textarea
+                value={privateSkill}
+                onChange={(event) => setPrivateSkill(event.target.value)}
+                placeholder="# Goal\n\nDescribe exactly how an agent should use this skill, required inputs, implementation notes, output expectations, caveats, and examples."
+                rows={10}
+                className={`${inputClass} resize-none font-mono text-xs`}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-white/55">Price / Call</label>
+                <input
+                  type="text"
+                  value={priceAmount}
+                  onChange={(event) => setPriceAmount(event.target.value)}
+                  placeholder="0.050000"
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                  onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Tags</label>
+              <input
+                type="text"
+                value={tags}
+                onChange={(event) => setTags(event.target.value)}
+                placeholder="mcp, audits, security"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {step === 3 ? (
+          <>
+            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Links & Publish</div>
+            <p className="mb-3 text-xs text-white/45">Attach reference links for the marketplace listing. The public description is published openly, while the private SKILL.md stays paywalled behind the invoke route.</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <input
+                type="url"
+                value={docsUrl}
+                onChange={(event) => setDocsUrl(event.target.value)}
+                placeholder="Docs URL"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+              <input
+                type="url"
+                value={githubUrl}
+                onChange={(event) => setGithubUrl(event.target.value)}
+                placeholder="GitHub URL"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+              <input
+                type="url"
+                value={iconUrl}
+                onChange={(event) => setIconUrl(event.target.value)}
+                placeholder="Icon URL"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
+                onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
+              />
+            </div>
+            <div className="mt-5 p-4" style={cardStyle}>
+              <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/30">What Happens Next</div>
+              <div className="space-y-2">
+                {[
+                  "The backend reserves your slug and stores both the public description and the private SKILL.md content",
+                  "Your wallet signs the on-chain register_operator transaction",
+                  "The Solana program stores the listing with a metadata URI that points to the public metadata document",
+                  "The skill becomes discoverable publicly, and the private SKILL.md is revealed only after payment",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-2">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0" style={{ color: "#10B981" }}>
+                      <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    <span className="text-[11px] text-white/50">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        {step === 4 ? (
+          <>
+            <div className="mb-4 text-[9px] font-bold uppercase tracking-widest text-white/40">Review and Submit</div>
+            <div className="space-y-4">
+              <div className="p-4" style={cardStyle}>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Skill Name</div>
+                <div className="text-sm text-white/80">{skillName || "Untitled Skill"}</div>
+              </div>
+              <div className="p-4" style={cardStyle}>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Slug</div>
+                <div className="text-sm text-white/80">{slugValue || "not-set"}</div>
+              </div>
+              <div className="p-4" style={cardStyle}>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Description</div>
+                <div className="text-xs text-white/60">{publicDescription || "No description provided"}</div>
+              </div>
+              <div className="p-4" style={cardStyle}>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Private SKILL.md</div>
+                <div className="text-xs text-white/60">{privateSkill || "No private skill content provided"}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-4" style={cardStyle}>
+                  <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Category</div>
+                  <div className="text-sm text-white/80">{CATEGORY_OPTIONS.find(([value]) => value === skillCategory)?.[1] ?? skillCategory}</div>
+                </div>
+                <div className="p-4" style={cardStyle}>
+                  <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Pricing</div>
+                  <div className="text-sm text-white/80">{priceAmount ? `$${priceAmount}/call` : "Not set"}</div>
+                </div>
+              </div>
+              <div className="p-4" style={cardStyle}>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Listing Mode</div>
+                <div className="text-xs text-white/60">Public description plus private markdown skill payload. No live endpoint or deployment URL is required for registration.</div>
+              </div>
+              <div className="rounded-[5px] border border-[#10B981]/15 bg-[#10B981]/4 p-4">
+                <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-[#10B981]">How You Will Earn</div>
+                <p className="text-xs leading-relaxed text-white/55">
+                  Every time an operator unlocks your private SKILL.md, the paywall charges {priceAmount ? `$${priceAmount}` : "$0.05"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.
+                </p>
+              </div>
+              <div className="p-4" style={cardStyle}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Wallet</div>
+                    <div className="break-all text-xs text-white/60">{walletAddress || "No wallet connected"}</div>
+                  </div>
+                  <ConnectWalletButton />
+                </div>
+                <p className="mt-3 text-[11px] text-white/45">
+                  Connect and authenticate a wallet first. The Upload CTA unlocks after the session refresh completes for the connected wallet.
+                </p>
+                {connected && !authReady && authLoading ? (
+                  <p className="mt-2 text-[11px] text-[#10B981]">Finalizing wallet session...</p>
+                ) : null}
+              </div>
+            </div>
+          </>
+        ) : null}
+
+        </div>
+      </div>
+
+      <div className="border-t border-white/6 p-4">
+        <div className="flex gap-3">
+          {step > 1 ? (
+            <button
+              onClick={() => setStep(step - 1)}
+              className="px-5 py-2.5 text-sm font-medium text-white/50 transition-all hover:text-white/75"
+              style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "5px" }}
+            >
+              Back
+            </button>
+          ) : null}
+
+          {step < 4 ? (
+            <button
+              type="button"
+              disabled={!canAdvance}
+              onClick={() => setStep(step + 1)}
+              className="flex-1 py-2.5 text-sm font-semibold transition-all"
+              style={{
+                background: canAdvance ? "#10B981" : "rgba(255,255,255,0.08)",
+                color: canAdvance ? "#000" : "rgba(255,255,255,0.35)",
+                borderRadius: "5px",
+                boxShadow: canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+              }}
+              onMouseEnter={(event) => {
+                if (!canAdvance) return;
+                event.currentTarget.style.background = "#059669";
+                event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = canAdvance ? "#10B981" : "rgba(255,255,255,0.08)";
+                event.currentTarget.style.boxShadow = canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none";
+              }}
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={!uploadEnabled}
+              onClick={handleUpload}
+              className="flex-1 py-2.5 text-sm font-semibold transition-all"
+              style={{
+                background: uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)",
+                color: uploadEnabled ? "#000" : "rgba(255,255,255,0.35)",
+                borderRadius: "5px",
+                boxShadow: uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+              }}
+              onMouseEnter={(event) => {
+                if (!uploadEnabled) return;
+                event.currentTarget.style.background = "#059669";
+                event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.background = uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)";
+                event.currentTarget.style.boxShadow = uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none";
+              }}
+            >
+              {submitting || registerMutation.isPending
+                ? "Uploading Skill..."
+                : connected && authReady
+                  ? "Upload Skill"
+                  : "Connect Wallet To Upload"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SkillUploadModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose, open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-120 flex items-start justify-center overflow-y-auto p-4 sm:items-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-md" />
+      <div className="relative z-10 my-4 w-full max-w-xl" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 z-20 p-1 text-white/35 transition-colors hover:text-white/70"
+          aria-label="Close upload modal"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+        <SkillUploadPanel
+          onSuccess={(slug) => {
+            onClose();
+            navigate(`/marketplace/${slug}`);
+          }}
+        />
+      </div>
+    </div>
+  );
+}

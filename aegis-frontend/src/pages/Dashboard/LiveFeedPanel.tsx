@@ -31,20 +31,14 @@ interface FeedRow {
 
 const FEE_BREAKDOWN = [
   { label: "Creator", pct: "85%", color: T.positive },
-  { label: "Validators", pct: "15%", color: T.text50 },
+  { label: "Validators", pct: "10%", color: T.text50 },
   { label: "Stakers", pct: "3%", color: T.text30 },
-  { label: "Treasury", pct: "8%", color: T.text50 },
-  { label: "Insurance", pct: "3%", color: T.text50 },
-  { label: "Burned", pct: "0.5%", color: T.negative },
+  { label: "Treasury", pct: "1.5%", color: T.text50 },
+  { label: "Insurance", pct: "0.5%", color: T.text50 },
+  { label: "Burned", pct: "0%", color: T.negative },
 ];
 
-const TOP_OPERATORS = [
-  { name: "GPT-4o Router", invocations: 312 },
-  { name: "Claude Analyst", invocations: 248 },
-  { name: "Mistral Coder", invocations: 187 },
-  { name: "Gemini Vision", invocations: 143 },
-  { name: "Llama Guard", invocations: 98 },
-];
+// TOP_OPERATORS is derived from real feed data — see topOperators computed below
 
 /* ── Styles ───────────────────────────────────────────────────────────── */
 
@@ -68,6 +62,9 @@ export default function LiveFeedPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+
+  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 30_000, refetchInterval: isPaused ? false : 30_000 });
+  const stats = statsQuery.data as Record<string, any> | undefined;
 
   const recentQuery = trpc.invoke.recent.useQuery(
     { limit: 25 },
@@ -122,6 +119,27 @@ export default function LiveFeedPanel() {
     return true;
   });
 
+  // Top operators derived from real feed rows
+  const topOperators: { name: string; invocations: number }[] = (() => {
+    const counts: Record<string, number> = {};
+    for (const r of allRows) {
+      counts[r.operator] = (counts[r.operator] ?? 0) + 1;
+    }
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, invocations]) => ({ name, invocations }));
+  })();
+
+  // Derived stats from real data
+  const totalInv: number = (stats?.totalInvocations as number) ?? 0;
+  const totalEarnings: number = stats?.totalEarnings ? parseFloat(String(stats.totalEarnings)) : 0;
+  const successCount = allRows.filter(r => r.status === "Success").length;
+  const feedSuccessRate = allRows.length > 0 ? ((successCount / allRows.length) * 100).toFixed(1) : null;
+  const feedAvgLatencyMs = allRows.length > 0
+    ? Math.round(allRows.reduce((acc, r) => acc + (parseInt(r.latency) || 0), 0) / allRows.length)
+    : null;
+
   return (
     <div>
       <PageHeader
@@ -149,10 +167,10 @@ export default function LiveFeedPanel() {
         gap: 12,
         marginBottom: 24,
       }}>
-        <StatTile label="Invocations / min" value="847" delta="+12.3% vs last hour" deltaPositive />
-        <StatTile label="Success Rate" value="96.8%" delta="+0.4%" deltaPositive accent={T.positive} />
-        <StatTile label="Avg Latency" value="142ms" delta="-8ms" deltaPositive accent={T.text50} />
-        <StatTile label="Fees Today" value="$4,219" delta="+$340 last hour" deltaPositive accent={T.text50} />
+        <StatTile label="Total Invocations" value={totalInv > 0 ? totalInv.toLocaleString() : "—"} delta="all-time" />
+        <StatTile label="Success Rate" value={feedSuccessRate ? `${feedSuccessRate}%` : "—"} delta="recent window" accent={T.positive} />
+        <StatTile label="Avg Latency" value={feedAvgLatencyMs != null ? `${feedAvgLatencyMs}ms` : "—"} delta="recent window" accent={T.text50} />
+        <StatTile label="Total Fees" value={totalEarnings > 0 ? `$${Math.floor(totalEarnings).toLocaleString()}` : "—"} delta="all-time" accent={T.text50} />
       </div>
 
       {/* Filter bar */}
@@ -340,10 +358,13 @@ export default function LiveFeedPanel() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Top operators */}
           <Card>
-            <CardHead label="Top Operators (1h)" />
+            <CardHead label="Top Operators (recent)" />
             <div style={{ padding: "12px 20px 16px" }}>
-              {TOP_OPERATORS.map((op) => {
-                const maxInv = TOP_OPERATORS[0].invocations;
+              {topOperators.length === 0 && (
+                <div style={{ fontSize: 12, color: T.text20, textAlign: "center", padding: "16px 0" }}>No data yet</div>
+              )}
+              {topOperators.map((op) => {
+                const maxInv = topOperators[0]?.invocations ?? 1;
                 const pct = (op.invocations / maxInv) * 100;
                 return (
                   <div key={op.name} style={{ marginBottom: 12 }}>

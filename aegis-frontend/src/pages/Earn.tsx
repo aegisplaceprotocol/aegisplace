@@ -234,16 +234,13 @@ function MarketplaceDemand() {
 export default function Earn() {
   return (
     <RequireWallet>
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#0A0A0B] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');`}</style>
       <Navbar />
 
       {/* Hero */}
       <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
-          <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 mb-6">
-            THE CREATOR ECONOMY
-          </div>
-
+        <div className="mx-auto max-w-[1520px] px-12">
           <h1 className="text-[clamp(2rem,5vw,3.75rem)] font-normal text-white leading-[1.05] tracking-tight mb-4">
             Where AI skills earn money
             <br />
@@ -275,32 +272,29 @@ export default function Earn() {
 
       {/* Calculator */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12">
           <EarningsCalculator />
         </div>
       </section>
 
       {/* 3-Step Guide */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12">
           <ThreeStepGuide />
         </div>
       </section>
 
       {/* Marketplace Demand */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12">
           <MarketplaceDemand />
         </div>
       </section>
 
       {/* The Apple comparison */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="border border-white/[0.04] bg-white/[0.015] p-6 sm:p-10 lg:p-12">
-            <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 uppercase mb-6">
-              THE ANALOGY
-            </div>
             <h3 className="text-xl sm:text-2xl font-normal text-white mb-4">
               The App Store moment for AI.
             </h3>
@@ -338,7 +332,7 @@ export default function Earn() {
 
       {/* Bottom CTA */}
       <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-2xl text-center">
+        <div className="mx-auto max-w-[1520px] px-12 text-center">
           <h2 className="text-[clamp(1.5rem,4vw,2.5rem)] font-normal text-white leading-[1.1] tracking-tight mb-4">
             You build it. You own it.
             <br />

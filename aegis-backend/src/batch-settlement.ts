@@ -23,7 +23,6 @@ export interface PendingInvocation {
   feeSplit: {
     creator: number;
     validators: number;
-    stakers: number;
     treasury: number;
     insurance: number;
     burned: number;
@@ -108,7 +107,6 @@ class BatchSettlementEngine {
       (acc, inv) => ({
         creator: acc.creator + inv.feeSplit.creator,
         validators: acc.validators + inv.feeSplit.validators,
-        stakers: acc.stakers + inv.feeSplit.stakers,
         treasury: acc.treasury + inv.feeSplit.treasury,
         insurance: acc.insurance + inv.feeSplit.insurance,
         burned: acc.burned + inv.feeSplit.burned,
@@ -116,7 +114,6 @@ class BatchSettlementEngine {
       {
         creator: 0,
         validators: 0,
-        stakers: 0,
         treasury: 0,
         insurance: 0,
         burned: 0,

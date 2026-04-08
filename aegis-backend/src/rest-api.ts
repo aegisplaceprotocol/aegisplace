@@ -20,6 +20,7 @@ const router = Router();
 
 /* ── Helper: format operator for API response ────────────────────────── */
 function formatOperator(op: Record<string, unknown>) {
+  const hasPrivateSkill = typeof op.skill === "string" && op.skill.trim().length > 0;
   return {
     id: op._id || op.id,
     slug: op.slug,
@@ -33,9 +34,9 @@ function formatOperator(op: Record<string, unknown>) {
     invocations: op.totalInvocations || 0,
     revenue: op.totalEarnings || "0",
     healthStatus: op.healthStatus || "healthy",
-    endpointUrl: op.endpointUrl || null,
-    httpMethod: op.httpMethod || "POST",
-    endpoint: op.endpoint,
+    hasPrivateSkill,
+    skillFormat: hasPrivateSkill ? "markdown" : null,
+    skillStatus: hasPrivateSkill ? "ready" : "missing_skill",
     creatorWallet: op.creatorWallet || null,
     metadataUri: op.onChainMetadataUri || null,
     onChain: {
@@ -112,11 +113,10 @@ router.get("/skills/:slug/metadata", async (req: Request, res: Response) => {
       description: operator.description || operator.tagline || null,
       category: operator.category,
       creatorWallet: operator.creatorWallet,
-      endpointUrl: operator.endpointUrl || null,
-      httpMethod: operator.httpMethod || "POST",
       pricePerCall: operator.pricePerCall || "0",
-      requestSchema: operator.requestSchema || null,
-      responseSchema: operator.responseSchema || null,
+      hasPrivateSkill: typeof operator.skill === "string" && operator.skill.trim().length > 0,
+      skillFormat: "markdown",
+      revealPath: `/api/v1/operators/${operator.slug}/invoke`,
       tags: operator.tags || [],
       iconUrl: operator.iconUrl || null,
       docsUrl: operator.docsUrl || null,
@@ -184,7 +184,7 @@ router.post(
 
       const o = op as Record<string, unknown>;
       const operatorId = o._id || o.id;
-      const { txSignature, payerWallet } = extractPaymentProof(req);
+      const { txSignature, payerWallet, receiptPda, settlementMethod } = extractPaymentProof(req);
       const paymentHeader = (req as any).paymentProof || txSignature;
 
       // Execute through unified invocation engine
@@ -193,7 +193,9 @@ router.post(
         callerWallet: (payerWallet as string) || undefined,
         payload: req.body,
         txSignature: paymentHeader ? String(paymentHeader) : undefined,
+        receiptPda: receiptPda ? String(receiptPda) : undefined,
         paymentToken: undefined,
+        settlementMethod: settlementMethod === "aegis_program" ? "aegis_program" : "legacy_transfer",
         source: "rest",
       });
 
@@ -209,6 +211,13 @@ router.post(
         success: result.success,
         operatorId,
         operatorName: result.operatorName,
+        operator: {
+          slug: o.slug,
+          description: o.description || o.tagline || null,
+          metadataUri: o.onChainMetadataUri || null,
+          skillStatus: typeof o.skill === "string" && o.skill.trim().length > 0 ? "ready" : "missing_skill",
+          skillFormat: "markdown",
+        },
         result: result.response,
         execution: {
           durationMs: result.responseMs,
@@ -221,14 +230,15 @@ router.post(
           token: "USDC",
           chain: "solana",
           txSignature: paymentHeader || null,
+          receiptPda: receiptPda || null,
+          settlementMethod: settlementMethod || (receiptPda ? "aegis_program" : "legacy_transfer"),
           settledAt: new Date().toISOString(),
           feeSplit: {
-            creator: "60%",
-            validators: "15%",
-            stakers: "12%",
-            treasury: "8%",
-            insurance: "3%",
-            burned: "2%",
+            creator: "85%",
+            validators: "10%",
+            treasury: "3%",
+            insurance: "1.5%",
+            burned: "0.5%",
           },
         },
         invocationId: result.invocationId,

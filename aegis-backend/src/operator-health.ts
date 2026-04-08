@@ -1,32 +1,13 @@
 /**
- * Operator Health Checking for Aegis Protocol.
- * Periodically checks operator endpoints and auto-deactivates after 3 consecutive failures.
+ * Operator readiness checking for Aegis Protocol.
+ * Periodically checks that operators still have private skill content configured.
  */
 
 import { OperatorModel, logAudit } from "./db";
 import logger from "./logger";
 
-function isPrivateUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname;
-    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true;
-    if (host === '169.254.169.254') return true;
-    if (host === '100.100.100.200') return true;
-    if (host.startsWith('10.')) return true;
-    if (host.startsWith('192.168.')) return true;
-    if (host.startsWith('172.') && parseInt(host.split('.')[1]) >= 16 && parseInt(host.split('.')[1]) <= 31) return true;
-    if (host.endsWith('.internal') || host.endsWith('.local')) return true;
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return true;
-    return false;
-  } catch { return true; }
-}
-
 /** Health check interval: 5 minutes */
 const HEALTH_CHECK_INTERVAL_MS = 5 * 60 * 1000;
-
-/** Timeout for each health check request (10 seconds) */
-const HEALTH_CHECK_TIMEOUT_MS = 10_000;
 
 /** Number of consecutive failures before auto-deactivation */
 const MAX_CONSECUTIVE_FAILURES = 3;
@@ -42,95 +23,37 @@ interface HealthCheckResult {
 }
 
 /**
- * Check a single operator's endpoint health via HEAD request.
- * Falls back to GET if HEAD is not supported.
+ * Check whether a single operator still has private skill content configured.
  */
 async function checkOperatorHealth(
   operatorId: string,
   slug: string,
-  endpointUrl: string,
+  skill: string | null | undefined,
 ): Promise<HealthCheckResult> {
-  const start = Date.now();
-
-  if (isPrivateUrl(endpointUrl)) {
-    return {
-      operatorId,
-      slug,
-      status: "down",
-      responseMs: 0,
-      error: "Endpoint URL is not allowed (private/internal address)",
-    };
+  const hasPrivateSkill = typeof skill === "string" && skill.trim().length > 0;
+  if (hasPrivateSkill) {
+    return { operatorId, slug, status: "healthy", responseMs: 0 };
   }
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT_MS);
-
-    // Try HEAD first (lightweight)
-    let res: Response;
-    try {
-      res = await fetch(endpointUrl, {
-        method: "HEAD",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "Aegis-HealthCheck/1.0",
-          "X-Aegis-Health-Check": "true",
-        },
-      });
-    } catch {
-      // Some endpoints don't support HEAD, try GET
-      res = await fetch(endpointUrl, {
-        method: "GET",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "Aegis-HealthCheck/1.0",
-          "X-Aegis-Health-Check": "true",
-        },
-      });
-    }
-
-    clearTimeout(timeout);
-    const responseMs = Date.now() - start;
-
-    if (res.status >= 200 && res.status < 500) {
-      // 2xx-4xx are considered "alive" - the endpoint is responding
-      const status: HealthStatus = responseMs > 5000 ? "degraded" : "healthy";
-      return { operatorId, slug, status, responseMs };
-    }
-
-    // 5xx = server error, endpoint is degraded/down
-    return {
-      operatorId,
-      slug,
-      status: "degraded",
-      responseMs,
-      error: `HTTP ${res.status}`,
-    };
-  } catch (err: any) {
-    const responseMs = Date.now() - start;
-    const errorMsg = err.name === "AbortError" ? "Timeout" : err.message || "Connection failed";
-    return {
-      operatorId,
-      slug,
-      status: "down",
-      responseMs,
-      error: errorMsg,
-    };
-  }
+  return {
+    operatorId,
+    slug,
+    status: "down",
+    responseMs: 0,
+    error: "Private SKILL.md content is missing",
+  };
 }
 
 /**
- * Run health checks on all active operators that have an endpointUrl.
+ * Run readiness checks on all active operators.
  * Updates healthStatus, consecutiveFailures, and lastHealthCheck in the database.
- * Auto-deactivates operators after MAX_CONSECUTIVE_FAILURES consecutive failures.
+ * Auto-deactivates operators after MAX_CONSECUTIVE_FAILURES consecutive missing-skill checks.
  */
 export async function runHealthChecks(): Promise<void> {
   try {
-    // Get all active operators with endpoints
+    // Get all active operators
     const activeOperators = await OperatorModel.find({
       isActive: true,
-      endpointUrl: { $ne: null, $exists: true },
-    }).select("_id slug endpointUrl consecutiveFailures").lean();
+    }).select("_id slug skill consecutiveFailures").lean();
 
     if (activeOperators.length === 0) return;
 
@@ -143,7 +66,7 @@ export async function runHealthChecks(): Promise<void> {
 
       const results = await Promise.allSettled(
         batch.map((op: any) =>
-          checkOperatorHealth(String(op._id), op.slug, op.endpointUrl!),
+          checkOperatorHealth(String(op._id), op.slug, op.skill),
         ),
       );
 
@@ -170,7 +93,7 @@ export async function runHealthChecks(): Promise<void> {
         if (newConsecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
           updateData.isActive = false;
           updateData.healthStatus = "down";
-          updateData.suspensionReason = `Auto-deactivated: endpoint unreachable for ${MAX_CONSECUTIVE_FAILURES} consecutive health checks`;
+          updateData.suspensionReason = `Auto-deactivated: private SKILL.md missing for ${MAX_CONSECUTIVE_FAILURES} consecutive checks`;
 
           logger.warn(
             `[HealthCheck] Auto-deactivating operator ${check.slug} (${check.operatorId}): ${MAX_CONSECUTIVE_FAILURES} consecutive failures`,
@@ -199,60 +122,13 @@ export async function runHealthChecks(): Promise<void> {
 }
 
 /**
- * Validate that an endpoint URL is reachable before accepting registration.
- * Returns true if the endpoint responds within the timeout, false otherwise.
+ * Validate that private skill content exists before accepting registration.
  */
-export async function validateEndpoint(endpointUrl: string): Promise<{ reachable: boolean; responseMs: number; error?: string }> {
-  if (isPrivateUrl(endpointUrl)) {
-    return { reachable: false, responseMs: 0, error: "Endpoint URL is not allowed (private/internal address)" };
-  }
-
-  const start = Date.now();
-
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
-
-    const res = await fetch(endpointUrl, {
-      method: "HEAD",
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Aegis-EndpointValidation/1.0",
-        "X-Aegis-Validation": "true",
-      },
-    });
-
-    clearTimeout(timeout);
-    const responseMs = Date.now() - start;
-
-    // Accept any response (even 4xx) as proof the server is alive
-    return { reachable: true, responseMs };
-  } catch (headErr: any) {
-    // Try GET as fallback - some servers don't support HEAD
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15_000);
-
-      const res = await fetch(endpointUrl, {
-        method: "GET",
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "Aegis-EndpointValidation/1.0",
-          "X-Aegis-Validation": "true",
-        },
-      });
-
-      clearTimeout(timeout);
-      const responseMs = Date.now() - start;
-      return { reachable: true, responseMs };
-    } catch (getErr: any) {
-      const responseMs = Date.now() - start;
-      const errorMsg = getErr.name === "AbortError"
-        ? "Endpoint did not respond within 15 seconds"
-        : getErr.message || "Connection failed";
-      return { reachable: false, responseMs, error: errorMsg };
-    }
-  }
+export async function validateEndpoint(skill: string): Promise<{ reachable: boolean; responseMs: number; error?: string }> {
+  const hasPrivateSkill = typeof skill === "string" && skill.trim().length > 0;
+  return hasPrivateSkill
+    ? { reachable: true, responseMs: 0 }
+    : { reachable: false, responseMs: 0, error: "Private SKILL.md content is required" };
 }
 
 /** Timer handle for the health check interval */

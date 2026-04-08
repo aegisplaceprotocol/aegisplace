@@ -161,7 +161,7 @@ app.get("/aegis/health", (req, res) => {
 });
 
 // The marketplace polls this every 30s.
-// Your reputation score updates in real-time.`,
+// Your quality score updates in real-time.`,
   },
 ];
 

@@ -146,7 +146,14 @@ async function startServer() {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-API-Key,X-Payment');
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Content-Type,Authorization,X-API-Key,X-Payment,X-Payment-Proof,X-Payer-Wallet,X-Invocation-Receipt,X-Settlement-Method,Payment-Signature,Stripe-Payment-Token,Stripe-Payment-Receipt',
+      );
+      res.setHeader(
+        'Access-Control-Expose-Headers',
+        'X-Payment-Required,X-Payment-Amount,X-Payment-Currency,X-Payment-Chain,X-Payment-Recipient,X-Payment-Network,X-Payment-Description,PAYMENT-REQUIRED,PAYMENT-RESPONSE',
+      );
     }
     if (req.method === 'OPTIONS') return res.sendStatus(204);
     next();

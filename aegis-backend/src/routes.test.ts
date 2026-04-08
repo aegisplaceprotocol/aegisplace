@@ -16,7 +16,7 @@ vi.mock("./db", () => ({
     return Promise.resolve(undefined);
   }),
   getOperatorById: vi.fn().mockImplementation((id: number) => {
-    if (id === 1) return Promise.resolve({ id: 1, name: "Test Op", slug: "test-op", trustScore: 85, totalInvocations: 100, isActive: true, pricePerCall: "0.025", creatorWallet: "abc123", endpointUrl: null, httpMethod: null, responseSchema: null, creatorId: "user-1" });
+    if (id === 1) return Promise.resolve({ id: 1, name: "Test Op", slug: "test-op", trustScore: 85, totalInvocations: 100, isActive: true, pricePerCall: "0.025", creatorWallet: "abc123", skill: "# Test skill", creatorId: "user-1" });
     return Promise.resolve(undefined);
   }),
   createOperator: vi.fn().mockResolvedValue({ id: 2, name: "New Op", slug: "new-op" }),
@@ -33,7 +33,7 @@ vi.mock("./db", () => ({
 // Mock the validator module
 vi.mock("./validator", () => ({
   validateInvocation: vi.fn().mockReturnValue({ score: 85, trustDelta: 1, flags: [], breakdown: {} }),
-  calculateFees: vi.fn().mockReturnValue({ creator: 0.015, validators: 0.00375, stakers: 0.003, treasury: 0.002, insurance: 0.00075, burn: 0.0005 }),
+  calculateFees: vi.fn().mockReturnValue({ creator: 0.02125, validators: 0.0025, treasury: 0.00075, insurance: 0.000375, burn: 0.000125 }),
 }));
 
 import { listOperators, getOperatorBySlug, getOperatorById, getProtocolStats, recordInvocation, updateOperator } from "./db";
@@ -129,7 +129,6 @@ describe("Invocation flow logic", () => {
     const fees = calculateFees(0.025);
     expect(fees).toHaveProperty("creator");
     expect(fees).toHaveProperty("validators");
-    expect(fees).toHaveProperty("stakers");
     expect(fees).toHaveProperty("treasury");
     expect(fees).toHaveProperty("insurance");
     expect(fees).toHaveProperty("burn");
@@ -152,12 +151,11 @@ describe("Invocation flow logic", () => {
       operatorId: 1,
       callerWallet: "test-wallet",
       amountPaid: "0.025",
-      creatorShare: "0.015",
-      validatorShare: "0.00375",
-      treasuryShare: "0.002",
-      burnAmount: "0.0005",
-      stakersShare: "0.003",
-      insuranceShare: "0.00075",
+      creatorShare: "0.02125",
+      validatorShare: "0.0025",
+      treasuryShare: "0.00075",
+      burnAmount: "0.000125",
+      insuranceShare: "0.000375",
       responseMs: 300,
       success: true,
       statusCode: 200,

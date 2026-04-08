@@ -199,7 +199,7 @@ export default function OperatorApply() {
           </div>
           <span className="text-[12px] text-white/20">
             Any developer can register an operator. The marketplace ranks by health, bond size, and validator scores.
-            Bad actors get slashed. Good actors compound reputation.
+            Bad actors get slashed. Good actors compound quality.
           </span>
         </div>
       </div>

@@ -224,7 +224,7 @@ export default function Protections() {
             </div>
             <p className="text-[14px] text-zinc-500 max-w-md leading-relaxed lg:text-right">
               Bonded operators, NeMo guardrails, on-chain insurance, and atomic settlement.
-              Each one enforces quality independently. Together they make the agent economy trustworthy.
+              Each one enforces quality independently. Together they make the agent economy verifiable.
             </p>
           </div>
         </motion.div>

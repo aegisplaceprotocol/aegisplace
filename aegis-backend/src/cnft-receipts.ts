@@ -58,7 +58,6 @@ export function generateReceiptMetadata(invocation: {
   feeSplit: {
     creator: string;
     validators: string;
-    stakers: string;
     treasury: string;
     insurance: string;
     burned: string;
@@ -101,8 +100,8 @@ export function generateReceiptMetadata(invocation: {
     properties: {
       category: "receipt",
       creators: [
-        { address: invocation.creatorWallet, share: 60 },
-        { address: "AEG1SProtoco1Treasury111111111111111111111", share: 40 },
+        { address: invocation.creatorWallet, share: 85 },
+        { address: "AEG1SProtoco1Treasury111111111111111111111", share: 15 },
       ],
     },
   };

@@ -813,7 +813,7 @@ function IntegrationTab() {
               },
               {
                 label: "Aegis Protocol",
-                items: ["Validation", "Reputation", "x402"],
+                items: ["Validation", "quality", "x402"],
                 color: T.text50,
               },
               {

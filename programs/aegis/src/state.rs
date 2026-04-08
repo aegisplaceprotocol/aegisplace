@@ -38,7 +38,7 @@ pub struct ProtocolConfig {
     /// Fee distribution in basis points:
     /// [creator, validators, stakers, treasury, insurance, burned].
     /// Must sum to 10000 (100.00%).
-    /// Default: [6000, 1500, 1200, 800, 300, 200]
+    /// Default: [8500, 1000, 0, 300, 150, 50]
     pub fee_bps: [u16; 6],
 
     /// Pending admin for 2-step admin transfer. Default (zero) means no pending transfer.
@@ -66,10 +66,6 @@ pub struct Operator {
     /// URL-safe marketplace slug. Stable lookup key shared by frontend, MCP, and REST.
     #[max_len(64)]
     pub slug: String,
-
-    /// HTTPS endpoint URL for off-chain skill execution.
-    #[max_len(256)]
-    pub endpoint_url: String,
 
     /// Canonical metadata document for rich marketplace fields that do not need to live on-chain.
     #[max_len(200)]

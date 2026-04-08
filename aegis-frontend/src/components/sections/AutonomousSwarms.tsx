@@ -572,7 +572,7 @@ export default function AutonomousSwarms() {
 # Step 1: Find the 6 best AI researchers on the marketplace
 operators = aegis.discover(
     category="llm_research",
-    min_success_score=0.85,     # only hire workers with great reputations
+    min_success_score=0.85,     # only hire workers with great quality scores
     sort_by="best_val_bpb",   # ranked by their best results
     limit=6
 )

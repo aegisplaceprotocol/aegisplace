@@ -85,7 +85,7 @@ function _MyOperators() {
   const totalInvocations = operators?.reduce((sum, op) => sum + (op.totalInvocations || 0), 0) || 0;
   const totalEarnings = operators?.reduce((sum, op) => sum + parseFloat(op.totalEarned || "..."), 0) || 0;
   const avgTrust = operators?.length
-    ? Math.round(operators.reduce((sum, op) => sum + op.trustScore, 0) / operators.length)
+    ? Math.round(operators.reduce((sum, op) => sum + op.qualityScore, 0) / operators.length)
     : 0;
   const activeCount = operators?.filter(op => op.isActive).length || 0;
 
@@ -95,12 +95,13 @@ function _MyOperators() {
 
   return (
     <RequireWallet>
-    <div className="min-h-screen bg-white/[0.02]">
+    <div className="min-h-screen bg-[#0A0A0B]" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');`}</style>
       <Navbar />
 
       {/* Hero */}
       <section className="pt-28 pb-12 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1520px] px-12">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
               CREATOR DASHBOARD
@@ -124,7 +125,7 @@ function _MyOperators() {
       {/* Not connected state */}
       {!connected && (
         <section className="py-32">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1520px] px-12">
             <div className="max-w-lg mx-auto text-center">
               <div className="w-20 h-20 mx-auto mb-8 border border-white/[0.08] bg-white/[0.02] flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -152,7 +153,7 @@ function _MyOperators() {
       {/* Connected: loading state */}
       {connected && isLoading && (
         <section className="py-32">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center">
+          <div className="mx-auto max-w-[1520px] px-12 text-center">
             <div className="w-8 h-8 border-2 border-white/30 border-t-[#A1A1AA] rounded-full animate-spin mx-auto mb-4" />
             <p className="text-[13px] text-white/30 ">Loading your operators...</p>
           </div>
@@ -162,7 +163,7 @@ function _MyOperators() {
       {/* Connected: no operators */}
       {connected && !isLoading && (!operators || operators.length === 0) && (
         <section className="py-32">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1520px] px-12">
             <div className="max-w-lg mx-auto text-center">
               <div className="w-20 h-20 mx-auto mb-8 border border-white/[0.08] bg-white/[0.02] flex items-center justify-center">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -189,7 +190,7 @@ function _MyOperators() {
         <>
           {/* Stats overview */}
           <section className="border-b border-white/[0.04] bg-white/[0.01]">
-            <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-10">
+            <div className="mx-auto max-w-[1520px] px-12 py-10">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06] border border-white/[0.04]">
                 <div className="bg-white/[0.02] p-6 md:p-8">
                   <div className="text-[28px] md:text-[36px] font-normal text-white/90 leading-none mb-2">
@@ -213,7 +214,7 @@ function _MyOperators() {
                   <div className="text-[28px] md:text-[36px] font-normal leading-none mb-2" style={{ color: trustColor(avgTrust) }}>
                     <AnimNum value={avgTrust} />
                   </div>
-                  <div className="text-[11px] text-white/30 tracking-wider">AVG TRUST SCORE</div>
+                  <div className="text-[11px] text-white/30 tracking-wider">AVG quality score</div>
                 </div>
               </div>
             </div>
@@ -221,7 +222,7 @@ function _MyOperators() {
 
           {/* Operator list */}
           <section className="py-16">
-            <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1520px] px-12">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-[13px] font-medium text-white/40 tracking-wider">
                   YOUR OPERATORS ({operators.length})
@@ -274,7 +275,7 @@ function _MyOperators() {
                             <div className="flex items-center gap-3">
                               <span className={`text-[10px] font-medium px-2 py-0.5 border ${
                                 op.isActive
-                                  ? "text-emerald-400/70 border-emerald-400/20 bg-emerald-400/[0.04]"
+                                  ? "text-white/60 border-white/[0.08] bg-white/[0.03]"
                                   : "text-white/25 border-white/[0.04] bg-white/[0.02]"
                               }`}>
                                 {op.isActive ? "ACTIVE" : "INACTIVE"}
@@ -291,8 +292,8 @@ function _MyOperators() {
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             <div>
                               <div className="text-[10px] font-medium text-white/20 mb-1">TRUST</div>
-                              <div className="text-[16px] font-normal" style={{ color: trustColor(op.trustScore) }}>
-                                {op.trustScore}
+                              <div className="text-[16px] font-normal" style={{ color: trustColor(op.qualityScore) }}>
+                                {op.qualityScore}
                               </div>
                             </div>
                             <div>

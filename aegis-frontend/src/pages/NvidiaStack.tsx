@@ -14,7 +14,7 @@ const NEMO_COMPONENTS = [
     explanation:
       "NeMo Guardrails is an open-source toolkit that lets you define rules for what an AI model can and cannot do. It works by intercepting requests and responses at runtime. Input rails screen what goes into the model (blocking jailbreak attempts, off-topic requests, or PII). Output rails screen what comes out (filtering unsafe content, enforcing format compliance, fact-checking against sources). Dialog rails control conversation flow so the model stays on task. You write these rules in a simple configuration language called Colang. The toolkit adds roughly 0.5 seconds of latency but catches policy violations that the model itself would miss.",
     aegisIntegration:
-      "Every operator invocation on Aegis passes through NeMo Guardrails before and after execution. Operators define their own rail configurations (what topics they handle, what content they block). Guardrail compliance rates feed directly into the on-chain success rate. An operator that consistently passes all rails earns a higher reputation. An operator that triggers output rails gets flagged for validator review.",
+      "Every operator invocation on Aegis passes through NeMo Guardrails before and after execution. Operators define their own rail configurations (what topics they handle, what content they block). Guardrail compliance rates feed directly into the on-chain success rate. An operator that consistently passes all rails earns a higher quality. An operator that triggers output rails gets flagged for validator review.",
     stats: [
       { label: "Rail types", value: "4" },
       { label: "Detection improvement", value: "1.4x" },
@@ -33,7 +33,7 @@ const NEMO_COMPONENTS = [
     explanation:
       "NeMo Evaluator runs standardized tests against AI models and agents. It supports academic benchmarks (MMLU, HumanEval, GSM8K), generative quality metrics (BLEU, ROUGE, code execution pass rates), and LLM-as-a-judge evaluations where a separate model grades the output. You define evaluation suites with specific test cases, expected outputs, and scoring rubrics. The evaluator runs these automatically and produces numerical scores. This replaces subjective user ratings with reproducible, objective measurements.",
     aegisIntegration:
-      "Aegis uses NeMo Evaluator to generate the quantitative component of every operator's success rate. When an operator is registered, it goes through an initial evaluation suite. After that, periodic re-evaluations run every few hours using fresh test cases. The scores feed into the 6-pillar trust model alongside validator attestations, invocation success rates, and economic signals. Operators cannot game their success rate because the evaluation is automated and the test cases rotate.",
+      "Aegis uses NeMo Evaluator to generate the quantitative component of every operator's success rate. When an operator is registered, it goes through an initial evaluation suite. After that, periodic re-evaluations run every few hours using fresh test cases. The scores feed into the 6-pillar quality model alongside validator attestations, invocation success rates, and economic signals. Operators cannot game their success rate because the evaluation is automated and the test cases rotate.",
     stats: [
       { label: "Benchmark types", value: "24+" },
       { label: "Eval methods", value: "3" },
@@ -183,7 +183,7 @@ export default function NvidiaStack() {
 
       {/* -- Hero ------------------------------------------------------------ */}
       <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <div className="flex items-center gap-3 mb-8">
             <NvidiaBadge text="NVIDIA NeMo" size="md" />
             <span className="text-[10px] font-medium text-white/20 tracking-wider">PROTOCOL INTEGRATION</span>
@@ -206,7 +206,7 @@ export default function NvidiaStack() {
 
       {/* -- Guardrails Deep Dive (NEW) -------------------------------------- */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <div className="flex items-center gap-2 mb-6">
             <NvidiaEyeLogo size={14} className="text-[#76B900]/60" />
             <span className="text-[11px] font-medium tracking-wider uppercase text-white/30">
@@ -219,7 +219,7 @@ export default function NvidiaStack() {
           </h2>
           <p className="text-[14px] text-white/30 max-w-2xl leading-relaxed mb-12">
             NeMo Guardrails gives Aegis four types of runtime safety enforcement. Every operator invocation
-            passes through these rails. Guardrail compliance rates feed directly into on-chain trust scores.
+            passes through these rails. Guardrail compliance rates feed directly into on-chain quality scores.
             No other AI IDE or marketplace has anything comparable.
           </p>
 
@@ -277,7 +277,7 @@ export default function NvidiaStack() {
 
       {/* -- 7 Components ---------------------------------------------------- */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-4xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-4xl">
           <div className="flex items-center gap-2 mb-6">
             <NvidiaEyeLogo size={14} className="text-[#76B900]/60" />
             <span className="text-[11px] font-medium tracking-wider uppercase text-white/30 font-medium">
@@ -399,7 +399,7 @@ export default function NvidiaStack() {
 
       {/* -- Architecture Stack ---------------------------------------------- */}
       <section className="py-16 sm:py-24 border-b border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-3xl">
           <h2 className="text-xl sm:text-2xl font-normal text-white mb-2">
             The operator lifecycle, layer by layer.
           </h2>
@@ -440,7 +440,7 @@ export default function NvidiaStack() {
 
       {/* -- Why this matters ------------------------------------------------ */}
       <section className="py-16 sm:py-24">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 max-w-3xl">
+        <div className="mx-auto max-w-[1520px] px-12 max-w-3xl">
           <div className="border border-white/[0.04] p-6 rounded sm:p-10">
             <div className="flex items-center gap-2 mb-4">
               <NvidiaEyeLogo size={16} className="text-[#76B900]/50" />

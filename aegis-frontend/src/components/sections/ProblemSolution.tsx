@@ -34,7 +34,7 @@ export default function ProblemSolution() {
           </h2>
 
           <p className="text-[14px] sm:text-[15px] text-zinc-500 max-w-2xl leading-relaxed mb-12 sm:mb-16">
-            Aegis solves all three: a marketplace with trust and discovery, x402 for autonomous agent payments, and AegisX — the first Solana-native IDE with 86 built-in modules.
+            Aegis solves all three: a marketplace with trust and discovery, x402 for autonomous agent payments, and AegisX, the first Solana-native IDE with 86 built-in modules.
           </p>
         </motion.div>
 

@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { T } from "./theme";
 import { PageHeader, Card, CardHead, FilterChips, ActionButton, StatusBadge, StatTile } from "./primitives";
 
-type Domain = "All" | "Trust & Reputation" | "Agent Safety" | "Payment Protocols" | "Solana" | "NVIDIA";
+type Domain = "All" | "Trust & quality" | "Agent Safety" | "Payment Protocols" | "Solana" | "NVIDIA";
 
 interface Paper {
   id: number;
@@ -22,23 +22,23 @@ const PAPERS: Paper[] = [
     id: 1,
     title: "Computational Trust in Multi-Agent Systems",
     authors: "Piotr Zielinski, MIT CSAIL",
-    abstract: "Formalizes computational approaches to trust evaluation in distributed systems. Develops mathematical models for quantifying trustworthiness based on observable behavior, establishing foundations for automated trust assessment. Addresses the cold-start problem, trust propagation across networks, and the integration of multiple evidence sources into coherent trust scores. Directly applicable to on-chain reputation systems for autonomous agent marketplaces.",
-    tags: ["Trust Systems", "Multi-Agent", "Reputation"],
+    abstract: "Formalizes computational approaches to trust evaluation in distributed systems. Develops mathematical models for quantifying trustworthiness based on observable behavior, establishing foundations for automated trust assessment. Addresses the cold-start problem, trust propagation across networks, and the integration of multiple evidence sources into coherent quality scores. Directly applicable to on-chain quality systems for autonomous agent marketplaces.",
+    tags: ["Trust Systems", "Multi-Agent", "quality"],
     relevance: 96,
     date: "2006",
     link: "https://groups.csail.mit.edu/medg/people/psz/home/",
-    domain: "Trust & Reputation",
+    domain: "Trust & quality",
   },
   {
     id: 2,
-    title: "Reputation Systems for Online Marketplaces",
+    title: "quality systems for Online Marketplaces",
     authors: "Resnick, Zeckhauser, Swanson, Lockwood",
-    abstract: "Seminal paper on the design principles of reputation systems for online marketplaces. Analyzes feedback mechanisms, strategic manipulation, and the conditions under which reputation systems produce reliable signals. Identifies key challenges including name-changing attacks, ballot stuffing, and the tension between privacy and accountability that remain central to modern agent reputation design.",
-    tags: ["Reputation", "Marketplace", "Trust Systems"],
+    abstract: "Seminal paper on the design principles of quality systems for online marketplaces. Analyzes feedback mechanisms, strategic manipulation, and the conditions under which quality systems produce reliable signals. Identifies key challenges including name-changing attacks, ballot stuffing, and the tension between privacy and accountability that remain central to modern agent quality design.",
+    tags: ["quality", "Marketplace", "Trust Systems"],
     relevance: 94,
     date: "2000",
     link: "https://doi.org/10.1145/355112.355122",
-    domain: "Trust & Reputation",
+    domain: "Trust & quality",
   },
   {
     id: 3,
@@ -110,7 +110,7 @@ const PAPERS: Paper[] = [
 
 const DOMAIN_OPTIONS: { id: Domain; label: string }[] = [
   { id: "All", label: "All" },
-  { id: "Trust & Reputation", label: "Trust & Reputation" },
+  { id: "Trust & quality", label: "Trust & quality" },
   { id: "Agent Safety", label: "Agent Safety" },
   { id: "Payment Protocols", label: "Payment Protocols" },
   { id: "Solana", label: "Solana" },

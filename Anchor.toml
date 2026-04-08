@@ -10,16 +10,11 @@ aegis = "HiDGqc9NX4dbERfqAyq2skF3Tk5vWEjXwsrrtSWxi19v"
 aegis_governance = "G15ETEBeHKaCvfDHmpdE9o6XEfy3bBDCGcG5kAsGXdrD"
 royalty_registry = "8KAWrDAwgGihNr49VRu2Wvsf8n1dHkjFtUt53M1D9T7a"
 
-[programs.localnet]
-aegis = "HiDGqc9NX4dbERfqAyq2skF3Tk5vWEjXwsrrtSWxi19v"
-aegis_governance = "G15ETEBeHKaCvfDHmpdE9o6XEfy3bBDCGcG5kAsGXdrD"
-royalty_registry = "8KAWrDAwgGihNr49VRu2Wvsf8n1dHkjFtUt53M1D9T7a"
-
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

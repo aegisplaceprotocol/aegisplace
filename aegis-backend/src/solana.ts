@@ -1,15 +1,28 @@
 /**
  * Solana payment verification for Aegis Protocol.
- * Verifies USDC SPL token transfers on Solana mainnet.
+ * Verifies USDC SPL token transfers on the configured Solana cluster.
  */
 
 import { Connection, ParsedTransactionWithMeta, PublicKey, SystemProgram } from "@solana/web3.js";
 import { ENV } from "./_core/env";
+import {
+  decodeOperatorAccount,
+  decodeInvocationReceiptAccount,
+  decodeProtocolConfigAccount,
+} from "./aegis-program";
 
-/** USDC mint address on Solana mainnet */
-const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const CLUSTER_USDC_MINTS: Record<string, string> = {
+  "mainnet-beta": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  devnet: "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
+  testnet: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+};
 
-/** USDC has 6 decimal places */
+const CLUSTER_NETWORK_IDS: Record<string, string> = {
+  "mainnet-beta": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+  devnet: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+  testnet: "solana:4uhcVJyU9pJkvQyS88uRDiswHXSCkY3z",
+};
+
 const USDC_DECIMALS = 6;
 
 export interface PaymentVerificationResult {
@@ -37,13 +50,31 @@ export interface SkillRegistrationPlan {
   }>;
 }
 
-let _connection: Connection | null = null;
+export interface ProgramPaymentVerificationParams {
+  txSignature: string;
+  expectedAmount: number;
+  callerWallet: string;
+  programId: string;
+  operatorPda: string;
+  configPda: string;
+  receiptPda: string;
+}
+
+let connection: Connection | null = null;
+
+export function getUsdcMintForCluster(cluster = ENV.solanaCluster): string {
+  return CLUSTER_USDC_MINTS[cluster] || CLUSTER_USDC_MINTS.devnet;
+}
+
+export function getSolanaNetworkId(cluster = ENV.solanaCluster): string {
+  return CLUSTER_NETWORK_IDS[cluster] || CLUSTER_NETWORK_IDS.devnet;
+}
 
 function getConnection(): Connection {
-  if (!_connection) {
-    _connection = new Connection(ENV.solanaRpcUrl, "confirmed");
+  if (!connection) {
+    connection = new Connection(ENV.solanaRpcUrl, "confirmed");
   }
-  return _connection;
+  return connection;
 }
 
 export function getAegisProgramId(): PublicKey {
@@ -69,9 +100,9 @@ export function deriveOperatorPda(
 }
 
 export async function getProtocolConfigSnapshot(): Promise<ProtocolConfigSnapshot> {
-  const connection = getConnection();
+  const client = getConnection();
   const configPda = deriveConfigPda();
-  const accountInfo = await connection.getAccountInfo(configPda, "confirmed");
+  const accountInfo = await client.getAccountInfo(configPda, "confirmed");
 
   if (!accountInfo) {
     throw new Error(
@@ -118,17 +149,6 @@ export async function prepareSkillRegistrationPlan(params: {
   };
 }
 
-/**
- * Verify a Solana USDC payment on-chain.
- *
- * Checks:
- * 1. Transaction exists and is confirmed
- * 2. Transaction has no errors
- * 3. Contains a USDC token transfer
- * 4. Transfer amount matches expected amount
- * 5. Sender matches callerWallet
- * 6. Recipient matches treasuryWallet
- */
 export async function verifyPayment(
   txSignature: string,
   expectedAmount: number,
@@ -136,12 +156,12 @@ export async function verifyPayment(
   treasuryWallet: string,
 ): Promise<PaymentVerificationResult> {
   try {
-    const connection = getConnection();
+    const client = getConnection();
+    const usdcMint = getUsdcMintForCluster();
 
-    // Fetch the parsed transaction
     let tx: ParsedTransactionWithMeta | null;
     try {
-      tx = await connection.getParsedTransaction(txSignature, {
+      tx = await client.getParsedTransaction(txSignature, {
         maxSupportedTransactionVersion: 0,
         commitment: "confirmed",
       });
@@ -153,92 +173,65 @@ export async function verifyPayment(
       return { verified: false, error: "Transaction not found. It may not be confirmed yet." };
     }
 
-    // Check for transaction errors
     if (tx.meta?.err) {
       return { verified: false, error: `Transaction failed on-chain: ${JSON.stringify(tx.meta.err)}` };
     }
 
-    // Look for USDC token transfers in the inner instructions and main instructions
     const allInstructions = [
       ...(tx.transaction.message.instructions || []),
       ...(tx.meta?.innerInstructions?.flatMap((ix) => ix.instructions) || []),
     ];
 
-    // Convert expected amount to USDC base units (6 decimals)
     const expectedBaseUnits = Math.round(expectedAmount * Math.pow(10, USDC_DECIMALS));
-
-    // Tolerance: allow 1% difference to account for rounding
     const tolerance = Math.max(1, Math.round(expectedBaseUnits * 0.01));
-
     let matchingTransferFound = false;
 
     for (const ix of allInstructions) {
-      // Check parsed SPL token transfer instructions
-      if ("parsed" in ix && ix.parsed) {
-        const parsed = ix.parsed as any;
-        const type = parsed.type;
+      if (!("parsed" in ix) || !ix.parsed) continue;
 
-        // Handle both 'transfer' and 'transferChecked' instruction types
-        if (type === "transfer" || type === "transferChecked") {
-          const info = parsed.info;
-          if (!info) continue;
+      const parsed = ix.parsed as any;
+      const type = parsed.type;
+      if (type !== "transfer" && type !== "transferChecked") continue;
 
-          // For transferChecked, the mint is directly available
-          if (type === "transferChecked" && info.mint !== USDC_MINT) {
-            continue;
-          }
+      const info = parsed.info;
+      if (!info) continue;
 
-          const amount = parseInt(
-            type === "transferChecked" ? info.tokenAmount?.amount : info.amount,
-            10,
-          );
+      if (type === "transferChecked" && info.mint !== usdcMint) continue;
 
-          if (isNaN(amount)) continue;
+      const amount = parseInt(
+        type === "transferChecked" ? info.tokenAmount?.amount : info.amount,
+        10,
+      );
+      if (isNaN(amount)) continue;
+      if (Math.abs(amount - expectedBaseUnits) > tolerance) continue;
 
-          // Verify amount is within tolerance
-          if (Math.abs(amount - expectedBaseUnits) > tolerance) continue;
+      const senderAuthority = info.authority || info.source;
+      const destination = info.destination;
+      if (senderAuthority !== callerWallet) continue;
 
-          // For SPL token transfers, authority/source/destination are token accounts.
-          // We need to verify the owner wallets via pre/post token balances.
-          // The `authority` field is the wallet that signed the transfer.
-          const senderAuthority = info.authority || info.source;
-          const destination = info.destination;
-
-          // Check if the sender authority matches the caller wallet
-          // (authority is the wallet public key for SPL token transfers)
-          if (senderAuthority === callerWallet) {
-            // Verify destination belongs to treasury wallet using token balances
-            if (verifyDestinationOwner(tx, destination, treasuryWallet)) {
-              matchingTransferFound = true;
-              break;
-            }
-          }
-        }
+      if (verifyDestinationOwner(tx, destination, treasuryWallet, usdcMint)) {
+        matchingTransferFound = true;
+        break;
       }
     }
 
-    // Also check pre/post token balances as a fallback verification method
     if (!matchingTransferFound && tx.meta?.preTokenBalances && tx.meta?.postTokenBalances) {
-      const preBalances = tx.meta.preTokenBalances.filter((b) => b.mint === USDC_MINT);
-      const postBalances = tx.meta.postTokenBalances.filter((b) => b.mint === USDC_MINT);
+      const preBalances = tx.meta.preTokenBalances.filter((b) => b.mint === usdcMint);
+      const postBalances = tx.meta.postTokenBalances.filter((b) => b.mint === usdcMint);
 
-      // Find the treasury wallet's balance increase
       let treasuryReceived = 0;
       let callerSent = 0;
 
       for (const post of postBalances) {
         if (post.owner === treasuryWallet) {
-          const pre = preBalances.find(
-            (p) => p.accountIndex === post.accountIndex,
-          );
+          const pre = preBalances.find((p) => p.accountIndex === post.accountIndex);
           const preAmount = parseInt(pre?.uiTokenAmount?.amount || "0", 10);
           const postAmount = parseInt(post.uiTokenAmount?.amount || "0", 10);
           treasuryReceived += postAmount - preAmount;
         }
+
         if (post.owner === callerWallet) {
-          const pre = preBalances.find(
-            (p) => p.accountIndex === post.accountIndex,
-          );
+          const pre = preBalances.find((p) => p.accountIndex === post.accountIndex);
           const preAmount = parseInt(pre?.uiTokenAmount?.amount || "0", 10);
           const postAmount = parseInt(post.uiTokenAmount?.amount || "0", 10);
           callerSent += preAmount - postAmount;
@@ -267,34 +260,130 @@ export async function verifyPayment(
   }
 }
 
-/**
- * Check if a token account destination is owned by the expected wallet
- * using the transaction's pre/post token balances.
- */
 function verifyDestinationOwner(
   tx: ParsedTransactionWithMeta,
   destinationTokenAccount: string,
   expectedOwner: string,
+  usdcMint: string,
 ): boolean {
-  // Check post token balances for the destination account
-  const accountKeys = tx.transaction.message.accountKeys.map((k) =>
-    typeof k === "string" ? k : k.pubkey.toBase58(),
+  const accountKeys = tx.transaction.message.accountKeys.map((key) =>
+    typeof key === "string" ? key : key.pubkey.toBase58(),
   );
 
   const destIndex = accountKeys.indexOf(destinationTokenAccount);
   if (destIndex === -1) {
-    // If we can't find the exact account, check if any post balance
-    // shows the expected owner receiving USDC
-    return (
-      tx.meta?.postTokenBalances?.some(
-        (b) => b.mint === USDC_MINT && b.owner === expectedOwner,
-      ) ?? false
-    );
+    return tx.meta?.postTokenBalances?.some(
+      (balance) => balance.mint === usdcMint && balance.owner === expectedOwner,
+    ) ?? false;
   }
 
   const postBalance = tx.meta?.postTokenBalances?.find(
-    (b) => b.accountIndex === destIndex && b.mint === USDC_MINT,
+    (balance) => balance.accountIndex === destIndex && balance.mint === usdcMint,
   );
 
   return postBalance?.owner === expectedOwner;
+}
+
+export async function getDecodedProtocolConfig(configPda: string): Promise<ReturnType<typeof decodeProtocolConfigAccount>> {
+  const client = getConnection();
+  const accountInfo = await client.getAccountInfo(new PublicKey(configPda), "confirmed");
+
+  if (!accountInfo) {
+    throw new Error(`Aegis protocol config not found at ${configPda}`);
+  }
+
+  return decodeProtocolConfigAccount(accountInfo.data);
+}
+
+export async function getDecodedOperator(operatorPda: string): Promise<ReturnType<typeof decodeOperatorAccount>> {
+  const client = getConnection();
+  const accountInfo = await client.getAccountInfo(new PublicKey(operatorPda), "confirmed");
+
+  if (!accountInfo) {
+    throw new Error(`Aegis operator account not found at ${operatorPda}`);
+  }
+
+  return decodeOperatorAccount(accountInfo.data);
+}
+
+export async function verifyProgramPayment(
+  params: ProgramPaymentVerificationParams,
+): Promise<PaymentVerificationResult> {
+  try {
+    const client = getConnection();
+    const tx = await client.getParsedTransaction(params.txSignature, {
+      maxSupportedTransactionVersion: 0,
+      commitment: "confirmed",
+    });
+
+    if (!tx) {
+      return { verified: false, error: "Transaction not found. It may not be confirmed yet." };
+    }
+
+    if (tx.meta?.err) {
+      return { verified: false, error: `Transaction failed on-chain: ${JSON.stringify(tx.meta.err)}` };
+    }
+
+    const programId = new PublicKey(params.programId).toBase58();
+    const operatorPda = new PublicKey(params.operatorPda).toBase58();
+    const configPda = new PublicKey(params.configPda).toBase58();
+    const receiptPda = new PublicKey(params.receiptPda).toBase58();
+    const callerWallet = new PublicKey(params.callerWallet).toBase58();
+
+    const accountKeys = tx.transaction.message.accountKeys.map((key) =>
+      typeof key === "string" ? key : key.pubkey.toBase58(),
+    );
+
+    if (!accountKeys.includes(programId)) {
+      return { verified: false, error: `Transaction does not reference Aegis program ${programId}.` };
+    }
+
+    for (const required of [operatorPda, configPda, receiptPda, callerWallet]) {
+      if (!accountKeys.includes(required)) {
+        return { verified: false, error: `Transaction is missing required account ${required}.` };
+      }
+    }
+
+    const config = await getDecodedProtocolConfig(configPda);
+    const receiptInfo = await client.getAccountInfo(new PublicKey(receiptPda), "confirmed");
+    if (!receiptInfo) {
+      return { verified: false, error: `Invocation receipt ${receiptPda} was not created.` };
+    }
+
+    if (!receiptInfo.owner.equals(new PublicKey(programId))) {
+      return { verified: false, error: `Invocation receipt ${receiptPda} is not owned by the Aegis program.` };
+    }
+
+    const receipt = decodeInvocationReceiptAccount(receiptInfo.data);
+    const expectedAmountBaseUnits = BigInt(Math.round(params.expectedAmount * 1_000_000));
+
+    if (receipt.operator !== operatorPda) {
+      return { verified: false, error: `Receipt operator ${receipt.operator} does not match expected operator ${operatorPda}.` };
+    }
+
+    if (receipt.caller !== callerWallet) {
+      return { verified: false, error: `Receipt caller ${receipt.caller} does not match expected payer ${callerWallet}.` };
+    }
+
+    if (receipt.amountPaid !== expectedAmountBaseUnits) {
+      return {
+        verified: false,
+        error: `Receipt amount ${receipt.amountPaid.toString()} does not match expected ${expectedAmountBaseUnits.toString()} base units.`,
+      };
+    }
+
+    const sawConfiguredAccount = [config.treasury, config.validatorPool, config.stakerPool, config.insuranceFund]
+      .every((account) => accountKeys.includes(account));
+
+    if (!sawConfiguredAccount) {
+      return {
+        verified: false,
+        error: "Transaction did not touch the configured protocol settlement token accounts.",
+      };
+    }
+
+    return { verified: true };
+  } catch (err: any) {
+    return { verified: false, error: `Program payment verification error: ${err.message}` };
+  }
 }

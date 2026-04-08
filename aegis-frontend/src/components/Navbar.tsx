@@ -54,7 +54,7 @@ const NAV_GROUPS: NavGroup[] = [
     links: [
       { label: "Working Papers", href: "/research", page: true, description: "3 academic papers on agent economics" },
       { label: "Competitive Analysis", href: "/compare", page: true, description: "AegisX vs Cursor, Copilot, Windsurf" },
-      { label: "Why Aegis", href: "/why", page: true, description: "$29B market, zero trust layers" },
+      { label: "Why Aegis", href: "/why", page: true, description: "$29B market, no skills marketplace" },
       { label: "Live Feed", href: "/live-feed", page: true, description: "Real-time protocol activity" },
     ],
   },

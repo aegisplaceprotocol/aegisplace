@@ -145,12 +145,18 @@ export default function EvolutionPanel() {
     const realOps: Operator[] = (myOps.data?.items || []).map((op: any) => ({
       name: op.slug || op.name,
       initialValues: [
-        Math.min(100, Math.round((op.trustScore ?? 50) * 0.6)),
-        Math.min(100, Math.round(Math.random() * 30 + 20)),
-        Math.min(100, Math.round(Math.random() * 30 + 15)),
+        // Specialize: derived from quality score
+        Math.min(100, Math.round((op.qualityScore ?? 50) * 0.6)),
+        // Learn: derived from invocation count scaled to 0-50 range
+        Math.min(50, Math.round((op.totalInvocations ?? 0) / 200)),
+        // Equip: derived from success rate if available, else trust proxy
+        Math.min(100, Math.round(((op.successRate ? parseFloat(op.successRate) : op.qualityScore ?? 50)) * 0.4)),
+        // Earn: derived from invocation volume
         Math.min(100, Math.round((op.totalInvocations ?? 0) / 100)),
-        Math.min(100, Math.round(Math.random() * 25 + 10)),
-        Math.min(100, Math.round((op.trustScore ?? 50) * 0.5)),
+        // Network: derived from quality score as social proxy
+        Math.min(100, Math.round((op.qualityScore ?? 50) * 0.3)),
+        // Harden: derived from quality score as security proxy
+        Math.min(100, Math.round((op.qualityScore ?? 50) * 0.5)),
       ],
     }));
     return realOps.length > 0 ? [...realOps, ...OPERATORS] : OPERATORS;

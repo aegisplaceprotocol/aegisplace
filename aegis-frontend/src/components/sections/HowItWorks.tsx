@@ -6,7 +6,7 @@ const STEPS = [
   { num: "01", title: "Register", desc: "Operators register skills with bonded $AEGIS stake. Skin in the game guarantees quality from day one." },
   { num: "02", title: "Discover", desc: "Agents discover skills via MCP with NeMo guardrails filtering every request for safety, injection, and compliance." },
   { num: "03", title: "Pay", desc: "x402 micropayments handle billing per invocation. USDC in, swapped to $AEGIS on Jupiter, settled on Solana." },
-  { num: "04", title: "Protect", desc: "Trust scores, slashing, and insurance protect everyone. Bad operators lose their bond. Good ones compound reputation." },
+  { num: "04", title: "Protect", desc: "quality scores, slashing, and insurance protect everyone. Bad operators lose their bond. Good ones compound quality." },
 ];
 
 export default function HowItWorks() {
@@ -24,7 +24,7 @@ export default function HowItWorks() {
           </h2>
           <p className="text-[14px] text-zinc-500 max-w-md leading-relaxed lg:text-right">
             Operators stake real money. Agents discover skills through guardrails. x402 handles payment.
-            Trust scores and slashing keep everyone honest. Every step is recorded on Solana.
+            quality scores and slashing keep everyone honest. Every step is recorded on Solana.
           </p>
         </motion.div>
 
@@ -100,7 +100,7 @@ export default function HowItWorks() {
             <rect x="480" y="50" width="380" height="190" rx="12" stroke="rgba(161,161,170,0.5)" strokeWidth="1.5" fill="rgba(161,161,170,0.04)" />
             <text x="670" y="105" textAnchor="middle" fill="rgba(161,161,170,0.9)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="18" fontWeight="700">Aegis Registry</text>
             <text x="670" y="132" textAnchor="middle" fill="rgba(255,255,255,0.35)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="12">On-chain Solana program</text>
-            <text x="670" y="168" textAnchor="middle" fill="rgba(161,161,170,0.30)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">metadata  |  bond_vault  |  reputation</text>
+            <text x="670" y="168" textAnchor="middle" fill="rgba(161,161,170,0.30)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">metadata  |  bond_vault  |  quality</text>
             <text x="670" y="192" textAnchor="middle" fill="rgba(255,255,255,0.15)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">Token-2022 transfer hooks</text>
 
             {/* Arrow: Registry -> Index */}
@@ -118,7 +118,7 @@ export default function HowItWorks() {
 
             <circle cx="210" cy="210" r="3" fill="rgba(255,255,255,0.15)" />
             <line x1="210" y1="214" x2="210" y2="328" className="flow-line-slow" />
-            <text x="175" y="268" fill="rgba(255,255,255,0.18)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">Reputation</text>
+            <text x="175" y="268" fill="rgba(255,255,255,0.18)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">Quality</text>
             <text x="175" y="282" fill="rgba(255,255,255,0.18)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="10">feedback</text>
 
             <circle cx="670" cy="240" r="3.5" fill="#A1A1AA" opacity="0.5" />
@@ -183,7 +183,7 @@ export default function HowItWorks() {
             <text x="640" y="684" textAnchor="middle" fill="rgba(255,255,255,0.20)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="11">Replayable audit trace on-chain</text>
 
             <line x1="340" y1="647" x2="210" y2="462" className="flow-line-obs" />
-            <text x="258" y="565" textAnchor="middle" fill="rgba(161,161,170,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="9">Reputation update</text>
+            <text x="258" y="565" textAnchor="middle" fill="rgba(161,161,170,0.25)" fontFamily="'Aeonik', system-ui, sans-serif" fontSize="9">Quality update</text>
 
             {/* LEGEND */}
             <rect x="100" y="745" width="1140" height="50" rx="8" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.04)" strokeWidth="1" />

@@ -20,7 +20,7 @@ interface Operator {
   name: string;
   slug: string;
   category: string;
-  trustScore: number;
+  qualityScore: number;
   pricePerCall: string;
   totalInvocations: number;
   successRate: number;
@@ -34,189 +34,7 @@ interface Operator {
   validatorAttestations: { validator: string; score: number; date: string }[];
 }
 
-/* ── Demo data ────────────────────────────────────────────────────────── */
-
-const OPERATORS: Operator[] = [
-  {
-    id: "o1", name: "GPT-4o Router", slug: "gpt-4o-router", category: "AI / ML", trustScore: 95,
-    pricePerCall: "$0.012", totalInvocations: 312400, successRate: 99.2, isActive: true, isVerified: true,
-    avgLatency: "89ms", creator: "0x7a3B...f291", description: "Routes prompts to GPT-4o with optimal token budgeting.",
-    recentInvocations: [
-      { caller: "0x1eC4...83d0", time: "2 min ago", status: "Success", latency: "82ms", amount: "$0.012" },
-      { caller: "0xbF92...44a1", time: "5 min ago", status: "Success", latency: "91ms", amount: "$0.012" },
-      { caller: "0x3dA1...c7e8", time: "8 min ago", status: "Failed", latency: "312ms", amount: "$0.000" },
-      { caller: "0x92F6...1b3c", time: "12 min ago", status: "Success", latency: "78ms", amount: "$0.012" },
-      { caller: "0xd4E7...9f02", time: "15 min ago", status: "Success", latency: "95ms", amount: "$0.012" },
-    ],
-    weeklyUsage: [4200, 4800, 3900, 5100, 4600, 3200, 4400],
-    validatorAttestations: [
-      { validator: "Validator Alpha", score: 96, date: "2026-03-20" },
-      { validator: "Validator Beta", score: 94, date: "2026-03-18" },
-    ],
-  },
-  {
-    id: "o2", name: "Claude Analyst", slug: "claude-analyst", category: "AI / ML", trustScore: 93,
-    pricePerCall: "$0.034", totalInvocations: 248100, successRate: 98.7, isActive: true, isVerified: true,
-    avgLatency: "142ms", creator: "0x1eC4...83d0", description: "Claude-powered data analysis with structured output.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "1 min ago", status: "Success", latency: "138ms", amount: "$0.034" },
-      { caller: "0xbF92...44a1", time: "4 min ago", status: "Success", latency: "151ms", amount: "$0.034" },
-      { caller: "0x3dA1...c7e8", time: "9 min ago", status: "Success", latency: "129ms", amount: "$0.034" },
-      { caller: "0x92F6...1b3c", time: "14 min ago", status: "Pending", latency: "--", amount: "--" },
-      { caller: "0xd4E7...9f02", time: "20 min ago", status: "Success", latency: "145ms", amount: "$0.034" },
-    ],
-    weeklyUsage: [3800, 4100, 3500, 4400, 3900, 2800, 3600],
-    validatorAttestations: [
-      { validator: "Validator Alpha", score: 93, date: "2026-03-22" },
-    ],
-  },
-  {
-    id: "o3", name: "Mistral Coder", slug: "mistral-coder", category: "Development", trustScore: 88,
-    pricePerCall: "$0.008", totalInvocations: 187300, successRate: 97.4, isActive: true, isVerified: false,
-    avgLatency: "203ms", creator: "0xbF92...44a1", description: "Mistral-based code generation and completion.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "3 min ago", status: "Success", latency: "198ms", amount: "$0.008" },
-      { caller: "0x1eC4...83d0", time: "7 min ago", status: "Success", latency: "210ms", amount: "$0.008" },
-      { caller: "0x3dA1...c7e8", time: "11 min ago", status: "Success", latency: "195ms", amount: "$0.008" },
-      { caller: "0x92F6...1b3c", time: "16 min ago", status: "Success", latency: "220ms", amount: "$0.008" },
-      { caller: "0xd4E7...9f02", time: "22 min ago", status: "Failed", latency: "503ms", amount: "$0.000" },
-    ],
-    weeklyUsage: [2800, 3100, 2600, 3400, 3000, 2100, 2700],
-    validatorAttestations: [],
-  },
-  {
-    id: "o4", name: "Gemini Vision", slug: "gemini-vision", category: "AI / ML", trustScore: 91,
-    pricePerCall: "$0.042", totalInvocations: 143200, successRate: 98.1, isActive: true, isVerified: true,
-    avgLatency: "178ms", creator: "0x3dA1...c7e8", description: "Multi-modal vision analysis powered by Gemini.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "6 min ago", status: "Success", latency: "170ms", amount: "$0.042" },
-      { caller: "0x1eC4...83d0", time: "10 min ago", status: "Success", latency: "185ms", amount: "$0.042" },
-      { caller: "0xbF92...44a1", time: "15 min ago", status: "Success", latency: "172ms", amount: "$0.042" },
-      { caller: "0x92F6...1b3c", time: "19 min ago", status: "Success", latency: "191ms", amount: "$0.042" },
-      { caller: "0xd4E7...9f02", time: "24 min ago", status: "Success", latency: "168ms", amount: "$0.042" },
-    ],
-    weeklyUsage: [2200, 2500, 2000, 2700, 2400, 1700, 2100],
-    validatorAttestations: [
-      { validator: "Validator Gamma", score: 91, date: "2026-03-19" },
-    ],
-  },
-  {
-    id: "o5", name: "Llama Guard", slug: "llama-guard", category: "Security", trustScore: 86,
-    pricePerCall: "$0.003", totalInvocations: 98400, successRate: 96.8, isActive: true, isVerified: false,
-    avgLatency: "67ms", creator: "0x92F6...1b3c", description: "Content safety filtering powered by Llama Guard.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "1 min ago", status: "Success", latency: "63ms", amount: "$0.003" },
-      { caller: "0x1eC4...83d0", time: "3 min ago", status: "Success", latency: "71ms", amount: "$0.003" },
-      { caller: "0xbF92...44a1", time: "6 min ago", status: "Success", latency: "59ms", amount: "$0.003" },
-      { caller: "0x3dA1...c7e8", time: "10 min ago", status: "Success", latency: "68ms", amount: "$0.003" },
-      { caller: "0xd4E7...9f02", time: "14 min ago", status: "Failed", latency: "450ms", amount: "$0.000" },
-    ],
-    weeklyUsage: [1500, 1700, 1300, 1900, 1600, 1100, 1400],
-    validatorAttestations: [],
-  },
-  {
-    id: "o6", name: "DeepSeek Math", slug: "deepseek-math", category: "AI / ML", trustScore: 82,
-    pricePerCall: "$0.005", totalInvocations: 74600, successRate: 95.3, isActive: true, isVerified: false,
-    avgLatency: "256ms", creator: "0xd4E7...9f02", description: "Mathematical reasoning and proof verification.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "4 min ago", status: "Success", latency: "248ms", amount: "$0.005" },
-      { caller: "0x1eC4...83d0", time: "9 min ago", status: "Success", latency: "262ms", amount: "$0.005" },
-      { caller: "0xbF92...44a1", time: "13 min ago", status: "Pending", latency: "--", amount: "--" },
-      { caller: "0x3dA1...c7e8", time: "18 min ago", status: "Success", latency: "251ms", amount: "$0.005" },
-      { caller: "0x92F6...1b3c", time: "23 min ago", status: "Success", latency: "270ms", amount: "$0.005" },
-    ],
-    weeklyUsage: [1100, 1300, 900, 1500, 1200, 800, 1000],
-    validatorAttestations: [],
-  },
-  {
-    id: "o7", name: "Cohere Summarizer", slug: "cohere-summarizer", category: "AI / ML", trustScore: 89,
-    pricePerCall: "$0.006", totalInvocations: 62100, successRate: 98.0, isActive: true, isVerified: true,
-    avgLatency: "118ms", creator: "0x5cB8...62d4", description: "High-quality text summarization across languages.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "2 min ago", status: "Success", latency: "112ms", amount: "$0.006" },
-      { caller: "0x1eC4...83d0", time: "6 min ago", status: "Success", latency: "125ms", amount: "$0.006" },
-      { caller: "0xbF92...44a1", time: "11 min ago", status: "Success", latency: "108ms", amount: "$0.006" },
-      { caller: "0x3dA1...c7e8", time: "17 min ago", status: "Success", latency: "120ms", amount: "$0.006" },
-      { caller: "0x92F6...1b3c", time: "21 min ago", status: "Success", latency: "115ms", amount: "$0.006" },
-    ],
-    weeklyUsage: [900, 1000, 800, 1100, 950, 650, 850],
-    validatorAttestations: [
-      { validator: "Validator Beta", score: 89, date: "2026-03-21" },
-    ],
-  },
-  {
-    id: "o8", name: "Stable Diffusion XL", slug: "stable-diffusion-xl", category: "AI / ML", trustScore: 78,
-    pricePerCall: "$0.087", totalInvocations: 45200, successRate: 94.6, isActive: true, isVerified: false,
-    avgLatency: "3120ms", creator: "0xaA31...7e5f", description: "State-of-the-art image generation with SDXL.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "5 min ago", status: "Success", latency: "3050ms", amount: "$0.087" },
-      { caller: "0x1eC4...83d0", time: "12 min ago", status: "Success", latency: "3200ms", amount: "$0.087" },
-      { caller: "0xbF92...44a1", time: "18 min ago", status: "Failed", latency: "5000ms", amount: "$0.000" },
-      { caller: "0x3dA1...c7e8", time: "25 min ago", status: "Success", latency: "3100ms", amount: "$0.087" },
-      { caller: "0x92F6...1b3c", time: "32 min ago", status: "Success", latency: "2980ms", amount: "$0.087" },
-    ],
-    weeklyUsage: [600, 750, 550, 800, 700, 400, 620],
-    validatorAttestations: [],
-  },
-  {
-    id: "o9", name: "Whisper Transcribe", slug: "whisper-transcribe", category: "AI / ML", trustScore: 90,
-    pricePerCall: "$0.021", totalInvocations: 53800, successRate: 97.9, isActive: true, isVerified: true,
-    avgLatency: "1450ms", creator: "0x7a3B...f291", description: "Audio to text with speaker diarization.",
-    recentInvocations: [
-      { caller: "0x1eC4...83d0", time: "3 min ago", status: "Success", latency: "1380ms", amount: "$0.021" },
-      { caller: "0xbF92...44a1", time: "8 min ago", status: "Success", latency: "1520ms", amount: "$0.021" },
-      { caller: "0x3dA1...c7e8", time: "14 min ago", status: "Success", latency: "1410ms", amount: "$0.021" },
-      { caller: "0x92F6...1b3c", time: "20 min ago", status: "Success", latency: "1490ms", amount: "$0.021" },
-      { caller: "0xd4E7...9f02", time: "27 min ago", status: "Pending", latency: "--", amount: "--" },
-    ],
-    weeklyUsage: [800, 900, 700, 1000, 850, 580, 760],
-    validatorAttestations: [
-      { validator: "Validator Alpha", score: 90, date: "2026-03-23" },
-    ],
-  },
-  {
-    id: "o10", name: "DALL-E Renderer", slug: "dalle-renderer", category: "AI / ML", trustScore: 84,
-    pricePerCall: "$0.064", totalInvocations: 38700, successRate: 96.2, isActive: false, isVerified: false,
-    avgLatency: "2800ms", creator: "0x1eC4...83d0", description: "DALL-E 3 image generation with style controls.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "1 hr ago", status: "Failed", latency: "5000ms", amount: "$0.000" },
-      { caller: "0xbF92...44a1", time: "1 hr ago", status: "Failed", latency: "5000ms", amount: "$0.000" },
-      { caller: "0x3dA1...c7e8", time: "2 hrs ago", status: "Success", latency: "2750ms", amount: "$0.064" },
-      { caller: "0x92F6...1b3c", time: "2 hrs ago", status: "Success", latency: "2900ms", amount: "$0.064" },
-      { caller: "0xd4E7...9f02", time: "3 hrs ago", status: "Success", latency: "2680ms", amount: "$0.064" },
-    ],
-    weeklyUsage: [500, 620, 480, 0, 0, 0, 0],
-    validatorAttestations: [],
-  },
-  {
-    id: "o11", name: "CodeLlama Debug", slug: "codellama-debug", category: "Development", trustScore: 85,
-    pricePerCall: "$0.004", totalInvocations: 29100, successRate: 96.5, isActive: true, isVerified: false,
-    avgLatency: "310ms", creator: "0xbF92...44a1", description: "Automated code debugging and fix suggestions.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "7 min ago", status: "Success", latency: "305ms", amount: "$0.004" },
-      { caller: "0x1eC4...83d0", time: "13 min ago", status: "Success", latency: "318ms", amount: "$0.004" },
-      { caller: "0x3dA1...c7e8", time: "19 min ago", status: "Success", latency: "292ms", amount: "$0.004" },
-      { caller: "0x92F6...1b3c", time: "25 min ago", status: "Success", latency: "330ms", amount: "$0.004" },
-      { caller: "0xd4E7...9f02", time: "33 min ago", status: "Success", latency: "301ms", amount: "$0.004" },
-    ],
-    weeklyUsage: [400, 480, 350, 520, 460, 300, 410],
-    validatorAttestations: [],
-  },
-  {
-    id: "o12", name: "Phi-3 Classifier", slug: "phi3-classifier", category: "Data", trustScore: 80,
-    pricePerCall: "$0.002", totalInvocations: 21400, successRate: 95.8, isActive: true, isVerified: false,
-    avgLatency: "45ms", creator: "0x3dA1...c7e8", description: "Lightweight text classification for structured data.",
-    recentInvocations: [
-      { caller: "0x7a3B...f291", time: "1 min ago", status: "Success", latency: "42ms", amount: "$0.002" },
-      { caller: "0x1eC4...83d0", time: "4 min ago", status: "Success", latency: "48ms", amount: "$0.002" },
-      { caller: "0xbF92...44a1", time: "8 min ago", status: "Success", latency: "44ms", amount: "$0.002" },
-      { caller: "0x92F6...1b3c", time: "13 min ago", status: "Success", latency: "46ms", amount: "$0.002" },
-      { caller: "0xd4E7...9f02", time: "18 min ago", status: "Success", latency: "41ms", amount: "$0.002" },
-    ],
-    weeklyUsage: [300, 360, 270, 400, 340, 220, 310],
-    validatorAttestations: [],
-  },
-];
+/* ── (demo arrays removed — data comes from trpc.operator.list) ───────── */
 
 const CATEGORIES = [
   { id: "All", label: "All" },
@@ -272,7 +90,7 @@ function trustColor(score: number): string {
   return T.negative;
 }
 
-type SortKey = "name" | "trustScore" | "pricePerCall" | "totalInvocations" | "successRate";
+type SortKey = "name" | "qualityScore" | "pricePerCall" | "totalInvocations" | "successRate";
 
 /* ── Component ────────────────────────────────────────────────────────── */
 
@@ -292,29 +110,29 @@ export default function OperatorDirectoryPanel() {
     { staleTime: 60_000 },
   );
 
-  // Map API data to local shape, falling back to demo data
-  const OPERATORS_DATA: Operator[] = operatorsQuery.data
-    ? (operatorsQuery.data as any[]).map((op: any, i: number) => ({
-        id: String(op.id ?? `api-${i}`),
-        name: op.name ?? "Unknown Operator",
-        slug: op.slug ?? "unknown",
-        category: op.category ?? "Other",
-        trustScore: op.trustScore ?? 50,
-        pricePerCall: op.pricePerCall ? `$${op.pricePerCall}` : "$0.00",
-        totalInvocations: op.totalInvocations ?? 0,
-        successRate: op.successfulInvocations && op.totalInvocations
-          ? Number(((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1))
-          : 0,
-        isActive: op.isActive ?? false,
-        isVerified: op.isVerified ?? false,
-        avgLatency: op.avgResponseMs ? `${op.avgResponseMs}ms` : "0ms",
-        creator: op.creatorWallet ? `${op.creatorWallet.slice(0, 6)}...${op.creatorWallet.slice(-4)}` : "unknown",
-        description: op.description ?? op.tagline ?? "",
-        recentInvocations: [],
-        weeklyUsage: [0, 0, 0, 0, 0, 0, 0],
-        validatorAttestations: [],
-      }))
-    : OPERATORS;
+  const rawOperators: any[] = (operatorsQuery.data as any)?.operators ?? [];
+
+  // Map real operators to local Operator shape
+  const OPERATORS_DATA: Operator[] = rawOperators.map((op: any, i: number) => ({
+    id: String(op.id ?? `api-${i}`),
+    name: op.name ?? "Unknown Operator",
+    slug: op.slug ?? "unknown",
+    category: op.category ?? "Other",
+    qualityScore: op.qualityScore ?? 50,
+    pricePerCall: op.pricePerCall ? `$${op.pricePerCall}` : "$0.00",
+    totalInvocations: op.totalInvocations ?? 0,
+    successRate: op.successfulInvocations && op.totalInvocations
+      ? Number(((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1))
+      : 0,
+    isActive: op.isActive ?? false,
+    isVerified: op.isVerified ?? false,
+    avgLatency: op.avgResponseMs ? `${op.avgResponseMs}ms` : "0ms",
+    creator: op.creatorWallet ? `${op.creatorWallet.slice(0, 6)}...${op.creatorWallet.slice(-4)}` : "unknown",
+    description: op.description ?? op.tagline ?? "",
+    recentInvocations: [],
+    weeklyUsage: [0, 0, 0, 0, 0, 0, 0],
+    validatorAttestations: [],
+  }));
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -334,8 +152,8 @@ export default function OperatorDirectoryPanel() {
       if (priceFilter === "free" && parseFloat(op.pricePerCall.replace("$", "")) > 0) return false;
       if (priceFilter === "0.01" && parseFloat(op.pricePerCall.replace("$", "")) >= 0.01) return false;
       if (priceFilter === "0.10" && parseFloat(op.pricePerCall.replace("$", "")) >= 0.10) return false;
-      if (trustMin && op.trustScore < parseInt(trustMin)) return false;
-      if (trustMax && op.trustScore > parseInt(trustMax)) return false;
+      if (trustMin && op.qualityScore < parseInt(trustMin)) return false;
+      if (trustMax && op.qualityScore > parseInt(trustMax)) return false;
       if (search && !op.name.toLowerCase().includes(search.toLowerCase()) && !op.slug.includes(search.toLowerCase())) return false;
       return true;
     });
@@ -343,7 +161,7 @@ export default function OperatorDirectoryPanel() {
     result.sort((a, b) => {
       let cmp = 0;
       if (sortKey === "name") cmp = a.name.localeCompare(b.name);
-      else if (sortKey === "trustScore") cmp = a.trustScore - b.trustScore;
+      else if (sortKey === "qualityScore") cmp = a.qualityScore - b.qualityScore;
       else if (sortKey === "pricePerCall") cmp = parseFloat(a.pricePerCall.replace("$", "")) - parseFloat(b.pricePerCall.replace("$", ""));
       else if (sortKey === "totalInvocations") cmp = a.totalInvocations - b.totalInvocations;
       else if (sortKey === "successRate") cmp = a.successRate - b.successRate;
@@ -437,7 +255,7 @@ export default function OperatorDirectoryPanel() {
                   { key: "name" as SortKey, label: "Operator", align: "left" },
                   { key: null, label: "Slug", align: "left" },
                   { key: null, label: "Category", align: "left" },
-                  { key: "trustScore" as SortKey, label: "Trust", align: "right" },
+                  { key: "qualityScore" as SortKey, label: "Trust", align: "right" },
                   { key: "pricePerCall" as SortKey, label: "Price", align: "right" },
                   { key: "totalInvocations" as SortKey, label: "Invocations", align: "right" },
                   { key: "successRate" as SortKey, label: "Success", align: "right" },
@@ -463,6 +281,20 @@ export default function OperatorDirectoryPanel() {
               </tr>
             </thead>
             <tbody>
+              {operatorsQuery.isLoading && (
+                <tr>
+                  <td colSpan={9} style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: T.text20 }}>
+                    Loading operators...
+                  </td>
+                </tr>
+              )}
+              {!operatorsQuery.isLoading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={9} style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: T.text20 }}>
+                    No operators found.
+                  </td>
+                </tr>
+              )}
               {filtered.map((op) => (
                 <React.Fragment key={op.id}>
                   <tr
@@ -487,8 +319,8 @@ export default function OperatorDirectoryPanel() {
                       <StatusBadge status={op.category} color="blue" />
                     </td>
                     <td style={{ padding: "12px 12px", textAlign: "right" }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: trustColor(op.trustScore), fontVariantNumeric: "tabular-nums" }}>
-                        {op.trustScore}
+                      <span style={{ fontSize: 14, fontWeight: 600, color: trustColor(op.qualityScore), fontVariantNumeric: "tabular-nums" }}>
+                        {op.qualityScore}
                       </span>
                     </td>
                     <td style={{ padding: "12px 12px", fontSize: 13, color: T.text50, textAlign: "right", fontVariantNumeric: "tabular-nums" }}>

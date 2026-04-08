@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::program_pack::Pack;
+use anchor_spl::token::spl_token;
 use crate::errors::AegisError;
+use crate::events::ConfigUpdated;
 use crate::state::ProtocolConfig;
 
 pub fn handler(
@@ -9,6 +12,7 @@ pub fn handler(
     new_validator_pool: Option<Pubkey>,
     new_staker_pool: Option<Pubkey>,
     new_insurance_fund: Option<Pubkey>,
+    new_usdc_mint: Option<Pubkey>,
 ) -> Result<()> {
     let config = &mut ctx.accounts.config;
 
@@ -27,8 +31,8 @@ pub fn handler(
         }
         // Creator fee (index 0) must be at least 4000 bps (40%).
         require!(config.fee_bps[0] >= 4000, AegisError::CreatorFeeTooLow);
-        // Burn fee (index 5) must be at least 100 bps (1%).
-        require!(config.fee_bps[5] >= 100, AegisError::BurnFeeTooLow);
+        // Burn fee (index 5) must be at least 50 bps (0.5%).
+        require!(config.fee_bps[5] >= 50, AegisError::BurnFeeTooLow);
     }
     if let Some(t) = new_treasury {
         require!(t != Pubkey::default(), AegisError::InvalidInput);
@@ -47,25 +51,52 @@ pub fn handler(
         config.insurance_fund = i;
     }
 
-    // FIX 2: When updating any pool address, require remaining accounts for validation.
-    if new_treasury.is_some() || new_validator_pool.is_some() || new_staker_pool.is_some() || new_insurance_fund.is_some() {
-        // Require at least one remaining account for validation.
-        require!(!ctx.remaining_accounts.is_empty(), AegisError::InvalidAccount);
-
-        // Validate ALL remaining accounts are valid SPL Token accounts.
-        for account_info in ctx.remaining_accounts.iter() {
-            require!(
-                account_info.owner == &anchor_spl::token::ID,
-                AegisError::InvalidAccount
-            );
-            // Also check the account has data (is initialized).
-            require!(
-                account_info.data_len() >= 165, // TokenAccount is 165 bytes
-                AegisError::InvalidAccount
-            );
-        }
+    if let Some(mint) = new_usdc_mint {
+        require!(mint != Pubkey::default(), AegisError::InvalidInput);
+        require!(
+            new_treasury.is_some()
+                && new_validator_pool.is_some()
+                && new_staker_pool.is_some()
+                && new_insurance_fund.is_some(),
+            AegisError::MintMigrationRequiresAllPools,
+        );
+        config.usdc_mint = mint;
     }
 
+    // FIX 2: When updating any pool address, require remaining accounts for validation.
+    let expects_pool_validation =
+        new_treasury.is_some() || new_validator_pool.is_some() || new_staker_pool.is_some() || new_insurance_fund.is_some();
+    if expects_pool_validation {
+        require!(ctx.remaining_accounts.len() == 4, AegisError::InvalidAccount);
+
+        validate_token_account(&ctx.remaining_accounts[0], config.treasury, config.usdc_mint)?;
+        validate_token_account(&ctx.remaining_accounts[1], config.validator_pool, config.usdc_mint)?;
+        validate_token_account(&ctx.remaining_accounts[2], config.staker_pool, config.usdc_mint)?;
+        validate_token_account(&ctx.remaining_accounts[3], config.insurance_fund, config.usdc_mint)?;
+    }
+
+    emit!(ConfigUpdated {
+        admin: config.admin,
+        treasury: config.treasury,
+        validator_pool: config.validator_pool,
+        staker_pool: config.staker_pool,
+        insurance_fund: config.insurance_fund,
+        usdc_mint: config.usdc_mint,
+        fee_bps: config.fee_bps,
+        timestamp: Clock::get()?.unix_timestamp,
+    });
+
+    Ok(())
+}
+
+fn validate_token_account(account_info: &AccountInfo, expected_key: Pubkey, expected_mint: Pubkey) -> Result<()> {
+    require!(account_info.key() == expected_key, AegisError::InvalidPoolAccount);
+    require!(account_info.owner == &anchor_spl::token::ID, AegisError::InvalidAccount);
+
+    let token_account = spl_token::state::Account::unpack(&account_info.try_borrow_data()?)
+        .map_err(|_| error!(AegisError::InvalidAccount))?;
+
+    require!(token_account.mint == expected_mint, AegisError::InvalidUsdcMint);
     Ok(())
 }
 

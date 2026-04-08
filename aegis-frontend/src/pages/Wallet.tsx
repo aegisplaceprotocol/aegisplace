@@ -80,7 +80,7 @@ export default function WalletPage() {
       <Navbar />
       <div className="pt-24 pb-12">
         {/* Hero */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 text-center pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 text-center pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             Open Wallet Standard
           </div>
@@ -95,7 +95,7 @@ export default function WalletPage() {
         </div>
 
         {/* Architecture Stack */}
-        <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <motion.div {...fadeInView} className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-4">
             The Aegis Stack
           </div>
@@ -135,7 +135,7 @@ export default function WalletPage() {
         </motion.div>
 
         {/* Steps */}
-        <motion.div {...fadeInView} className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <motion.div {...fadeInView} className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             Setup in 3 Steps
           </div>
@@ -191,20 +191,20 @@ export default function WalletPage() {
         </motion.div>
 
         {/* Spending Policy */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-4">
             Spending Policy Template
           </div>
           <p className="text-[14px] text-white/35 leading-relaxed mb-6 max-w-xl">
             Control exactly how much your agent can spend. OWS enforces these
-            limits at the signing level -- the agent physically cannot
+            limits at the signing level. The agent physically cannot
             overspend.
           </p>
           <Code code={POLICY_YAML} label="yaml" />
         </div>
 
         {/* How it works */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             How Agent Payments Work
           </div>
@@ -256,7 +256,7 @@ export default function WalletPage() {
         </div>
 
         {/* Key properties */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-16">
+        <div className="mx-auto max-w-[1520px] px-12 pb-16">
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-6">
             Security Properties
           </div>

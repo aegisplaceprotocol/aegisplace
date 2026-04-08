@@ -15,7 +15,7 @@ const MILESTONES: Milestone[] = [
     status: "done",
     items: [
       "Published whitepaper: bonded validation, x402 micropayments, deflationary tokenomics",
-      "Designed PDA state architecture for Solana (operator, bond, reputation accounts)",
+      "Designed PDA state architecture for Solana (operator, bond, quality accounts)",
       "Analyzed 5 academic papers on agent quality, observation loops, and AI safety",
       "Competitive landscape mapped: ERC-8004, Warden, Olas, ElizaOS, operators.sh, ACP",
     ],
@@ -29,7 +29,7 @@ const MILESTONES: Milestone[] = [
       "18 protocol primitives designed and documented",
       "Operator taxonomy: 5 classes (RECON, FORGE, CIPHER, AEGIS, GHOST)",
       "Mission Blueprints: 6 pre-built pipelines with economic projections",
-      "Agent Economy Stack positioning: success layer between x402 (payment) and MCP (discovery)",
+      "Agent Economy Stack positioning: skills marketplace between x402 (payment) and MCP (discovery)",
     ],
   },
   {
@@ -38,7 +38,7 @@ const MILESTONES: Milestone[] = [
     status: "active",
     items: [
       "Deploy $AEGIS token on Solana devnet (Token-2022 with transfer hooks)",
-      "Anchor program: operator registry, bond vault, reputation PDA",
+      "Anchor program: operator registry, bond vault, quality PDA",
       "x402 payment integration: USDC-to-$AEGIS swap on invocation",
       "CLI tool: agent-aegis register, invoke, validate, inspect",
       "Open source repository on GitHub (MIT license)",
@@ -74,7 +74,7 @@ const MILESTONES: Milestone[] = [
     status: "planned",
     items: [
       "Validator-as-a-Service marketplace",
-      "Cross-chain reputation portability (Solana, Ethereum, Base)",
+      "Cross-chain quality portability (Solana, Ethereum, Base)",
       "NIST Agent Standards compliance certification",
       "Target: 10,000 bonded operators, $1M+ monthly x402 volume",
     ],

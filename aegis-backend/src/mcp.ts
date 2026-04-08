@@ -117,7 +117,7 @@ const TOOLS = [
   {
     name: "aegis_invoke_operator",
     description:
-      "Invoke an AI operator with a payload. This calls the operator's real endpoint and records the invocation with trust scoring and guardrail checks.",
+      "Unlock an AI operator's private SKILL.md payload. Paid skills must include an on-chain settlement proof, and the invocation is still recorded with trust and guardrail metadata.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -136,6 +136,14 @@ const TOOLS = [
         txSignature: {
           type: "string",
           description: "Confirmed Solana payment transaction signature for paid skills (required when pricePerCall > 0)",
+        },
+        receiptPda: {
+          type: "string",
+          description: "Invocation receipt PDA created by the Aegis invoke_skill instruction for on-chain fee settlement",
+        },
+        settlementMethod: {
+          type: "string",
+          description: "Settlement proof method: use 'aegis_program' when providing an on-chain invocation receipt",
         },
       },
       required: ["operatorId"],
@@ -450,8 +458,8 @@ async function executeTool(
                   pricePerCall: op.pricePerCall,
                   avgResponseMs: op.avgResponseMs,
                   totalEarned: op.totalEarned,
-                  endpointUrl: op.endpointUrl,
-                  httpMethod: op.httpMethod,
+                  hasPrivateSkill: typeof op.skill === "string" && op.skill.trim().length > 0,
+                  skillFormat: "markdown",
                   healthStatus: op.healthStatus,
                   isActive: op.isActive,
                   createdAt: op.createdAt,
@@ -491,6 +499,8 @@ async function executeTool(
         const callerWallet = (args.callerWallet as string) || "mcp-agent";
         const payload = args.payload ?? {};
         const txSignature = args.txSignature as string | undefined;
+        const receiptPda = args.receiptPda as string | undefined;
+        const settlementMethod = args.settlementMethod as "legacy_transfer" | "aegis_program" | undefined;
 
         // Rate limit by caller wallet
         const rl = await checkRateLimit(`wallet:${callerWallet}`, "invoke.execute", 60, 60);
@@ -512,6 +522,8 @@ async function executeTool(
             callerWallet,
             payload,
             txSignature,
+            receiptPda,
+            settlementMethod,
             source: "mcp",
           });
 

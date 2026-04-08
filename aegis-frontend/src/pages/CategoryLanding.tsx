@@ -15,7 +15,7 @@ interface DbOperator {
   category: string;
   pricePerCall: string;
   creatorWallet: string;
-  trustScore: number;
+  qualityScore: number;
   totalInvocations: number;
   successfulInvocations: number;
   totalEarned: string;
@@ -52,8 +52,8 @@ function repColor(score: number) {
 /* ── Operator Card ────────────────────────────────────────────────────── */
 
 function OperatorCard({ op }: { op: DbOperator }) {
-  const pct = Math.min(100, Math.max(0, op.trustScore));
-  const color = repColor(op.trustScore);
+  const pct = Math.min(100, Math.max(0, op.qualityScore));
+  const color = repColor(op.qualityScore);
 
   return (
     <Link
@@ -70,13 +70,13 @@ function OperatorCard({ op }: { op: DbOperator }) {
         {op.tagline || op.description?.slice(0, 120) || "No description"}
       </p>
 
-      {/* Trust score bar */}
+      {/* quality score bar */}
       <div className="mb-4">
         <div className="h-[3px] bg-white/[0.04] w-full overflow-hidden rounded">
           <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
         </div>
         <div className="flex items-center justify-between mt-1.5">
-          <span className="text-[9px] text-white/15">Trust: {op.trustScore}/100</span>
+          <span className="text-[9px] text-white/15">Quality: {op.qualityScore}/100</span>
           <span className="text-[9px] text-white/15">
             {op.totalInvocations.toLocaleString()} calls
           </span>
@@ -112,7 +112,7 @@ export default function CategoryLanding() {
 
   // Compute stats
   const avgTrust = operators.length > 0
-    ? Math.round(operators.reduce((s: number, o: DbOperator) => s + o.trustScore, 0) / operators.length)
+    ? Math.round(operators.reduce((s: number, o: DbOperator) => s + o.qualityScore, 0) / operators.length)
     : 0;
   const totalInvocations = operators.reduce((s: number, o: DbOperator) => s + o.totalInvocations, 0);
 
@@ -123,7 +123,7 @@ export default function CategoryLanding() {
       {/* Hero Section */}
       <div className="pt-24">
         <div className="border-b border-white/[0.04]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-16 md:py-24">
+          <div className="mx-auto max-w-[1520px] px-12 py-16 md:py-24">
             <div className="max-w-2xl">
               <div className="flex items-center gap-3 mb-6">
                 <span className="text-[10px] font-medium text-zinc-300/60 bg-white/[0.04] border border-white/[0.10] px-3 py-1 rounded-full">
@@ -145,7 +145,7 @@ export default function CategoryLanding() {
 
         {/* Stats Bar */}
         <div className="border-b border-white/[0.04] bg-white/[0.01]">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-5">
+          <div className="mx-auto max-w-[1520px] px-12 py-5">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-[9px] font-medium text-zinc-300/50 tracking-wider">CATEGORY STATS</span>
               <div className="h-px flex-1 bg-white/[0.04]" />
@@ -163,7 +163,7 @@ export default function CategoryLanding() {
                 <div className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight">
                   {isLoading ? "--" : avgTrust}
                 </div>
-                <div className="text-[11px] text-white/25 mt-1 tracking-wider">AVG TRUST SCORE</div>
+                <div className="text-[11px] text-white/25 mt-1 tracking-wider">AVG quality score</div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight">
@@ -177,7 +177,7 @@ export default function CategoryLanding() {
       </div>
 
       {/* Operator Grid */}
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-[1520px] px-12 py-12">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -210,7 +210,7 @@ export default function CategoryLanding() {
 
       {/* Bottom CTA */}
       <div className="border-t border-white/[0.04]">
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-20 text-center">
+        <div className="mx-auto max-w-[1520px] px-12 py-20 text-center">
           <h2 className="text-2xl md:text-3xl font-normal text-white/90 tracking-tight mb-3">
             Deploy a {meta.title.replace(" Skills", "").replace(" Tools", "")} Skill
           </h2>

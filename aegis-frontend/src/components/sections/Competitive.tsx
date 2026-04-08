@@ -24,7 +24,7 @@ interface CriteriaRow {
 
 const CRITERIA: CriteriaRow[] = [
   { label: "Agent Identity Registry", values: [true, true, true, false, false, false, false, false, false], aegisStatus: "dev" },
-  { label: "On-Chain Reputation", values: [true, true, "partial", false, false, false, false, "partial", false], aegisStatus: "design" },
+  { label: "on-chain quality", values: [true, true, "partial", false, false, false, false, "partial", false], aegisStatus: "design" },
   { label: "Validation Registry (Active)", values: [true, false, false, false, false, false, false, false, false], aegisStatus: "design" },
   { label: "Bonded Validation + Slashing", values: [true, false, false, false, false, false, false, false, false], aegisStatus: "design" },
   { label: "x402 Micropayments", values: [true, false, false, false, false, false, false, true, false], aegisStatus: "dev" },

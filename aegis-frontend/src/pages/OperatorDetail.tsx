@@ -1,474 +1,1570 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { NvidiaEyeLogo } from "@/components/NvidiaLogo";
+import { useWalletModal } from "@/components/WalletModal";
 import { trpc, type RouterOutputs } from "@/lib/trpc";
-
-type InvocationRecord = RouterOutputs["invoke"]["byOperator"][number];
-import { useWallet } from "@solana/wallet-adapter-react";
+import { invokeWithPaywall, type PaidInvokeResult } from "@/lib/x402";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
 
-/* ── Helpers ──────────────────────────────────────────────────────────── */
+type InvocationRecord = RouterOutputs["invoke"]["byOperator"][number];
 
-function trustTier(score: number): string {
-  if (score >= 90) return "Diamond";
-  if (score >= 75) return "Gold";
-  if (score >= 50) return "Silver";
-  return "Bronze";
+/* ─────────────────────────────────────────────────────────────────────────────
+   DESIGN TOKENS — exact match to SkillsMarketplace
+───────────────────────────────────────────────────────────────────────────── */
+const T = {
+  bg: "#0A0A0B",
+  card: "rgba(255,255,255,0.015)",
+  cardHover: "rgba(255,255,255,0.025)",
+  border: "rgba(255,255,255,0.05)",
+  borderSubtle: "rgba(255,255,255,0.03)",
+  borderHover: "rgba(255,255,255,0.08)",
+  text95: "rgba(255,255,255,0.92)",
+  text80: "rgba(255,255,255,0.72)",
+  text50: "rgba(255,255,255,0.44)",
+  text30: "rgba(255,255,255,0.28)",
+  text20: "rgba(255,255,255,0.18)",
+  text12: "rgba(255,255,255,0.10)",
+  accent: "rgba(52,211,153,0.60)",
+  accentSubtle: "rgba(52,211,153,0.12)",
+  accentBorder: "rgba(52,211,153,0.25)",
+  white2: "rgba(255,255,255,0.02)",
+  white4: "rgba(255,255,255,0.04)",
+  white6: "rgba(255,255,255,0.06)",
+};
+
+const FONT_SANS = "'DM Sans', 'Helvetica Neue', sans-serif";
+const FONT_MONO = "'DM Mono', 'SF Mono', 'Fira Code', monospace";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────────────────────────────────────── */
+function parseDecimal(val: any): number {
+  if (!val) return 0;
+  if (typeof val === "number") return val;
+  if (val.$numberDecimal) return parseFloat(val.$numberDecimal);
+  return parseFloat(String(val)) || 0;
 }
 
-function tierColor(tier: string) {
-  switch (tier) {
-    case "Diamond": return "text-zinc-200";
-    case "Gold": return "text-amber-400";
-    case "Silver": return "text-zinc-400";
-    default: return "text-orange-400";
-  }
+function extractUnlockedSkill(result: PaidInvokeResult | null): string | null {
+  if (!result || !result.result || typeof result.result !== "object") return null;
+  const skill = (result.result as { skill?: unknown }).skill;
+  return typeof skill === "string" ? skill : null;
 }
 
-function repColor(score: number) {
-  if (score >= 80) return "rgb(161,161,170)";
-  if (score >= 60) return "rgb(113,113,122)";
-  if (score >= 40) return "rgb(234,179,8)";
-  return "rgba(220,100,60,0.50)";
+function fmtPrice(price: number): string {
+  if (price <= 0) return "Free";
+  if (price < 0.001) return `$${price.toFixed(6)}`;
+  if (price < 0.01) return `$${price.toFixed(5)}`;
+  if (price < 0.1) return `$${price.toFixed(4)}`;
+  return `$${price.toFixed(3)}`;
 }
 
-/* ── Tab Navigation ──────────────────────────────────────────────────── */
-type Tab = "overview" | "invocations" | "invoke";
+function catLabel(cat: string): string {
+  return cat.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+function shortWallet(w: string): string {
+  if (!w || w.length < 8) return w || "";
+  return `${w.slice(0, 6)}…${w.slice(-4)}`;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────────────────────────────────────── */
+type Tab = "overview" | "how-to-use" | "invoke" | "history";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "invocations", label: "Invocation History" },
-  { id: "invoke", label: "Invoke" },
+  { id: "overview",    label: "Overview"    },
+  { id: "how-to-use",  label: "How to Use"  },
+  { id: "invoke",      label: "Invoke"      },
+  { id: "history",     label: "History"     },
 ];
 
-/* ── Main Component ──────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────────────────
+   ICONS
+───────────────────────────────────────────────────────────────────────────── */
+function IconCopy() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <rect x="4" y="4" width="7" height="7" rx="1" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M1 8V1h7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+function IconCheck() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconArrowLeft() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M9.5 6H2.5M5.5 3l-3 3 3 3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconExternalLink() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+      <path d="M6.5 1.5H9.5V4.5M9.5 1.5L5 6M2 3H1V10H8V9" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function IconVerified() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+      <circle cx="6.5" cy="6.5" r="5.5" stroke={T.accentBorder} strokeWidth="1" />
+      <path d="M4 6.5l2 2 3-3" stroke={T.accent} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   COPY BUTTON
+───────────────────────────────────────────────────────────────────────────── */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handle = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  };
+  return (
+    <button
+      onClick={handle}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+        padding: "4px 10px",
+        background: copied ? T.accentSubtle : T.white4,
+        border: `1px solid ${copied ? T.accentBorder : T.border}`,
+        borderRadius: 5,
+        color: copied ? T.accent : T.text50,
+        fontSize: 10,
+        fontFamily: FONT_SANS,
+        fontWeight: 500,
+        cursor: "pointer",
+        letterSpacing: "0.04em",
+        transition: "all 0.2s ease",
+      }}
+    >
+      {copied ? <IconCheck /> : <IconCopy />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CODE BLOCK — syntax-highlighted via color spans
+───────────────────────────────────────────────────────────────────────────── */
+function CodeBlock({ code, lang = "bash" }: { code: string; lang?: string }) {
+  // Minimal coloring: strings, keys, comments, keywords
+  function colorize(line: string): React.ReactNode {
+    // For bash-style: highlight flags (--header, -H, -X), strings, urls
+    const parts: React.ReactNode[] = [];
+    let i = 0;
+    const src = line;
+
+    // simple tokenizer pass
+    while (i < src.length) {
+      // comment
+      if (src[i] === "#") {
+        parts.push(<span key={i} style={{ color: "rgba(255,255,255,0.22)" }}>{src.slice(i)}</span>);
+        break;
+      }
+      // string (single or double quoted)
+      if (src[i] === '"' || src[i] === "'") {
+        const q = src[i];
+        let j = i + 1;
+        while (j < src.length && src[j] !== q) j++;
+        parts.push(<span key={i} style={{ color: "rgba(134,239,172,0.85)" }}>{src.slice(i, j + 1)}</span>);
+        i = j + 1;
+        continue;
+      }
+      // flags / keys
+      if (src[i] === "-" && i > 0 && src[i - 1] === " ") {
+        let j = i;
+        while (j < src.length && src[j] !== " " && src[j] !== "\n") j++;
+        parts.push(<span key={i} style={{ color: "rgba(147,197,253,0.85)" }}>{src.slice(i, j)}</span>);
+        i = j;
+        continue;
+      }
+      // json key  "foo":
+      const jsonKey = src.slice(i).match(/^"([^"]+)"(\s*:)/);
+      if (jsonKey) {
+        parts.push(<span key={i} style={{ color: "rgba(196,181,253,0.85)" }}>{`"${jsonKey[1]}"`}</span>);
+        parts.push(<span key={i + "c"} style={{ color: T.text50 }}>{jsonKey[2]}</span>);
+        i += jsonKey[0].length;
+        continue;
+      }
+      // url
+      const url = src.slice(i).match(/^https?:\/\/[^\s'"]+/);
+      if (url) {
+        parts.push(<span key={i} style={{ color: "rgba(251,191,36,0.8)" }}>{url[0]}</span>);
+        i += url[0].length;
+        continue;
+      }
+      // keyword
+      const kw = src.slice(i).match(/^(curl|POST|GET|PUT|DELETE|const|await|fetch|method|headers|body|JSON\.stringify|Use|Then|Share|GET|POST)\b/);
+      if (kw) {
+        parts.push(<span key={i} style={{ color: "rgba(96,165,250,0.9)" }}>{kw[0]}</span>);
+        i += kw[0].length;
+        continue;
+      }
+      // default char
+      let j = i + 1;
+      while (j < src.length) {
+        const c = src[j];
+        if (c === '"' || c === "'" || c === "#") break;
+        if (c === "-" && j > 0 && src[j - 1] === " ") break;
+        if (src.slice(j).match(/^https?:\/\//)) break;
+        if (src.slice(j).match(/^(curl|POST|GET|PUT|DELETE|const|await|fetch|method|headers|body|JSON\.stringify|Use|Then|Share)\b/)) break;
+        j++;
+      }
+      parts.push(<span key={i} style={{ color: T.text80 }}>{src.slice(i, j)}</span>);
+      i = j;
+    }
+    return parts;
+  }
+
+  const lines = code.split("\n");
+
+  return (
+    <div style={{
+      background: "#0D0D0F",
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      overflow: "hidden",
+    }}>
+      {/* bar */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "8px 14px",
+        borderBottom: `1px solid ${T.borderSubtle}`,
+        background: T.white2,
+      }}>
+        <span style={{ fontSize: 10, fontFamily: FONT_MONO, color: T.text30, letterSpacing: "0.06em" }}>
+          {lang}
+        </span>
+        <CopyButton text={code} />
+      </div>
+      <pre style={{
+        margin: 0,
+        padding: "16px 18px",
+        overflowX: "auto",
+        fontFamily: FONT_MONO,
+        fontSize: 12,
+        lineHeight: 1.7,
+        color: T.text80,
+        background: "transparent",
+      }}>
+        {lines.map((line, idx) => (
+          <div key={idx}>{colorize(line)}</div>
+        ))}
+      </pre>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   STAT CARD — used in 2x2 hero grid
+───────────────────────────────────────────────────────────────────────────── */
+function StatCard({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div style={{
+      background: T.card,
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      padding: "18px 20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+    }}>
+      <div style={{
+        fontSize: 10,
+        fontWeight: 500,
+        color: T.text30,
+        letterSpacing: "0.09em",
+        textTransform: "uppercase",
+        fontFamily: FONT_SANS,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 24,
+        fontWeight: 300,
+        color: T.text95,
+        letterSpacing: "-0.03em",
+        lineHeight: 1,
+        fontFamily: mono ? FONT_MONO : FONT_SANS,
+        fontVariantNumeric: "tabular-nums",
+      }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SECTION HEADING
+───────────────────────────────────────────────────────────────────────────── */
+function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{
+      fontSize: 13,
+      fontWeight: 500,
+      color: T.text50,
+      letterSpacing: "0.07em",
+      textTransform: "uppercase",
+      fontFamily: FONT_SANS,
+      margin: "0 0 16px",
+    }}>
+      {children}
+    </h2>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   INTEGRATION CARD — each "how to use" method
+───────────────────────────────────────────────────────────────────────────── */
+function IntegrationCard({
+  title,
+  description,
+  code,
+  lang,
+  learnMore,
+}: {
+  title: string;
+  description: string;
+  code: string;
+  lang: string;
+  learnMore?: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        background: T.card,
+        border: `1px solid ${T.border}`,
+        borderRadius: 10,
+        padding: "24px 26px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+      }}
+    >
+      <div>
+        <div style={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: T.text95,
+          fontFamily: FONT_SANS,
+          marginBottom: 6,
+          letterSpacing: "-0.01em",
+        }}>
+          {title}
+        </div>
+        <div style={{
+          fontSize: 12.5,
+          color: T.text50,
+          fontFamily: FONT_SANS,
+          lineHeight: 1.6,
+        }}>
+          {description}
+        </div>
+      </div>
+      <CodeBlock code={code} lang={lang} />
+      {learnMore && (
+        <a
+          href={learnMore}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 11,
+            color: T.accent,
+            fontFamily: FONT_SANS,
+            textDecoration: "none",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Learn more <IconExternalLink />
+        </a>
+      )}
+    </motion.div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LOADING STATE
+───────────────────────────────────────────────────────────────────────────── */
+function LoadingState() {
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: FONT_SANS }}>
+      <Navbar />
+      <div style={{ paddingTop: 120, maxWidth: 1520, margin: "0 auto", padding: "120px 48px 80px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {[280, 420, 180, 340].map((w, i) => (
+            <motion.div
+              key={i}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ repeat: Infinity, duration: 1.8, delay: i * 0.12, ease: "easeInOut" }}
+              style={{ height: i === 0 ? 36 : i === 1 ? 14 : 14, width: w, background: T.white4, borderRadius: 5 }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   NOT FOUND STATE
+───────────────────────────────────────────────────────────────────────────── */
+function NotFoundState({ slug }: { slug: string }) {
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: FONT_SANS }}>
+      <Navbar />
+      <div style={{ paddingTop: 120, textAlign: "center", padding: "160px 48px" }}>
+        <div style={{ fontSize: 11, fontWeight: 500, color: T.text30, letterSpacing: "0.09em", textTransform: "uppercase", marginBottom: 20, fontFamily: FONT_SANS }}>
+          404 Not Found
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 300, color: T.text95, letterSpacing: "-0.03em", marginBottom: 12, fontFamily: FONT_SANS }}>
+          Skill not found
+        </h1>
+        <p style={{ fontSize: 14, color: T.text50, marginBottom: 40, fontFamily: FONT_SANS }}>
+          No skill or operator registered under <span style={{ fontFamily: FONT_MONO, color: T.text80 }}>"{slug}"</span>.
+        </p>
+        <Link href="/marketplace" style={{ textDecoration: "none" }}>
+          <button style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "transparent",
+            border: `1px solid ${T.border}`,
+            borderRadius: 8,
+            padding: "10px 20px",
+            color: T.text80,
+            fontSize: 13,
+            fontFamily: FONT_SANS,
+            fontWeight: 500,
+            cursor: "pointer",
+          }}>
+            <IconArrowLeft /> Back to Marketplace
+          </button>
+        </Link>
+      </div>
+      <MobileBottomNav />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MAIN COMPONENT
+───────────────────────────────────────────────────────────────────────────── */
 export default function OperatorDetail() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug || "";
   const [tab, setTab] = useState<Tab>("overview");
-  const { publicKey } = useWallet();
+  const { connection } = useConnection();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { setVisible } = useWalletModal();
+  const invokeResultRef = useRef<HTMLDivElement>(null);
+  const [invokeLoading, setInvokeLoading] = useState(false);
+  const [invokeResult, setInvokeResult] = useState<PaidInvokeResult | null>(null);
 
-  // Fetch operator from database
+  // ── Data fetching ────────────────────────────────────────────────────────
   const { data: operator, isLoading, error } = trpc.operator.bySlug.useQuery(
     { slug },
     { enabled: !!slug }
   );
 
-  // Fetch invocation history
   const { data: invocations } = trpc.invoke.byOperator.useQuery(
     { operatorId: operator?.id || 0, limit: 20 },
     { enabled: !!operator?.id }
   );
 
-  // Invoke mutation
-  const invokeMutation = trpc.invoke.execute.useMutation({
-    onSuccess: (result) => {
-      if (result.success) {
-        toast.success(`Invocation successful! Success score: ${result.validation.newTrustScore}`, {
-          description: `Response in ${result.responseMs}ms. Fee: $${result.fees.total.toFixed(4)} USDC`,
-        });
-      } else {
-        toast.error("Invocation failed", {
-          description: `Status: ${result.statusCode}. Flags: ${result.validation.flags.join(", ")}`,
-        });
-      }
-    },
-    onError: (err) => {
-      toast.error("Invocation error", { description: err.message });
-    },
-  });
+  const handleInvoke = async () => {
+    if (!operator || invokeLoading) return;
 
-  const handleInvoke = () => {
-    if (!operator) return;
-    invokeMutation.mutate({
-      operatorId: operator.id,
-      callerWallet: publicKey?.toBase58() || undefined,
-      payload: { test: true, timestamp: new Date().toISOString() },
-    });
+    const requiresPayment = parseDecimal(operator.pricePerCall) > 0;
+    if (requiresPayment && (!connected || !publicKey || !sendTransaction)) {
+      setVisible(true);
+      toast.info("Connect a Solana wallet to pay for this skill.");
+      return;
+    }
+
+    setInvokeLoading(true);
+
+    try {
+      const result = await invokeWithPaywall({
+        slug,
+        payload: { test: true, timestamp: new Date().toISOString() },
+        callerWallet: publicKey?.toBase58(),
+        connection,
+        publicKey,
+        sendTransaction: sendTransaction || undefined,
+      });
+
+      setInvokeResult(result);
+      toast.success(`Skill unlocked. ${result.execution.durationMs}ms`, {
+        description: `Fee: $${parseDecimal(result.payment.amount).toFixed(4)} ${result.payment.token}`,
+      });
+      setTimeout(() => invokeResultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 100);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Invocation failed";
+      toast.error("Invocation error", { description: message });
+    } finally {
+      setInvokeLoading(false);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white/[0.02]">
-        <Navbar />
-        <div className="pt-24">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-24 text-center">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-zinc-800/40 rounded w-64 mx-auto" />
-              <div className="h-4 bg-zinc-800/40 rounded w-96 mx-auto" />
-              <div className="h-4 bg-zinc-800/40 rounded w-80 mx-auto" />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingState />;
+  if (error || !operator) return <NotFoundState slug={slug} />;
 
-  if (error || !operator) {
-    return (
-      <div className="min-h-screen bg-white/[0.02]">
-        <Navbar />
-        <div className="pt-24">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-24 text-center">
-            <h1 className="text-3xl font-normal text-white mb-4">Operator Not Found</h1>
-            <p className="text-zinc-500 mb-8">The operator "{slug}" does not exist in the registry.</p>
-            <Link href="/marketplace" className="text-sm font-normal bg-white text-zinc-900 px-6 py-3 hover:bg-zinc-200 transition-colors rounded">
-              Back to Marketplace
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const tier = trustTier(operator.trustScore);
+  // ── Computed values ──────────────────────────────────────────────────────
+  const price = parseDecimal(operator.pricePerCall);
+  const priceStr = fmtPrice(price);
   const successRate = operator.totalInvocations > 0
     ? ((operator.successfulInvocations / operator.totalInvocations) * 100).toFixed(1)
     : "100.0";
-  const price = parseFloat(operator.pricePerCall);
-  const priceDisplay = price < 0.01 ? price.toFixed(4) : price < 1 ? price.toFixed(3) : price.toFixed(2);
-  const creatorShare = (price * 0.85).toFixed(4);
-  const validatorShare = (price * 0.15).toFixed(4);
-  const stakerShare = (price * 0.12).toFixed(4);
-  const treasuryShare = (price * 0.08).toFixed(4);
-  const insuranceShare = (price * 0.03).toFixed(4);
-  const burnAmount = (price * 0.02).toFixed(4);
+  const avgResponseMs = invocations && invocations.length > 0
+    ? Math.round(invocations.reduce((a, b) => a + b.responseMs, 0) / invocations.length)
+    : null;
+
+  // Correct fee split: 85/10/3/1.5/0.5
+  const feeCreator    = price * 0.85;
+  const feeValidators = price * 0.10;
+  const feeTreasury   = price * 0.03;
+  const feeInsurance  = price * 0.015;
+  const feeBurn       = price * 0.005;
+
+  const tags = (operator.tags as string[]) || [];
+  const category = operator.category || "General";
+  const unlockedSkill = extractUnlockedSkill(invokeResult);
+
+  // ── Code examples (dynamic with real slug) ───────────────────────────────
+  const invokeUrl = `https://aegisplace.com/api/v1/operators/${slug}/invoke`;
+
+  const curlExample = `curl -X POST ${invokeUrl} \\
+  -H "Content-Type: application/json" \\
+  -H "X-Payment-Proof: <solana-usdc-tx-signature>" \\
+  -H "X-Payer-Wallet: <your-wallet-address>" \\
+  -d '{"input": "your query here"}'`;
+
+  const mcpExample = `{
+  "mcpServers": {
+    "aegis": {
+      "url": "https://aegisplace.com/api/mcp"
+    }
+  }
+}`;
+
+  const mcpUsage = `# Then use the tool in Claude Code or Cursor:
+1. Use aegis_get_operator with slug "${slug}"
+2. Copy the returned operatorId
+3. Use aegis_invoke_operator with that operatorId and your payload`;
+
+  const a2aExample = `# 1. Discover backend capabilities:
+POST https://aegisplace.com/api/a2a
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "agent/discover"
+}
+
+# 2. Resolve the invoke URL for this skill:
+POST https://aegisplace.com/api/a2a
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "skills/invoke",
+  "params": {
+    "skillId": "${slug}",
+    "payload": { "input": "your query" }
+  }
+}`;
+
+  const jsExample = `const response = await fetch(
+  '${invokeUrl}',
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Payment-Proof': process.env.AEGIS_PAYMENT_TX,
+      'X-Payer-Wallet': process.env.AEGIS_WALLET,
+    },
+    body: JSON.stringify({ input: 'your query here' }),
+  }
+);
+const data = await response.json();
+console.log(data.result);`;
+
+  const pythonExample = `import os
+import requests
+
+response = requests.post(
+    "${invokeUrl}",
+    headers={
+        "Content-Type": "application/json",
+    "X-Payment-Proof": os.environ["AEGIS_PAYMENT_TX"],
+    "X-Payer-Wallet": os.environ["AEGIS_WALLET"],
+    },
+    json={"input": "your query here"},
+)
+print(response.json()["result"])`;
 
   return (
-    <div className="min-h-screen bg-white/[0.02]">
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: FONT_SANS }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 0; height: 0; }
+        ::selection { background: rgba(52,211,153,0.18); }
+        a { text-decoration: none; }
+      `}</style>
+
       <Navbar />
 
-      <div className="pt-24">
-        {/* Breadcrumb */}
-        <div className="border-b border-white/[0.06]/30">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-2 text-[11px] font-medium text-zinc-500">
-              <Link href="/marketplace" className="hover:text-zinc-300 transition-colors">Marketplace</Link>
-              <span className="text-zinc-700">/</span>
-              <span className="text-zinc-400">{operator.slug}</span>
-            </div>
-          </div>
-        </div>
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <div style={{
+        width: "100%",
+        paddingTop: 64,
+        position: "relative",
+        overflow: "hidden",
+        borderBottom: `1px solid ${T.borderSubtle}`,
+      }}>
+        {/* Video background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: "absolute",
+            top: 0, left: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: 0.15,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <source src="/videos/AegisSprite.mp4" type="video/mp4" />
+        </video>
+        {/* Dark gradient overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `linear-gradient(180deg, rgba(10,10,11,0.3) 0%, rgba(10,10,11,0.75) 70%, ${T.bg} 100%)`,
+          zIndex: 1, pointerEvents: "none",
+        }} />
+        {/* Emerald radial accents */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `
+            radial-gradient(ellipse 55% 45% at 85% 15%, rgba(52,211,153,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 40% 50% at 5% 90%, rgba(52,211,153,0.025) 0%, transparent 50%)
+          `,
+          zIndex: 2, pointerEvents: "none",
+        }} />
 
-        {/* Hero */}
-        <div className="border-b border-white/[0.06]/30">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12 md:py-16">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className={`text-[10px] font-medium px-3 py-1 rounded border ${
-                    operator.isVerified
-                      ? "bg-zinc-800/40 text-zinc-300 border-white/[0.06]/30"
-                      : "bg-amber-500/10 text-amber-400 border-amber-400/20"
-                  }`}>
-                    {operator.isVerified ? "Verified" : "Pending Verification"}
+        <div style={{ maxWidth: 1520, margin: "0 auto", padding: "40px 48px 44px", position: "relative", zIndex: 3 }}>
+          {/* Breadcrumb */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 32 }}
+          >
+            <Link href="/marketplace" style={{ color: T.text30, fontSize: 11, fontFamily: FONT_SANS, letterSpacing: "0.02em" }}>
+              Marketplace
+            </Link>
+            <span style={{ color: T.text20, fontSize: 10 }}>/</span>
+            <span style={{ color: T.text30, fontSize: 11, fontFamily: FONT_SANS, letterSpacing: "0.02em" }}>
+              {catLabel(category)}
+            </span>
+            <span style={{ color: T.text20, fontSize: 10 }}>/</span>
+            <span style={{ color: T.text50, fontSize: 11, fontFamily: FONT_MONO }}>
+              {operator.name}
+            </span>
+          </motion.div>
+
+          <div style={{ display: "flex", gap: 48, flexWrap: "wrap", alignItems: "flex-start" }}>
+            {/* Left — identity */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              style={{ flex: "1 1 420px", minWidth: 0 }}
+            >
+              {/* Category label */}
+              <div style={{
+                fontSize: 10,
+                fontWeight: 500,
+                color: T.text30,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontFamily: FONT_SANS,
+                marginBottom: 14,
+              }}>
+                {catLabel(category)}
+                {operator.isVerified && (
+                  <span style={{ display: "inline-flex", alignItems: "center", marginLeft: 8, verticalAlign: "middle" }}>
+                    <IconVerified />
                   </span>
-                  <span className={`text-[11px] font-medium ${tierColor(tier)}`}>{tier}</span>
-                  <span className="text-[11px] font-medium text-zinc-600">{operator.category}</span>
-                </div>
-
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-normal tracking-tight text-white mb-3">
-                  {operator.name}
-                </h1>
-
-                <p className="text-base md:text-lg text-zinc-500 leading-relaxed mb-6">
-                  {operator.tagline || operator.description?.slice(0, 200)}
-                </p>
-
-                {/* Creator wallet */}
-                <div className="flex items-center gap-2 text-[11px] font-medium text-zinc-600">
-                  <span>Creator:</span>
-                  <span className="text-zinc-400">{operator.creatorWallet.slice(0, 8)}...{operator.creatorWallet.slice(-4)}</span>
-                </div>
-              </div>
-
-              {/* Quick stats */}
-              <div className="grid grid-cols-2 gap-3 lg:min-w-[320px]">
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-4">
-                  <div className="text-[11px] font-medium text-zinc-500 mb-1">Success Rate</div>
-                  <div className="text-2xl font-normal" style={{ color: repColor(operator.trustScore) }}>{operator.trustScore}</div>
-                </div>
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-4">
-                  <div className="text-[11px] font-medium text-zinc-500 mb-1">Invocations</div>
-                  <div className="text-2xl font-normal text-zinc-200">{operator.totalInvocations.toLocaleString()}</div>
-                </div>
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-4">
-                  <div className="text-[11px] font-medium text-zinc-500 mb-1">Success Rate</div>
-                  <div className="text-2xl font-normal text-zinc-200">{successRate}%</div>
-                </div>
-                <div className="border border-white/[0.06]/40 bg-zinc-800/30 rounded p-4">
-                  <div className="text-[11px] font-medium text-zinc-400 mb-1">Price / Call</div>
-                  <div className="text-2xl font-normal text-zinc-200">${priceDisplay}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-white/[0.06]/30">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
-            <div className="flex gap-0">
-              {TABS.map(t => (
-                <button key={t.id} onClick={() => setTab(t.id)}
-                  className={`text-[13px] font-medium px-6 py-4 border-b-2 transition-all ${
-                    tab === t.id
-                      ? "text-zinc-200 border-zinc-200"
-                      : "text-zinc-500 border-transparent hover:text-zinc-300"
-                  }`}
-                >{t.label}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Content */}
-        <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 py-12">
-          {/* Overview Tab */}
-          {tab === "overview" && (
-            <div className="grid lg:grid-cols-[1fr_380px] gap-12">
-              <div>
-                <h2 className="text-xl font-normal text-white mb-4">Description</h2>
-                <p className="text-[14px] text-zinc-500 leading-relaxed mb-8 whitespace-pre-wrap">
-                  {operator.description || "No detailed description available."}
-                </p>
-
-                {/* Success score bar */}
-                <div className="mb-8">
-                  <h3 className="text-[12px] font-medium text-zinc-500 mb-3">Success Rate Breakdown</h3>
-                  <div className="h-2 bg-zinc-800 w-full rounded overflow-hidden mb-2">
-                    <div className="h-full rounded transition-all duration-1000"
-                      style={{ width: `${operator.trustScore}%`, background: repColor(operator.trustScore) }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-medium text-zinc-600">
-                    <span>0</span>
-                    <span>Current: {operator.trustScore}/100</span>
-                    <span>100</span>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                {operator.tags && (operator.tags as string[]).length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-[12px] font-medium text-zinc-500 mb-3">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(operator.tags as string[]).map((tag) => (
-                        <span key={tag} className="text-[11px] font-medium text-zinc-400 bg-zinc-800/40 border border-white/[0.06]/30 px-3 py-1 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
                 )}
               </div>
 
-              {/* Sidebar */}
-              <div className="space-y-4">
-                {/* Fee Distribution */}
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-6">
-                  <h3 className="text-[12px] font-medium text-zinc-400 mb-4">Fee Distribution</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Price per call</span>
-                      <span className="text-zinc-200">${priceDisplay} USDC</span>
-                    </div>
-                    <div className="h-px bg-zinc-800/50" />
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-400">Creator (85%)</span>
-                      <span className="text-zinc-300">${creatorShare}</span>
-                    </div>
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Validators (15%)</span>
-                      <span className="text-zinc-400">${validatorShare}</span>
-                    </div>
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Treasury (3%)</span>
-                      <span className="text-zinc-400">${stakerShare}</span>
-                    </div>
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Treasury (8%)</span>
-                      <span className="text-zinc-400">${treasuryShare}</span>
-                    </div>
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Insurance (3%)</span>
-                      <span className="text-zinc-400">${insuranceShare}</span>
-                    </div>
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-zinc-500">Burned (0.5%)</span>
-                      <span className="text-zinc-400">${burnAmount}</span>
-                    </div>
-                  </div>
-                </div>
+              {/* Name */}
+              <h1 style={{
+                fontSize: "clamp(28px, 3.5vw, 42px)",
+                fontWeight: 300,
+                color: T.text95,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.1,
+                fontFamily: FONT_SANS,
+                margin: "0 0 14px",
+              }}>
+                {operator.name}
+              </h1>
 
-                {/* NeMo Stack Status */}
-                <div className="border border-[rgba(52,211,153,0.08)] bg-[rgba(52,211,153,0.02)] rounded p-6">
-                  <h3 className="flex items-center gap-2 text-[12px] font-normal text-[rgba(52,211,153,0.55)] mb-4">
-                    <NvidiaEyeLogo size={14} className="text-[rgba(52,211,153,0.55)]" />
-                    NeMo Stack
-                  </h3>
-                  <div className="space-y-2">
-                    {[
-                      { name: "Guardrails", status: "Active" },
-                      { name: "Evaluator", status: "Benchmarked" },
-                      { name: "NIM Runtime", status: "Deployed" },
-                      { name: "Nemotron Base", status: "Super" },
-                    ].map(item => (
-                      <div key={item.name} className="flex items-center justify-between text-[12px]">
-                        <span className="text-zinc-500">{item.name}</span>
-                        <span className="font-normal text-[rgba(52,211,153,0.55)] text-[10px]">{item.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {/* Description */}
+              <p style={{
+                fontSize: 14,
+                color: T.text50,
+                lineHeight: 1.7,
+                fontFamily: FONT_SANS,
+                maxWidth: 560,
+                margin: "0 0 20px",
+              }}>
+                {operator.tagline || operator.description?.slice(0, 220) || "No description available."}
+              </p>
 
-                {/* Total Earned */}
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-6">
-                  <h3 className="text-[12px] font-medium text-zinc-500 mb-4">Lifetime Earnings</h3>
-                  <div className="text-3xl font-normal text-zinc-200">${parseFloat(operator.totalEarned).toFixed(2)}</div>
-                  <div className="text-[11px] font-medium text-zinc-600 mt-1">USDC earned by creator</div>
-                </div>
-
-                {/* Invoke Button */}
-                <button
-                  onClick={handleInvoke}
-                  disabled={invokeMutation.isPending}
-                  className="w-full bg-white text-zinc-900 font-normal text-[14px] py-4 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
-                >
-                  {invokeMutation.isPending ? "Invoking..." : `Invoke for $${priceDisplay} USDC`}
-                </button>
-                <p className="text-[10px] text-zinc-600 text-center">
-                  Simulated invocation. Real x402 payments settle on Solana mainnet.
-                </p>
+              {/* Creator wallet */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+                <span style={{ fontSize: 11, color: T.text30, fontFamily: FONT_SANS }}>Creator</span>
+                <span style={{ fontSize: 11, fontFamily: FONT_MONO, color: T.text50, letterSpacing: "0.03em" }}>
+                  {shortWallet(operator.creatorWallet)}
+                </span>
               </div>
-            </div>
+
+              {/* Tags as dot-separated text */}
+              {tags.length > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap" }}>
+                  {tags.slice(0, 6).map((tag, i) => (
+                    <span key={tag} style={{ display: "flex", alignItems: "center" }}>
+                      {i > 0 && <span style={{ color: T.text12, margin: "0 8px", fontSize: 10 }}>·</span>}
+                      <span style={{ fontSize: 11, color: T.text30, fontFamily: FONT_SANS }}>{tag}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Right — 2x2 stat grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.08, ease: "easeOut" }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 8,
+                width: 320,
+                flexShrink: 0,
+                alignSelf: "flex-start",
+              }}
+            >
+              <StatCard label="Price / Call" value={priceStr} mono />
+              <StatCard label="Total Calls" value={operator.totalInvocations.toLocaleString()} mono />
+              <StatCard label="Success Rate" value={`${successRate}%`} mono />
+              <StatCard label="Avg Response" value={avgResponseMs ? `${avgResponseMs}ms` : "—"} mono />
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TAB BAR ──────────────────────────────────────────────────────── */}
+      <div style={{ borderBottom: `1px solid ${T.borderSubtle}`, position: "sticky", top: 0, background: T.bg, zIndex: 10 }}>
+        <div style={{ maxWidth: 1520, margin: "0 auto", padding: "0 48px", display: "flex", gap: 0 }}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: tab === t.id ? `2px solid rgba(255,255,255,0.85)` : "2px solid transparent",
+                marginBottom: -1,
+                padding: "14px 20px",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: tab === t.id ? 500 : 400,
+                color: tab === t.id ? T.text95 : T.text30,
+                fontFamily: FONT_SANS,
+                letterSpacing: "0.01em",
+                transition: "color 0.2s ease, border-color 0.2s ease",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => { if (tab !== t.id) e.currentTarget.style.color = T.text80; }}
+              onMouseLeave={(e) => { if (tab !== t.id) e.currentTarget.style.color = T.text30; }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── TAB CONTENT ──────────────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1520, margin: "0 auto", padding: "52px 48px 120px" }}>
+        <AnimatePresence mode="wait">
+          {/* ── OVERVIEW ─────────────────────────────────────────────── */}
+          {tab === "overview" && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 48, alignItems: "start" }}>
+                {/* Main column */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+                  {/* Full description */}
+                  <section>
+                    <SectionHeading>About this skill</SectionHeading>
+                    <p style={{
+                      fontSize: 14,
+                      color: T.text50,
+                      lineHeight: 1.8,
+                      fontFamily: FONT_SANS,
+                      whiteSpace: "pre-wrap",
+                      margin: 0,
+                    }}>
+                      {operator.description || operator.tagline || "No detailed description available."}
+                    </p>
+                  </section>
+
+                  {/* Technical details */}
+                  <section>
+                    <SectionHeading>Technical Details</SectionHeading>
+                    <div style={{
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                    }}>
+                      {[
+                        { label: "Auth",        value: "X-Payment-Proof + X-Payer-Wallet (x402)" },
+                        { label: "Slug",        value: slug },
+                        { label: "Category",    value: catLabel(category) },
+                        { label: "Created",     value: operator.createdAt ? new Date(operator.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Unknown" },
+                        { label: "Registered",  value: operator.isVerified ? "Verified" : "Pending" },
+                      ].map((row, i, rows) => (
+                        <div
+                          key={row.label}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "12px 20px",
+                            borderBottom: i < rows.length - 1 ? `1px solid ${T.borderSubtle}` : "none",
+                            gap: 16,
+                          }}
+                        >
+                          <span style={{ fontSize: 12, color: T.text30, fontFamily: FONT_SANS, flexShrink: 0 }}>{row.label}</span>
+                          <span style={{ fontSize: 12, color: T.text80, fontFamily: FONT_MONO, wordBreak: "break-all", textAlign: "right" }}>{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Tags */}
+                  {tags.length > 0 && (
+                    <section>
+                      <SectionHeading>Tags</SectionHeading>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {tags.map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              fontSize: 11,
+                              color: T.text50,
+                              background: T.white4,
+                              border: `1px solid ${T.border}`,
+                              borderRadius: 4,
+                              padding: "4px 10px",
+                              fontFamily: FONT_SANS,
+                              letterSpacing: "0.02em",
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Success rate bar */}
+                  <section>
+                    <SectionHeading>Quality Score</SectionHeading>
+                    <div style={{
+                      background: T.card,
+                      border: `1px solid ${T.border}`,
+                      borderRadius: 10,
+                      padding: "20px 24px",
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                        <span style={{ fontSize: 12, color: T.text30, fontFamily: FONT_SANS }}>Composite quality index</span>
+                        <span style={{ fontSize: 14, color: T.text80, fontFamily: FONT_MONO, fontWeight: 500 }}>
+                          {operator.qualityScore}/100
+                        </span>
+                      </div>
+                      <div style={{ height: 3, background: T.white4, borderRadius: 2, overflow: "hidden" }}>
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${operator.qualityScore}%` }}
+                          transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+                          style={{ height: "100%", borderRadius: 2, background: "rgba(52,211,153,0.55)" }}
+                        />
+                      </div>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 8,
+                        fontSize: 10,
+                        color: T.text20,
+                        fontFamily: FONT_MONO,
+                      }}>
+                        <span>0</span>
+                        <span>50</span>
+                        <span>100</span>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                {/* Sidebar */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Invoke CTA */}
+                  <div style={{
+                    background: T.card,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 10,
+                    padding: "20px 22px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}>
+                    <button
+                      onClick={() => { setTab("invoke"); }}
+                      style={{
+                        background: "rgba(255,255,255,0.92)",
+                        color: "#0A0A0B",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "13px 20px",
+                        fontSize: 13,
+                        fontWeight: 500,
+                        fontFamily: FONT_SANS,
+                        cursor: "pointer",
+                        letterSpacing: "0.01em",
+                        transition: "background 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,1)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.92)"; }}
+                    >
+                      Invoke, {priceStr} / call
+                    </button>
+                    <button
+                      onClick={() => setTab("how-to-use")}
+                      style={{
+                        background: "transparent",
+                        color: T.text50,
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 8,
+                        padding: "10px 20px",
+                        fontSize: 12,
+                        fontFamily: FONT_SANS,
+                        cursor: "pointer",
+                        letterSpacing: "0.01em",
+                        transition: "color 0.2s ease, border-color 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = T.text95; e.currentTarget.style.borderColor = T.borderHover; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = T.text50; e.currentTarget.style.borderColor = T.border; }}
+                    >
+                      Integration guide
+                    </button>
+                    <p style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, margin: 0, textAlign: "center", lineHeight: 1.5 }}>
+                      Paid calls trigger an x402 challenge, then a wallet-signed USDC transfer on Solana before execution.
+                    </p>
+                  </div>
+
+                  {/* Fee Breakdown */}
+                  <div style={{
+                    background: T.card,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 10,
+                    padding: "20px 22px",
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: T.text30, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: FONT_SANS, marginBottom: 16 }}>
+                      Fee Breakdown
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: `1px solid ${T.borderSubtle}` }}>
+                        <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_SANS }}>Price per call</span>
+                        <span style={{ fontSize: 12, color: T.text95, fontFamily: FONT_MONO }}>{priceStr}</span>
+                      </div>
+                      {[
+                        { label: "Creator",    pct: "85%", amount: feeCreator },
+                        { label: "Validators", pct: "10%", amount: feeValidators },
+                        { label: "Treasury",   pct: "3%",  amount: feeTreasury },
+                        { label: "Insurance",  pct: "1.5%",amount: feeInsurance },
+                        { label: "Burn",       pct: "0.5%",amount: feeBurn },
+                      ].map((row, i) => (
+                        <div key={row.label} style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "9px 0",
+                          borderBottom: i < 4 ? `1px solid ${T.borderSubtle}` : "none",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_SANS }}>{row.label}</span>
+                            <span style={{ fontSize: 9, color: T.text20, fontFamily: FONT_MONO }}>{row.pct}</span>
+                          </div>
+                          <span style={{ fontSize: 11, color: T.text50, fontFamily: FONT_MONO }}>
+                            {price > 0 ? `$${row.amount.toFixed(5)}` : "—"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* NeMo Safety */}
+                  <div style={{
+                    background: "rgba(52,211,153,0.02)",
+                    border: `1px solid rgba(52,211,153,0.12)`,
+                    borderRadius: 10,
+                    padding: "20px 22px",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+                      <NvidiaEyeLogo size={13} className="text-[rgba(52,211,153,0.55)]" />
+                      <span style={{ fontSize: 11, fontWeight: 500, color: "rgba(52,211,153,0.55)", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: FONT_SANS }}>
+                        NeMo Guardrails
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {[
+                        { layer: "Input guardrails",  status: "Active",      note: "Validates incoming request structure" },
+                        { layer: "Evaluator",         status: "Benchmarked", note: "Scores response quality on every call" },
+                        { layer: "NIM Runtime",       status: "Deployed",    note: "Optimized inference serving" },
+                        { layer: "Nemotron Base",     status: "Active",      note: "Foundation model layer" },
+                      ].map((item, i) => (
+                        <div key={item.layer} style={{
+                          padding: "9px 0",
+                          borderBottom: i < 3 ? `1px solid rgba(52,211,153,0.06)` : "none",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                            <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_SANS }}>{item.layer}</span>
+                            <span style={{ fontSize: 9, color: "rgba(52,211,153,0.55)", fontFamily: FONT_MONO, letterSpacing: "0.04em" }}>{item.status}</span>
+                          </div>
+                          <span style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS }}>{item.note}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lifetime earnings */}
+                  <div style={{
+                    background: T.card,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 10,
+                    padding: "20px 22px",
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: T.text30, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: FONT_SANS, marginBottom: 10 }}>
+                      Creator Earnings
+                    </div>
+                    <div style={{ fontSize: 28, fontWeight: 300, color: T.text95, fontFamily: FONT_MONO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
+                      ${parseFloat(operator.totalEarned).toFixed(2)}
+                    </div>
+                    <div style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, marginTop: 4 }}>USDC paid to creator wallet</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
 
-          {/* Invocations Tab */}
-          {tab === "invocations" && (
-            <div>
-              <h2 className="text-xl font-normal text-white mb-6">Recent Invocations</h2>
-              {invocations && invocations.length > 0 ? (
-                <div className="border border-white/[0.06]/50 rounded overflow-hidden">
-                  <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-white/[0.06]/40 text-[10px] text-zinc-500 bg-white/[0.02]/40">
-                    <span>Caller</span>
-                    <span>Amount</span>
-                    <span>Status</span>
-                    <span>Response</span>
-                    <span>Trust</span>
+          {/* ── HOW TO USE ───────────────────────────────────────────── */}
+          {tab === "how-to-use" && (
+            <motion.div
+              key="how-to-use"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ maxWidth: 860 }}
+            >
+              <div style={{ marginBottom: 40 }}>
+                <h2 style={{ fontSize: 24, fontWeight: 300, color: T.text95, letterSpacing: "-0.03em", fontFamily: FONT_SANS, margin: "0 0 10px" }}>
+                  Integration Guide
+                </h2>
+                <p style={{ fontSize: 14, color: T.text50, fontFamily: FONT_SANS, lineHeight: 1.6, margin: 0 }}>
+                  Five backend-supported ways to unlock <span style={{ color: T.text80, fontFamily: FONT_MONO }}>{slug}</span>, from one-line cURL to MCP and A2A.
+                  The REST invoke route is now the paywalled reveal path for the private SKILL.md document, with A2A discovery and MCP tools resolving back into the same backend-managed unlock.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <IntegrationCard
+                  title="Via x402 HTTP Micropayment"
+                  description="The most direct path. First satisfy the x402 challenge by making the required USDC transfer, then retry the unlock route with the payment proof headers to receive the private SKILL.md content."
+                  code={curlExample}
+                  lang="bash"
+                  learnMore="https://x402.org"
+                />
+
+                <IntegrationCard
+                  title="Via MCP (Claude Code / Cursor)"
+                  description="Point your MCP client at the backend's JSON-RPC endpoint. Aegis exposes marketplace tools there, including operator lookup and invocation."
+                  code={mcpExample}
+                  lang="json"
+                />
+
+                <div style={{
+                  background: T.card,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 10,
+                  padding: "24px 26px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: T.text95, fontFamily: FONT_SANS, marginBottom: 6 }}>
+                      MCP Usage
+                    </div>
+                    <div style={{ fontSize: 12.5, color: T.text50, fontFamily: FONT_SANS, lineHeight: 1.6, marginBottom: 12 }}>
+                      Once the server is configured, resolve the operator by slug and then unlock its private markdown skill with the returned operator ID.
+                    </div>
                   </div>
-                  {invocations.map((inv: InvocationRecord) => (
-                    <div key={inv.id} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-5 py-3 border-b border-white/[0.06]/20 text-[12px] items-center hover:bg-zinc-800/20 transition-colors">
-                      <span className="font-medium text-zinc-500 truncate">
-                        {inv.callerWallet ? `${inv.callerWallet.slice(0, 6)}...${inv.callerWallet.slice(-4)}` : "Anonymous"}
-                      </span>
-                      <span className="font-medium text-zinc-400">${parseFloat(inv.amountPaid).toFixed(4)}</span>
-                      <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded border ${
-                        inv.success
-                          ? "text-zinc-300 border-white/[0.06]/30 bg-zinc-800/40"
-                          : "text-[rgba(220,100,60,0.50)] border-[rgba(220,100,60,0.15)] bg-[rgba(220,100,60,0.06)]"
-                      }`}>
-                        {inv.success ? "OK" : "FAIL"}
-                      </span>
-                      <span className="font-medium text-zinc-500">{inv.responseMs}ms</span>
-                      <span className={`text-[10px] font-medium ${inv.trustDelta > 0 ? "text-zinc-300" : inv.trustDelta < 0 ? "text-[rgba(220,100,60,0.50)]" : "text-zinc-600"}`}>
-                        {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
-                      </span>
+                  <CodeBlock code={mcpUsage} lang="plaintext" />
+                </div>
+
+                <IntegrationCard
+                  title="Via A2A (Agent-to-Agent)"
+                  description="The backend exposes an A2A-flavored JSON-RPC endpoint at /api/a2a. Discover the agent, resolve the skill, and then call the returned unlock URL through the backend."
+                  code={a2aExample}
+                  lang="bash"
+                  learnMore="https://google.github.io/A2A"
+                />
+
+                <IntegrationCard
+                  title="Via JavaScript / TypeScript SDK"
+                  description="Fetch directly from any JS runtime: Node.js, Deno, Bun, or the browser. Retry the unlock call after your wallet submits the USDC transfer and returns a transaction signature."
+                  code={jsExample}
+                  lang="typescript"
+                />
+
+                <IntegrationCard
+                  title="Via Python"
+                  description="Use requests or httpx against the same backend unlock route. Paid calls must include the wallet address plus the on-chain transfer signature as proof."
+                  code={pythonExample}
+                  lang="python"
+                />
+              </div>
+
+              {/* Response schema */}
+              <div style={{ marginTop: 40 }}>
+                <SectionHeading>Response Schema</SectionHeading>
+                <div style={{
+                  background: T.card,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                }}>
+                  {[
+                    { field: "success", type: "boolean", desc: "Whether the private skill unlock completed without errors" },
+                    { field: "result.skill", type: "string", desc: "The private SKILL.md markdown returned after payment or free unlock" },
+                    { field: "result.description", type: "string", desc: "Public marketplace description echoed alongside the private skill content" },
+                    { field: "execution.durationMs", type: "number", desc: "Backend processing latency for the unlock flow" },
+                    { field: "payment.amount", type: "number", desc: "Total amount charged to unlock the skill" },
+                    { field: "payment.feeSplit.creator", type: "string", desc: "Creator revenue share percentage for this unlock" },
+                    { field: "operator.skillStatus", type: "string", desc: "Whether the listing has private skill content configured" },
+                  ].map((row, i) => (
+                    <div key={row.field} style={{
+                      display: "grid",
+                      gridTemplateColumns: "180px 80px 1fr",
+                      gap: 16,
+                      padding: "12px 20px",
+                      borderBottom: i < 6 ? `1px solid ${T.borderSubtle}` : "none",
+                      alignItems: "baseline",
+                    }}>
+                      <span style={{ fontSize: 11.5, fontFamily: FONT_MONO, color: "rgba(196,181,253,0.8)" }}>{row.field}</span>
+                      <span style={{ fontSize: 10, fontFamily: FONT_MONO, color: "rgba(134,239,172,0.7)" }}>{row.type}</span>
+                      <span style={{ fontSize: 12, fontFamily: FONT_SANS, color: T.text30 }}>{row.desc}</span>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center py-16 text-zinc-600 text-sm">
-                  No invocations recorded yet.
-                </div>
-              )}
-            </div>
+              </div>
+            </motion.div>
           )}
 
-          {/* Invoke Tab */}
+          {/* ── INVOKE ───────────────────────────────────────────────── */}
           {tab === "invoke" && (
-            <div className="max-w-2xl">
-              <h2 className="text-xl font-normal text-white mb-4">Test Invocation</h2>
-              <p className="text-[14px] text-zinc-500 leading-relaxed mb-8">
-                Send a test invocation to this operator. The response will be validated by the Aegis trust engine,
-                which scores latency, status, schema compliance, and content quality. The operator's success rate
-                will be updated based on the result.
+            <motion.div
+              key="invoke"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ maxWidth: 640 }}
+            >
+              <h2 style={{ fontSize: 22, fontWeight: 300, color: T.text95, letterSpacing: "-0.03em", fontFamily: FONT_SANS, margin: "0 0 10px" }}>
+                Unlock Private Skill
+              </h2>
+              <p style={{ fontSize: 14, color: T.text50, lineHeight: 1.7, fontFamily: FONT_SANS, margin: "0 0 36px" }}>
+                Unlock the creator-authored private SKILL.md through the backend paywall. Free skills unlock immediately; paid skills first require a USDC transfer signed by your connected Solana wallet.
               </p>
 
-              {/* Invocation result */}
-              {invokeMutation.data && (
-                <div className="border border-white/[0.06]/50 bg-white/[0.02]/40 rounded p-6 mb-8">
-                  <h3 className="text-[12px] font-medium text-zinc-400 mb-4">Invocation Result</h3>
-                  <div className="space-y-3 text-[13px]">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Status</span>
-                      <span className={invokeMutation.data.success ? "text-zinc-200" : "text-[rgba(220,100,60,0.50)]"}>
-                        {invokeMutation.data.success ? "Success" : "Failed"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Response time</span>
-                      <span className="text-zinc-300">{invokeMutation.data.responseMs}ms</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Validation score</span>
-                      <span className="text-zinc-300">{invokeMutation.data.validation.score}/100</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Trust delta</span>
-                      <span className={`font-normal ${invokeMutation.data.validation.trustDelta > 0 ? "text-zinc-200" : "text-[rgba(220,100,60,0.50)]"}`}>
-                        {invokeMutation.data.validation.trustDelta > 0 ? "+" : ""}{invokeMutation.data.validation.trustDelta}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">New success rate</span>
-                      <span className="text-zinc-300">{invokeMutation.data.validation.newTrustScore}</span>
-                    </div>
-                    {invokeMutation.data.validation.flags.length > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">Flags</span>
-                        <span className="text-amber-400 text-[11px] font-medium">
-                          {invokeMutation.data.validation.flags.join(", ")}
-                        </span>
-                      </div>
-                    )}
-                    <div className="h-px bg-zinc-800/50" />
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Creator earned</span>
-                      <span className="text-zinc-300">${invokeMutation.data.fees.creator.toFixed(4)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">Burned</span>
-                      <span className="text-zinc-500">${invokeMutation.data.fees.burn.toFixed(4)}</span>
-                    </div>
-                  </div>
-
-                  {/* Raw response */}
-                  <div className="mt-6">
-                    <h4 className="text-[11px] font-medium text-zinc-500 mb-2">Raw Response</h4>
-                    <pre className="text-[11px] font-mono text-zinc-400 bg-white/[0.02]/60 border border-white/[0.06]/40 p-4 rounded overflow-x-auto max-h-48 overflow-y-auto">
-                      {JSON.stringify(invokeMutation.data.response, null, 2)}
-                    </pre>
-                  </div>
+              {/* Invocation payload preview */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, color: T.text30, fontFamily: FONT_SANS, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>
+                  Unlock Request
                 </div>
-              )}
+                <CodeBlock
+                  code={JSON.stringify({ purpose: "unlock-skill", timestamp: new Date().toISOString() }, null, 2)}
+                  lang="json"
+                />
+              </div>
 
+              {/* Invoke button */}
               <button
                 onClick={handleInvoke}
-                disabled={invokeMutation.isPending}
-                className="bg-white text-zinc-900 font-normal text-[14px] px-8 py-4 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                disabled={invokeLoading}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  background: invokeLoading ? T.white4 : "rgba(255,255,255,0.92)",
+                  color: invokeLoading ? T.text30 : "#0A0A0B",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "13px 28px",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  fontFamily: FONT_SANS,
+                  cursor: invokeLoading ? "not-allowed" : "pointer",
+                  letterSpacing: "0.01em",
+                  transition: "all 0.2s ease",
+                  marginBottom: 10,
+                }}
               >
-                {invokeMutation.isPending ? "Invoking..." : `Send Test Invocation ($${priceDisplay} USDC)`}
+                {invokeLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+                      style={{ width: 12, height: 12, border: `1.5px solid ${T.text20}`, borderTopColor: T.text50, borderRadius: "50%" }}
+                    />
+                    Invoking…
+                  </>
+                ) : (
+                  `Invoke, ${priceStr} / call`
+                )}
               </button>
-              <p className="text-[10px] text-zinc-600 mt-3">
-                This is a simulated invocation. No real USDC is charged. Success scores are updated in the database.
+              <p style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, margin: "0 0 40px" }}>
+                Free skills unlock immediately. Paid skills open a real wallet payment step and then retry the request with your payment proof.
               </p>
-            </div>
+              <p style={{ fontSize: 11, color: T.text30, fontFamily: FONT_SANS, lineHeight: 1.6, margin: "-28px 0 40px" }}>
+                The authoritative skill charge for this invoke is {priceStr} USDC. Some wallet UIs may summarize only a single settlement leg or separate SOL account-creation costs rather than the full program-settled USDC amount.
+              </p>
+
+              {/* Result card */}
+              <AnimatePresence>
+                {invokeResult && (
+                  <motion.div
+                    ref={invokeResultRef}
+                    key="result"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      background: T.card,
+                      border: `1px solid ${invokeResult.success ? T.border : "rgba(239,68,68,0.15)"}`,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Status bar */}
+                    <div style={{
+                      padding: "10px 20px",
+                      borderBottom: `1px solid ${T.borderSubtle}`,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      background: invokeResult.success ? "rgba(52,211,153,0.04)" : "rgba(239,68,68,0.04)",
+                    }}>
+                      <div style={{
+                        width: 6, height: 6, borderRadius: "50%",
+                        background: invokeResult.success ? "#34D399" : "#EF4444",
+                      }} />
+                      <span style={{ fontSize: 12, fontWeight: 500, fontFamily: FONT_SANS, color: invokeResult.success ? "rgba(52,211,153,0.8)" : "rgba(239,68,68,0.8)" }}>
+                        {invokeResult.success ? "Skill unlocked" : "Unlock failed"}
+                      </span>
+                    </div>
+                    <div style={{ padding: "20px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
+                        {[
+                          { label: "Unlock time", value: `${invokeResult.execution.durationMs}ms` },
+                          { label: "Trust score", value: String(invokeResult.execution.trustScore) },
+                          { label: "Guardrails", value: invokeResult.execution.guardrailsPass ? "Passed" : "Blocked" },
+                          { label: "Amount paid", value: `$${parseDecimal(invokeResult.payment.amount).toFixed(5)} ${invokeResult.payment.token}` },
+                          { label: "Chain", value: invokeResult.payment.chain },
+                          { label: "Payment tx", value: invokeResult.payment.txSignature ? shortWallet(invokeResult.payment.txSignature) : "None" },
+                        ].map((item) => (
+                          <div key={item.label} style={{
+                            background: T.white2,
+                            border: `1px solid ${T.borderSubtle}`,
+                            borderRadius: 6,
+                            padding: "10px 14px",
+                          }}>
+                            <div style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, letterSpacing: "0.04em", marginBottom: 4 }}>{item.label}</div>
+                            <div style={{ fontSize: 14, color: T.text80, fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {invokeResult.guardrails.violations.length > 0 && (
+                        <div style={{ marginBottom: 16, padding: "10px 14px", background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 6 }}>
+                          <span style={{ fontSize: 10, color: "rgba(251,191,36,0.7)", fontFamily: FONT_SANS, letterSpacing: "0.04em" }}>FLAGS  </span>
+                          <span style={{ fontSize: 11, color: "rgba(251,191,36,0.8)", fontFamily: FONT_MONO }}>
+                            {invokeResult.guardrails.violations.join("  ·  ")}
+                          </span>
+                        </div>
+                      )}
+                      {unlockedSkill && (
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Private SKILL.md</div>
+                          <CodeBlock
+                            code={unlockedSkill}
+                            lang="markdown"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Raw Unlock Response</div>
+                        <CodeBlock
+                          code={JSON.stringify(invokeResult.result, null, 2)}
+                          lang="json"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           )}
+
+          {/* ── HISTORY ──────────────────────────────────────────────── */}
+          {tab === "history" && (
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <h2 style={{ fontSize: 22, fontWeight: 300, color: T.text95, letterSpacing: "-0.03em", fontFamily: FONT_SANS, margin: "0 0 24px" }}>
+                Invocation History
+              </h2>
+
+              {invocations && invocations.length > 0 ? (
+                <div style={{
+                  background: T.card,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                }}>
+                  {/* Header row */}
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 110px 70px 90px 80px",
+                    gap: 12,
+                    padding: "10px 20px",
+                    borderBottom: `1px solid ${T.borderSubtle}`,
+                    background: T.white2,
+                  }}>
+                    {["Caller", "Amount", "Status", "Response", "Delta"].map((h) => (
+                      <span key={h} style={{ fontSize: 10, fontWeight: 500, color: T.text20, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: FONT_SANS }}>{h}</span>
+                    ))}
+                  </div>
+                  {invocations.map((inv: InvocationRecord, idx) => (
+                    <motion.div
+                      key={inv.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2, delay: idx * 0.03 }}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 110px 70px 90px 80px",
+                        gap: 12,
+                        padding: "12px 20px",
+                        borderBottom: idx < invocations.length - 1 ? `1px solid ${T.borderSubtle}` : "none",
+                        alignItems: "center",
+                        transition: "background 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = T.white2; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                    >
+                      <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {inv.callerWallet ? shortWallet(inv.callerWallet) : "Anonymous"}
+                      </span>
+                      <span style={{ fontSize: 12, color: T.text80, fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
+                        ${parseFloat(inv.amountPaid).toFixed(5)}
+                      </span>
+                      <span style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 40,
+                        padding: "3px 8px",
+                        fontSize: 9,
+                        fontWeight: 600,
+                        fontFamily: FONT_MONO,
+                        letterSpacing: "0.06em",
+                        borderRadius: 4,
+                        color: inv.success ? "rgba(52,211,153,0.7)" : "rgba(239,68,68,0.7)",
+                        background: inv.success ? "rgba(52,211,153,0.06)" : "rgba(239,68,68,0.06)",
+                        border: `1px solid ${inv.success ? "rgba(52,211,153,0.15)" : "rgba(239,68,68,0.15)"}`,
+                      }}>
+                        {inv.success ? "OK" : "ERR"}
+                      </span>
+                      <span style={{ fontSize: 12, color: T.text30, fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
+                        {inv.responseMs}ms
+                      </span>
+                      <span style={{
+                        fontSize: 12,
+                        fontFamily: FONT_MONO,
+                        fontVariantNumeric: "tabular-nums",
+                        color: inv.trustDelta > 0 ? "rgba(52,211,153,0.65)" : inv.trustDelta < 0 ? "rgba(239,68,68,0.65)" : T.text20,
+                      }}>
+                        {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "80px 40px",
+                  color: T.text20,
+                  fontSize: 13,
+                  fontFamily: FONT_SANS,
+                  background: T.card,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 10,
+                }}>
+                  No invocations recorded for this skill yet.
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── BOTTOM NAV ──────────────────────────────────────────────── */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+          marginTop: 80,
+          paddingTop: 28,
+          borderTop: `1px solid ${T.borderSubtle}`,
+        }}>
+          <Link href="/marketplace" style={{ textDecoration: "none" }}>
+            <button style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "transparent",
+              border: `1px solid ${T.border}`,
+              borderRadius: 7,
+              padding: "9px 16px",
+              color: T.text50,
+              fontSize: 12,
+              fontFamily: FONT_SANS,
+              cursor: "pointer",
+              transition: "color 0.2s ease, border-color 0.2s ease",
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = T.text95; e.currentTarget.style.borderColor = T.borderHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = T.text50; e.currentTarget.style.borderColor = T.border; }}
+            >
+              <IconArrowLeft /> Back to Marketplace
+            </button>
+          </Link>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <a
+              href={`mailto:support@aegisplace.com?subject=Issue report: ${slug}`}
+              style={{
+                fontSize: 12,
+                color: T.text20,
+                fontFamily: FONT_SANS,
+                textDecoration: "none",
+                letterSpacing: "0.01em",
+                transition: "color 0.2s ease",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.text50; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.text20; }}
+            >
+              Report Issue
+            </a>
+            <span style={{ color: T.text12, fontSize: 10 }}>·</span>
+            <a
+              href={`https://explorer.solana.com/address/${operator.creatorWallet}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 12,
+                color: T.text20,
+                fontFamily: FONT_SANS,
+                textDecoration: "none",
+                letterSpacing: "0.01em",
+                transition: "color 0.2s ease",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = T.text50; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = T.text20; }}
+            >
+              View on Solana <IconExternalLink />
+            </a>
+          </div>
         </div>
       </div>
+
+      <MobileBottomNav />
     </div>
   );
 }

@@ -42,10 +42,10 @@ const STACK_LAYERS = [
     highlight: false,
   },
   {
-    name: "Trust",
+    name: "Quality",
     protocol: "Aegis Protocol",
-    role: "Bonded validation, on-chain reputation, economic slashing.",
-    aegis: "THE MISSING LAYER. Between 'services exist' and 'services are trustworthy.'",
+    role: "Bonded validation, on-chain quality, economic slashing.",
+    aegis: "The skills marketplace for Solana. Bonded operators, verified quality, pay per call.",
     highlight: true,
   },
   {
@@ -65,7 +65,7 @@ const STACK_LAYERS = [
   {
     name: "Identity",
     protocol: "ERC-8004 / 8004-Solana",
-    role: "On-chain agent identity. Metaplex Core NFTs with reputation.",
+    role: "On-chain agent identity. Metaplex Core NFTs with quality history.",
     aegis: "Identity says WHO you are. Aegis says HOW GOOD you are.",
     highlight: false,
   },
@@ -481,7 +481,7 @@ const NEMO_COMPONENTS = [
     explanation:
       "NeMo Guardrails is an open-source toolkit that lets you define rules for what an AI model can and cannot do. It works by intercepting requests and responses at runtime. Input rails screen what goes into the model (blocking jailbreak attempts, off-topic requests, or PII). Output rails screen what comes out (filtering unsafe content, enforcing format compliance, fact-checking against sources). Dialog rails control conversation flow so the model stays on task. You write these rules in a simple configuration language called Colang. The toolkit adds roughly 0.5 seconds of latency but catches policy violations that the model itself would miss.",
     aegisIntegration:
-      "Every operator invocation on Aegis passes through NeMo Guardrails before and after execution. Operators define their own rail configurations (what topics they handle, what content they block). Guardrail compliance rates feed directly into the on-chain success rate. An operator that consistently passes all rails earns a higher reputation. An operator that triggers output rails gets flagged for validator review.",
+      "Every operator invocation on Aegis passes through NeMo Guardrails before and after execution. Operators define their own rail configurations (what topics they handle, what content they block). Guardrail compliance rates feed directly into the on-chain success rate. An operator that consistently passes all rails earns a higher quality. An operator that triggers output rails gets flagged for validator review.",
     stats: [
       { label: "Rail types", value: "4" },
       { label: "Detection improvement", value: "1.4x" },
@@ -500,7 +500,7 @@ const NEMO_COMPONENTS = [
     explanation:
       "NeMo Evaluator runs standardized tests against AI models and agents. It supports academic benchmarks (MMLU, HumanEval, GSM8K), generative quality metrics (BLEU, ROUGE, code execution pass rates), and LLM-as-a-judge evaluations where a separate model grades the output. You define evaluation suites with specific test cases, expected outputs, and scoring rubrics. The evaluator runs these automatically and produces numerical scores. This replaces subjective user ratings with reproducible, objective measurements.",
     aegisIntegration:
-      "Aegis uses NeMo Evaluator to generate the quantitative component of every operator's success rate. When an operator is registered, it goes through an initial evaluation suite. After that, periodic re-evaluations run every few hours using fresh test cases. The scores feed into the 6-pillar trust model alongside validator attestations, invocation success rates, and economic signals. Operators cannot game their success rate because the evaluation is automated and the test cases rotate.",
+      "Aegis uses NeMo Evaluator to generate the quantitative component of every operator's success rate. When an operator is registered, it goes through an initial evaluation suite. After that, periodic re-evaluations run every few hours using fresh test cases. The scores feed into the 6-pillar quality model alongside validator attestations, invocation success rates, and economic signals. Operators cannot game their success rate because the evaluation is automated and the test cases rotate.",
     stats: [
       { label: "Benchmark types", value: "24+" },
       { label: "Eval methods", value: "3" },
@@ -788,7 +788,7 @@ const COMPUTE_LAYERS = [
   { layer: "Layer 4", name: "Models", desc: "Nemotron Nano/Super/Ultra foundation models", color: "#76B900" },
   { layer: "Layer 5", name: "Skills", desc: "Task-specific operators with NeMo Guardrails", color: "#A1A1AA" },
   { layer: "Layer 6", name: "Agents", desc: "Autonomous consumers", color: "#71717A" },
-  { layer: "Layer 7", name: "Trust", desc: "Aegis bonded validation + NeMo Evaluator", color: "#A1A1AA" },
+  { layer: "Layer 7", name: "Quality", desc: "Aegis bonded validation + NeMo Evaluator", color: "#A1A1AA" },
   { layer: "Layer 8", name: "Settlement", desc: "Solana", color: "#4A7A82" },
 ];
 
@@ -943,7 +943,7 @@ export default function Protocol() {
       <div className="min-h-screen bg-background text-foreground">
         <Navbar />
         <div className="pt-24 pb-16">
-          <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1520px] px-12">
             {/* Hero */}
             <div className="mb-10">
               <div className="text-[11px] font-medium tracking-wider text-zinc-300/40 mb-6">

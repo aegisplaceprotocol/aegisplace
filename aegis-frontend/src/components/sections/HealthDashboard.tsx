@@ -12,7 +12,7 @@ interface OperatorHealth {
   errorRate: number;
   queueDepth: number;
   invocations24h: number;
-  reputation: number;
+  quality: number;
   lastCheck: number;
 }
 
@@ -35,7 +35,7 @@ function mapApiOperator(op: any): OperatorHealth {
     errorRate,
     queueDepth: 0,
     invocations24h: op.totalInvocations ?? 0,
-    reputation: Math.max(0, Math.min(100, Math.round((op.trustScore ?? 75) * 10) / 10)),
+    quality: Math.max(0, Math.min(100, Math.round((op.qualityScore ?? 75) * 10) / 10)),
     lastCheck: Date.now(),
   };
 }
@@ -101,7 +101,7 @@ export default function HealthDashboard() {
             </h2>
             <p className={`text-[14px] text-white/30 max-w-lg leading-relaxed mt-4`}>
               Every registered operator exposes a standard health endpoint. The marketplace displays
-              live operational status, not yesterday's reputation score.
+              live operational status, not yesterday's quality score.
             </p>
           </div>
           <div className="flex gap-6">
@@ -197,8 +197,8 @@ export default function HealthDashboard() {
               </div>
               <div className="p-3 bg-white/[0.015] border border-white/[0.04] rounded">
                 <div className="text-[10px] font-medium text-white/20 tracking-wider mb-1">REPUTATION</div>
-                <div className={`text-[20px] font-normal ${selected.reputation >= 90 ? "text-zinc-300" : selected.reputation >= 75 ? "text-amber-400" : "text-red-400"}`}>
-                  {selected.reputation}/100
+                <div className={`text-[20px] font-normal ${selected.quality >= 90 ? "text-zinc-300" : selected.quality >= 75 ? "text-amber-400" : "text-red-400"}`}>
+                  {selected.quality}/100
                 </div>
               </div>
             </div>

@@ -1,42 +1,12 @@
 /**
- * x402 Payment Protocol Middleware for Aegis Protocol
- *
- * Implements the HTTP 402 Payment Required flow:
- * 1. Agent sends request to invoke a skill
- * 2. Server responds with 402 + payment requirements in headers
- * 3. Agent signs Solana transaction for USDC payment
- * 4. Agent retries with X-Payment-Proof header containing tx signature
- * 5. Server verifies payment and processes the request
- *
- * Compatible with:
- * - Coinbase x402 SDK (@anthropic-ai/x402)
- * - Stripe MPP (Machine Payments Protocol)
- * - Any agent wallet with Solana USDC support
- *
- * Headers:
- *   Request:
- *     X-Payment-Proof: <solana-tx-signature>
- *     X-Payer-Wallet: <solana-wallet-address>
- *
- *   Response (402):
- *     X-Payment-Required: true
- *     X-Payment-Amount: <amount-in-lamports>
- *     X-Payment-Currency: USDC
- *     X-Payment-Chain: solana
- *     X-Payment-Recipient: <operator-creator-wallet>
- *     X-Payment-Network: mainnet-beta
- *     X-Payment-Description: <skill-name invocation>
+ * x402 Payment Protocol Middleware for Aegis Protocol.
+ * Implements the HTTP 402 payment-required handshake for paid invocations.
  */
 
 import { Request, Response, NextFunction } from "express";
 import { OperatorModel } from "../db.js";
 import { ENV } from "../_core/env.js";
-
-/** USDC mint on Solana mainnet */
-const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-
-/** Solana network identifier used in x402 v2 payloads */
-const SOLANA_NETWORK_ID = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
+import { getDecodedOperator, getDecodedProtocolConfig, getSolanaNetworkId, getUsdcMintForCluster } from "../solana.js";
 
 export interface X402PaymentInfo {
   required: boolean;
@@ -45,41 +15,43 @@ export interface X402PaymentInfo {
   chain: string;
   recipient: string;
   network: string;
+  assetMint?: string;
   description: string;
   operatorSlug: string;
+  settlement?: {
+    method: "legacy_transfer" | "aegis_program";
+    programId?: string;
+    configPda?: string;
+    operatorPda?: string;
+    operatorId?: number;
+    creatorWallet?: string;
+  };
 }
 
-/**
- * Extracts x402 payment proof from request headers.
- *
- * Supports multiple header conventions:
- * - X-Payment-Proof (preferred)
- * - X-Payment (Coinbase x402 SDK)
- * - Payment-Signature (x402 v2 spec, base64-encoded JSON)
- * - Body fallback (txSignature field)
- */
 export function extractPaymentProof(req: Request): {
   txSignature?: string;
   payerWallet?: string;
+  receiptPda?: string;
+  settlementMethod?: string;
 } {
-  // Try the x402 v2 base64 header first (Payment-Signature)
   const paymentSigHeader = req.headers["payment-signature"] as string | undefined;
   if (paymentSigHeader) {
     try {
-      const decoded = JSON.parse(
-        Buffer.from(paymentSigHeader, "base64").toString("utf-8"),
-      );
+      const decoded = JSON.parse(Buffer.from(paymentSigHeader, "base64").toString("utf-8"));
       if (decoded.txSignature) {
         return {
           txSignature: decoded.txSignature,
           payerWallet: decoded.sender || (req.headers["x-payer-wallet"] as string),
+          receiptPda: decoded.receiptPda || (req.headers["x-invocation-receipt"] as string),
+          settlementMethod: decoded.settlementMethod || (req.headers["x-settlement-method"] as string),
         };
       }
     } catch {
-      // Not base64 JSON -- treat raw value as tx signature
       return {
         txSignature: paymentSigHeader,
         payerWallet: (req.headers["x-payer-wallet"] as string) || req.body?.callerWallet,
+        receiptPda: (req.headers["x-invocation-receipt"] as string) || req.body?.receiptPda,
+        settlementMethod: (req.headers["x-settlement-method"] as string) || req.body?.settlementMethod,
       };
     }
   }
@@ -89,23 +61,17 @@ export function extractPaymentProof(req: Request): {
       (req.headers["x-payment-proof"] as string) ||
       (req.headers["x-payment"] as string) ||
       req.body?.txSignature,
-    payerWallet:
-      (req.headers["x-payer-wallet"] as string) || req.body?.callerWallet,
+    payerWallet: (req.headers["x-payer-wallet"] as string) || req.body?.callerWallet,
+    receiptPda: (req.headers["x-invocation-receipt"] as string) || req.body?.receiptPda,
+    settlementMethod: (req.headers["x-settlement-method"] as string) || req.body?.settlementMethod,
   };
 }
 
-/**
- * Sends a 402 Payment Required response with x402 headers.
- *
- * Sets both:
- * - Simple X-Payment-* headers for lightweight clients
- * - The x402 v2 base64 PAYMENT-REQUIRED header for SDK clients
- */
 export function send402(res: Response, info: X402PaymentInfo): void {
-  // Compute atomic amount (USDC has 6 decimals)
   const amountAtomic = String(Math.round(parseFloat(info.amount) * 1e6));
+  const usdcMint = info.assetMint || getUsdcMintForCluster();
+  const networkId = getSolanaNetworkId();
 
-  // x402 v2 response body
   const x402Body = {
     x402Version: 2,
     resource: {
@@ -116,22 +82,19 @@ export function send402(res: Response, info: X402PaymentInfo): void {
     accepts: [
       {
         scheme: "exact",
-        network: SOLANA_NETWORK_ID,
+        network: networkId,
         amount: amountAtomic,
-        asset: USDC_MINT,
+        asset: usdcMint,
         payTo: info.recipient,
         maxTimeoutSeconds: 60,
       },
     ],
   };
 
-  const paymentRequiredHeader = Buffer.from(JSON.stringify(x402Body)).toString(
-    "base64",
-  );
+  const paymentRequiredHeader = Buffer.from(JSON.stringify(x402Body)).toString("base64");
 
   res.status(402);
   res.set({
-    // Simple headers for lightweight clients
     "X-Payment-Required": "true",
     "X-Payment-Amount": amountAtomic,
     "X-Payment-Currency": info.currency,
@@ -139,7 +102,6 @@ export function send402(res: Response, info: X402PaymentInfo): void {
     "X-Payment-Recipient": info.recipient,
     "X-Payment-Network": info.network,
     "X-Payment-Description": info.description,
-    // x402 v2 base64 header for SDK clients
     "PAYMENT-REQUIRED": paymentRequiredHeader,
     "Content-Type": "application/json",
   });
@@ -156,14 +118,18 @@ export function send402(res: Response, info: X402PaymentInfo): void {
       chain: info.chain,
       recipient: info.recipient,
       network: info.network,
-      asset: USDC_MINT,
+      asset: usdcMint,
+      settlement: info.settlement,
     },
     instructions: {
-      step1:
-        "Sign a Solana USDC transfer transaction to the recipient address",
-      step2:
-        "Retry this request with X-Payment-Proof header containing the transaction signature",
+      step1: info.settlement?.method === "aegis_program"
+        ? "Sign an Aegis invoke_skill transaction on Solana to settle the fee split on-chain"
+        : "Sign a Solana USDC transfer transaction to the recipient address",
+      step2: "Retry this request with X-Payment-Proof header containing the transaction signature",
       step3: "Include X-Payer-Wallet header with your wallet address",
+      step4: info.settlement?.method === "aegis_program"
+        ? "Include X-Invocation-Receipt with the receipt PDA created by the Aegis program"
+        : undefined,
     },
     protocols: {
       x402: "https://x402.org",
@@ -172,70 +138,88 @@ export function send402(res: Response, info: X402PaymentInfo): void {
   });
 }
 
-/**
- * Middleware that enforces x402 payment for skill invocations.
- *
- * If the request has a valid payment proof, it passes through.
- * If not, it returns a 402 with payment instructions.
- *
- * Free-tier operators (pricePerCall = 0) pass through without payment.
- */
 export function x402PaymentGate() {
-  return async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const idOrSlug = req.params.idOrSlug;
     if (!idOrSlug) return next();
 
     try {
-      // Look up the operator
-      const op = (await OperatorModel.findOne(
-        /^\d+$/.test(idOrSlug) ? { id: Number(idOrSlug) } : { slug: idOrSlug },
-      ).lean()) as any;
+      const filter: any = /^\d+$/.test(idOrSlug)
+        ? { id: Number(idOrSlug) }
+        : { slug: idOrSlug };
+      const operator = (await OperatorModel.findOne(filter).lean()) as any;
 
-      if (!op) {
+      if (!operator) {
         res.status(404).json({ error: "Operator not found" });
         return;
       }
 
-      // Parse price -- handles both Decimal128 objects and plain strings
-      const price = op.pricePerCall?.$numberDecimal
-        ? parseFloat(op.pricePerCall.$numberDecimal)
-        : parseFloat(op.pricePerCall || "0");
+      let price = operator.pricePerCall?.$numberDecimal
+        ? parseFloat(operator.pricePerCall.$numberDecimal)
+        : parseFloat(operator.pricePerCall || "0");
 
-      // Free operators don't need payment
+      const hasPrivateSkill = typeof operator.skill === "string" && operator.skill.trim().length > 0;
+
       if (price <= 0) {
-        (req as any).operator = op;
+        (req as any).operator = operator;
         (req as any).paymentVerified = true;
         (req as any).paymentAmount = 0;
         return next();
       }
 
-      // Check for payment proof
-      const { txSignature, payerWallet } = extractPaymentProof(req);
-
-      if (txSignature) {
-        // Payment proof provided -- attach to request for downstream verification
-        (req as any).operator = op;
-        (req as any).paymentProof = txSignature;
-        (req as any).payerWallet = payerWallet;
-        (req as any).paymentAmount = price;
-        // Actual on-chain verification happens in the invoke handler
+      if (!hasPrivateSkill) {
+        (req as any).operator = operator;
+        (req as any).paymentVerified = false;
+        (req as any).paymentAmount = 0;
         return next();
       }
 
-      // No payment proof -- return 402
+      const { txSignature, payerWallet } = extractPaymentProof(req);
+      if (txSignature) {
+        (req as any).operator = operator;
+        (req as any).paymentProof = txSignature;
+        (req as any).payerWallet = payerWallet;
+        (req as any).paymentAmount = price;
+        return next();
+      }
+
+      let assetMint: string | undefined;
+      if (operator.onChainProgramId && operator.onChainConfigPda && operator.onChainOperatorPda) {
+        try {
+          const [config, onChainOperator] = await Promise.all([
+            getDecodedProtocolConfig(operator.onChainConfigPda),
+            getDecodedOperator(operator.onChainOperatorPda),
+          ]);
+          assetMint = config.usdcMint;
+          price = Number(onChainOperator.priceUsdcBase) / 1_000_000;
+        } catch {
+          assetMint = undefined;
+        }
+      }
+
       send402(res, {
         required: true,
         amount: price.toFixed(6),
         currency: "USDC",
         chain: "solana",
-        recipient: ENV.treasuryWallet || op.creatorWallet || "",
-        network: "mainnet-beta",
-        description: `Invoke ${op.name} (${op.slug})`,
-        operatorSlug: op.slug,
+        recipient: ENV.treasuryWallet || operator.creatorWallet || "",
+        network: ENV.solanaCluster,
+        assetMint,
+        description: `Unlock ${operator.name} (${operator.slug})`,
+        operatorSlug: operator.slug,
+        settlement:
+          operator.onChainProgramId && operator.onChainConfigPda && operator.onChainOperatorPda
+            ? {
+                method: "aegis_program",
+                programId: operator.onChainProgramId,
+                configPda: operator.onChainConfigPda,
+                operatorPda: operator.onChainOperatorPda,
+                operatorId: operator.onChainOperatorId ?? undefined,
+                creatorWallet: operator.creatorWallet || undefined,
+              }
+            : {
+                method: "legacy_transfer",
+              },
       });
     } catch (err: any) {
       next(err);
@@ -243,19 +227,12 @@ export function x402PaymentGate() {
   };
 }
 
-/**
- * Middleware for Stripe MPP (Machine Payments Protocol) compatibility.
- * Translates MPP-specific headers to x402 format so downstream
- * middleware can handle them uniformly.
- */
 export function mppCompatibility() {
   return (req: Request, _res: Response, next: NextFunction): void => {
-    // Stripe MPP uses different header names
     const mppPayment = req.headers["stripe-payment-token"] as string;
     const mppReceipt = req.headers["stripe-payment-receipt"] as string;
 
     if (mppPayment && !req.headers["x-payment-proof"]) {
-      // Translate MPP headers to x402 format
       (req as any).mppPaymentToken = mppPayment;
       (req as any).mppReceipt = mppReceipt;
       req.headers["x-payment-proof"] = mppPayment;
@@ -265,18 +242,12 @@ export function mppCompatibility() {
   };
 }
 
-/**
- * Helper: build x402 v2 PAYMENT-RESPONSE header after successful invocation.
- */
-export function buildPaymentResponseHeader(
-  txSignature: string,
-  settled: boolean,
-): string {
+export function buildPaymentResponseHeader(txSignature: string, settled: boolean): string {
   return Buffer.from(
     JSON.stringify({
       x402Version: 2,
       txSignature,
-      network: SOLANA_NETWORK_ID,
+      network: getSolanaNetworkId(),
       settled,
     }),
   ).toString("base64");

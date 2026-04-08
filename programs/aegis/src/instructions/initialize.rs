@@ -11,7 +11,7 @@ use crate::state::ProtocolConfig;
 ///
 /// Fee schedule: [creator, validators, stakers, treasury, insurance, burned]
 /// Must sum to 10000 (100.00%).
-/// Default: [6000, 1500, 1200, 800, 300, 200] = 60/15/12/8/3/2
+/// Default: [8500, 1000, 0, 300, 150, 50] = 85/10/0/3/1.5/0.5
 pub fn handler(ctx: Context<Initialize>, fee_bps: [u16; 6]) -> Result<()> {
     // Validate each individual fee value is within range.
     for &bps in fee_bps.iter() {

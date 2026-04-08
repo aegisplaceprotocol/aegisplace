@@ -4,16 +4,16 @@ use crate::errors::AegisError;
 use crate::events::SkillInvoked;
 use crate::state::{InvocationReceipt, Operator, ProtocolConfig};
 
-/// Invokes an operator's skill, distributing the payment to 6 parties.
+/// Invokes an operator's skill, distributing the payment to protocol recipients.
 ///
 /// The caller pays the operator's price in USDC. The payment is immediately
-/// split according to the protocol's 6-way fee schedule:
-///   - 60% to the skill creator
-///   - 15% to the validator pool
-///   - 12% to veAEGIS stakers
-///   - 8%  to the dynamic treasury
-///   - 3%  to the insurance fund
-///   - 2%  burned (permanently removed from supply)
+/// split according to the protocol fee schedule:
+///   - 85% to the skill creator
+///   - 10% to the validator pool
+///   - 3%  to the dynamic treasury
+///   - 1.5% to the insurance fund
+///   - 0.5% burned (permanently removed from supply)
+///   - the staker slot is currently configured to 0 bps
 ///
 /// The burned portion absorbs rounding dust so total out == total in.
 /// An InvocationReceipt PDA is created to record the transaction on-chain.
@@ -74,7 +74,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         .checked_sub(insurance_share)
         .ok_or(AegisError::ArithmeticOverflow)?;
 
-    // Transfer USDC: caller -> creator (60%)
+    // Transfer USDC: caller -> creator
     if creator_share > 0 {
         token::transfer(
             CpiContext::new(
@@ -89,7 +89,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         )?;
     }
 
-    // Transfer USDC: caller -> validator pool (15%)
+    // Transfer USDC: caller -> validator pool
     if validator_share > 0 {
         token::transfer(
             CpiContext::new(
@@ -104,7 +104,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         )?;
     }
 
-    // Transfer USDC: caller -> staker pool (12%)
+    // Transfer USDC: caller -> staker pool (currently 0 bps by config)
     if staker_share > 0 {
         token::transfer(
             CpiContext::new(
@@ -119,7 +119,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         )?;
     }
 
-    // Transfer USDC: caller -> treasury (8%)
+    // Transfer USDC: caller -> treasury
     if treasury_share > 0 {
         token::transfer(
             CpiContext::new(
@@ -134,7 +134,7 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
         )?;
     }
 
-    // Transfer USDC: caller -> insurance fund (3%)
+    // Transfer USDC: caller -> insurance fund
     if insurance_share > 0 {
         token::transfer(
             CpiContext::new(
@@ -262,6 +262,7 @@ pub struct InvokeSkill<'info> {
 
     /// The USDC mint. Validated against the stored config.usdc_mint.
     #[account(
+        mut,
         constraint = usdc_mint.key() == config.usdc_mint @ AegisError::InvalidUsdcMint,
     )]
     pub usdc_mint: Box<Account<'info, Mint>>,
