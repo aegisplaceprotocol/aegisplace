@@ -103,6 +103,9 @@
     "typescript": "5.9.3",
     "vite": "^7.1.7"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.60.1"
+  },
   "overrides": {
     "react-native": "0.76.9"
   }
