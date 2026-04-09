@@ -275,7 +275,7 @@ pnpm test         # Run test suite
 ### Project Structure
 
 ```
-aegis/
+./
 ├── aegis-frontend/        # React 19 + Vite web app
 ├── aegis-backend/         # Express + tRPC API, MCP server, jobs, scripts
 ├── programs/
