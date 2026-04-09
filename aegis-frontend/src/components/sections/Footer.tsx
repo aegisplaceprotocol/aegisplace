@@ -26,7 +26,7 @@ const LINK_GROUPS = [
   {
     title: "Build",
     links: [
-      { label: "GitHub", href: "https://github.com/aegisplace", external: true },
+      { label: "GitHub", href: "https://github.com/aegisplaceprotocol/aegisplace", external: true },
       { label: "Documentation", href: "/docs" },
       { label: "SDK Integration", href: "/sdk" },
       { label: "Playground", href: "/playground" },
@@ -100,7 +100,7 @@ export default function Footer() {
             MIT License. Build Once. Earn Forever. Solana. x402. MCP.
           </div>
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <a href="https://github.com/aegisplace" target="_blank" rel="noopener noreferrer" className="text-[12px] font-normal text-white/20 hover:text-white/35 transition-colors cursor-pointer">
+            <a href="https://github.com/aegisplaceprotocol/aegisplace" target="_blank" rel="noopener noreferrer" className="text-[12px] font-normal text-white/20 hover:text-white/35 transition-colors cursor-pointer">
               GitHub
             </a>
             <span className="text-[12px] text-white/[0.08]">|</span>

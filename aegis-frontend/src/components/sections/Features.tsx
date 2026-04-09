@@ -6,12 +6,6 @@ import { useState } from "react";
 
 const FEATURES = [
   {
-    title: "Bonded Operator Registration",
-    desc: "Operator creators stake $AEGIS to list. The bond is slashed if the operator is malicious, broken, or misrepresented. Economic accountability replaces GitHub stars.",
-    cmd: "agent-aegis register --stake 1000",
-    paper: "Haupt et al., MIT CSAIL",
-  },
-  {
     title: "x402 Micropayments",
     desc: "Native x402 protocol integration. Agents pay for operator invocations with USDC via standard HTTP 402. Aegis swaps USDC to $AEGIS on the backend, creating constant buy pressure from every call. Built on the x402 open standard for HTTP-native micropayments.",
     cmd: "agent-aegis invoke code-review --pay x402",
