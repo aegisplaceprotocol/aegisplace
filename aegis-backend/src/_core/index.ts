@@ -172,56 +172,8 @@ async function startServer() {
   // Register wallet-sign auth routes
   registerAuthRoutes(app);
 
-  // MCP authentication - require X-API-Key header for write operations
-  const mcpAuthMiddleware = (req: any, res: any, next: any) => {
-    // Read-only methods (tools/list) are public
-    if (req.method === 'GET') return next();
-
-    // Parse the body to check the method
-    const body = req.body;
-    const method = body?.method;
-
-    // Allow discovery (tools/list) without auth
-    if (method === 'tools/list' || method === 'initialize' || method === 'notifications/initialized') {
-      return next();
-    }
-
-    // Read-only tools don't need auth
-    const readOnlyTools = ['aegis_list_operators', 'aegis_get_operator', 'aegis_search_operators',
-      'aegis_get_categories', 'aegis_get_stats', 'aegis_get_trust_score', 'aegis_discovery_stats',
-      'aegis_list_tasks', 'aegis_get_operator_token'];
-
-    if (method === 'tools/call' && readOnlyTools.includes(body?.params?.name)) {
-      return next();
-    }
-
-    // Write operations require API key
-    const apiKey = req.headers['x-api-key'];
-    if (!apiKey) {
-      return res.status(401).json({
-        jsonrpc: '2.0',
-        id: body?.id || null,
-        error: { code: -32001, message: 'Authentication required. Provide X-API-Key header.' }
-      });
-    }
-
-    const validKey = process.env.MCP_API_KEY;
-    const keyBuf = Buffer.from(apiKey || '');
-    const validBuf = Buffer.from(validKey || '');
-    if (!validKey || keyBuf.length !== validBuf.length || !require('crypto').timingSafeEqual(keyBuf, validBuf)) {
-      return res.status(401).json({
-        jsonrpc: '2.0',
-        id: body?.id || null,
-        error: { code: -32001, message: 'Invalid API key' }
-      });
-    }
-
-    next();
-  };
-
   // MCP endpoint
   app.use("/api/mcp", mcpLimiter);
-  app.use("/api/mcp", mcpAuthMiddleware);
   app.post("/api/mcp", handleMCP);
   app.get("/api/mcp", handleMCPDiscovery);
 

@@ -62,6 +62,7 @@ const DeployWizard = lazy(() => import("./pages/DeployWizard"));
 const CategoryLanding = lazy(() => import("./pages/CategoryLanding"));
 const Check = lazy(() => import("./pages/Check"));
 const AegisChat = lazy(() => import("./pages/AegisChat"));
+const McpCheckout = lazy(() => import("./pages/McpCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function Router() {
@@ -120,6 +121,8 @@ function Router() {
         <Route path={"/admin"} component={Admin} />
         <Route path={"/check"} component={Check} />
         <Route path={"/chat"} component={AegisChat} />
+        <Route path={"/checkout"} component={McpCheckout} />
+        <Route path={"/mcp/checkout"} component={McpCheckout} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

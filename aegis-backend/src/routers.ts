@@ -122,7 +122,7 @@ export const appRouter = router({
       }),
 
     earnings: publicProcedure
-      .input(z.object({ operatorId: z.number() }))
+      .input(z.object({ operatorId: z.union([z.string().min(1), z.number()]) }))
       .query(async ({ input }) => {
         return getOperatorEarnings(input.operatorId);
       }),
@@ -207,6 +207,7 @@ export const appRouter = router({
         }
 
         const normalizedInput = normalizeOperatorListingInput(input);
+        const hasConfirmedOnChainRegistration = Boolean(normalizedInput.onChainTxSignature);
 
         const operator = await createOperator({
           ...normalizedInput,
@@ -218,11 +219,11 @@ export const appRouter = router({
           totalEarned: "0",
           avgResponseMs: 0,
           isActive: true,
-          isVerified: false,
+          isVerified: hasConfirmedOnChainRegistration,
           healthStatus: normalizedInput.skill ? "healthy" : "unknown",
           consecutiveFailures: 0,
-          onChainRegisteredAt: normalizedInput.onChainTxSignature ? new Date() : null,
-          onChainSyncStatus: normalizedInput.onChainTxSignature ? "confirmed" : "unregistered",
+          onChainRegisteredAt: hasConfirmedOnChainRegistration ? new Date() : null,
+          onChainSyncStatus: hasConfirmedOnChainRegistration ? "confirmed" : "unregistered",
         });
 
         await logAudit({
@@ -355,8 +356,6 @@ export const appRouter = router({
         payload: z.any().optional(),
         paymentToken: z.string().optional(),
         txSignature: z.string().optional(),
-        receiptPda: z.string().optional(),
-        settlementMethod: z.enum(["legacy_transfer", "aegis_program"]).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         // Rate limit: 60 invocations per minute per IP
@@ -373,9 +372,7 @@ export const appRouter = router({
             callerWallet: input.callerWallet,
             payload: input.payload,
             txSignature: input.txSignature,
-            receiptPda: input.receiptPda,
             paymentToken: input.paymentToken,
-            settlementMethod: input.settlementMethod,
             source: "trpc",
           });
 
@@ -417,7 +414,7 @@ export const appRouter = router({
 
     byOperator: publicProcedure
       .input(z.object({
-        operatorId: z.number(),
+        operatorId: z.union([z.string().min(1), z.number()]),
         limit: z.number().min(1).max(100).optional(),
       }))
       .query(async ({ input }) => {

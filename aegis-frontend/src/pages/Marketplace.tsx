@@ -37,18 +37,18 @@ const FONT_MONO = "'DM Mono', 'SF Mono', 'Fira Code', monospace";
    TYPES
 ───────────────────────────────────────────────────────────────────────────── */
 interface DbOperator {
-  id: number;
+  id: number | string;
   slug: string;
   name: string;
   tagline: string | null;
   description: string | null;
   category: string;
-  pricePerCall: string;
+  pricePerCall: unknown;
   creatorWallet: string;
   qualityScore: number;
   totalInvocations: number;
   successfulInvocations: number;
-  totalEarned: string;
+  totalEarned: unknown;
   avgResponseMs: number;
   isActive: boolean;
   isVerified: boolean;
@@ -84,8 +84,17 @@ function shortWallet(w: string): string {
   return `${w.slice(0, 4)}…${w.slice(-4)}`;
 }
 
-function priceDisplay(val: string): string {
-  const n = parseFloat(val);
+function parseDecimal(val: unknown): number {
+  if (!val) return 0;
+  if (typeof val === "number") return val;
+  if (typeof val === "object" && val !== null && "$numberDecimal" in val) {
+    return parseFloat(String((val as { $numberDecimal?: unknown }).$numberDecimal)) || 0;
+  }
+  return parseFloat(String(val)) || 0;
+}
+
+function priceDisplay(val: unknown): string {
+  const n = parseDecimal(val);
   if (!n || n <= 0) return "Free";
   if (n < 0.001) return `$${n.toFixed(6)}`;
   if (n < 0.01)  return `$${n.toFixed(5)}`;
@@ -166,6 +175,7 @@ function SkeletonCard({ index = 0 }: { index?: number }) {
 function OperatorCard({ op, index = 0 }: { op: DbOperator; index?: number }) {
   const [hovered, setHovered] = useState(false);
   const displayCategory = CATEGORY_MAP[op.category] || op.category;
+  const pricePerCall = parseDecimal(op.pricePerCall);
 
   return (
     <motion.div
@@ -258,9 +268,9 @@ function OperatorCard({ op, index = 0 }: { op: DbOperator; index?: number }) {
             letterSpacing: "-0.02em", fontFamily: FONT_MONO,
             fontVariantNumeric: "tabular-nums",
           }}>
-            {priceDisplay(op.pricePerCall)}
+            {priceDisplay(pricePerCall)}
           </span>
-          {parseFloat(op.pricePerCall) > 0 && (
+          {pricePerCall > 0 && (
             <span style={{ fontSize: 10, fontWeight: 400, color: T.text30, fontFamily: FONT_SANS }}>/call</span>
           )}
         </div>
@@ -747,7 +757,7 @@ export default function Marketplace() {
                         fontSize: 11, color: T.text50, fontFamily: FONT_MONO,
                         fontVariantNumeric: "tabular-nums", textAlign: "right",
                       }}>
-                        ${parseFloat(op.totalEarned).toFixed(2)}
+                        ${parseDecimal(op.totalEarned).toFixed(2)}
                       </span>
                     </Link>
                   ))}

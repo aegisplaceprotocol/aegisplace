@@ -15,6 +15,7 @@ import { invokeLimiter } from "./middleware/rate-limit.js";
 import { executeInvocation, InvocationError } from "./invoke-engine.js";
 import { getGuardrailMetrics } from "./guardrails.js";
 import { getTrustBreakdown } from "./trust-engine.js";
+import { buildCheckoutUrl, buildOperatorPaymentContext, buildRestRetryTemplate, sanitizeInvokePayload } from "./payment-plan.js";
 
 const router = Router();
 
@@ -163,6 +164,56 @@ router.get("/operators/:idOrSlug/trust", async (req: Request, res: Response) => 
   }
 });
 
+/* ── POST /api/v1/operators/:idOrSlug/checkout-plan ───────────────────── */
+router.post("/operators/:idOrSlug/checkout-plan", async (req: Request, res: Response) => {
+  try {
+    const idOrSlug = req.params.idOrSlug;
+    const op = await db.getOperatorById(idOrSlug) || await db.getOperatorBySlug(idOrSlug);
+    if (!op) {
+      res.status(404).json({ error: "Operator not found" });
+      return;
+    }
+
+    const operator = op as unknown as Record<string, any>;
+    const callerWallet = typeof req.body?.callerWallet === "string" ? req.body.callerWallet : "";
+    const requestPayload = sanitizeInvokePayload(req.body);
+    const paymentContext = await buildOperatorPaymentContext({
+      operator,
+      callerWallet: callerWallet || undefined,
+    });
+
+    res.json({
+      error: "PAYMENT_REQUIRED",
+      operatorId: String(operator._id || operator.id || ""),
+      operatorSlug: operator.slug,
+      operatorName: operator.name,
+      callerWallet,
+      checkoutUrl: buildCheckoutUrl({
+        mode: "rest",
+        operatorSlug: operator.slug,
+      }),
+      retry: buildRestRetryTemplate({
+        operatorSlug: operator.slug,
+        callerWallet,
+        payload: requestPayload,
+      }),
+      payment: {
+        amount: paymentContext.amount.toFixed(6),
+        currency: "USDC",
+        recipient: operator.onChainProgramId || null,
+        preparedTransaction: paymentContext.preparedTransaction,
+        checkoutUrl: buildCheckoutUrl({
+          mode: "rest",
+          operatorSlug: operator.slug,
+        }),
+      },
+    });
+  } catch (err) {
+    logger.error({ err }, "REST checkout plan failed");
+    res.status(500).json({ error: "Failed to prepare checkout plan" });
+  }
+});
+
 /* ── POST /api/v1/operators/:idOrSlug/invoke  (x402 middleware) ────────── */
 router.post(
   "/operators/:idOrSlug/invoke",
@@ -184,7 +235,7 @@ router.post(
 
       const o = op as Record<string, unknown>;
       const operatorId = o._id || o.id;
-      const { txSignature, payerWallet, receiptPda, settlementMethod } = extractPaymentProof(req);
+      const { txSignature, payerWallet } = extractPaymentProof(req);
       const paymentHeader = (req as any).paymentProof || txSignature;
 
       // Execute through unified invocation engine
@@ -193,9 +244,7 @@ router.post(
         callerWallet: (payerWallet as string) || undefined,
         payload: req.body,
         txSignature: paymentHeader ? String(paymentHeader) : undefined,
-        receiptPda: receiptPda ? String(receiptPda) : undefined,
         paymentToken: undefined,
-        settlementMethod: settlementMethod === "aegis_program" ? "aegis_program" : "legacy_transfer",
         source: "rest",
       });
 
@@ -230,8 +279,7 @@ router.post(
           token: "USDC",
           chain: "solana",
           txSignature: paymentHeader || null,
-          receiptPda: receiptPda || null,
-          settlementMethod: settlementMethod || (receiptPda ? "aegis_program" : "legacy_transfer"),
+          settlementMethod: "aegis_program",
           settledAt: new Date().toISOString(),
           feeSplit: {
             creator: "85%",

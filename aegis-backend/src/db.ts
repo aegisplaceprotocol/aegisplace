@@ -146,7 +146,7 @@ const invocationSchema = new mongoose.Schema(
     trustDelta: { type: Number, default: 0, required: true },
     txSignature: { type: String, default: null, maxlength: 128 },
     onChainReceiptPda: { type: String, default: null, maxlength: 64 },
-    settlementMethod: { type: String, enum: ["legacy_transfer", "aegis_program"], default: null },
+    settlementMethod: { type: String, enum: ["aegis_program"], default: null },
     paymentToken: { type: String, default: null, maxlength: 512 },
     paymentVerified: { type: Boolean, default: false, required: true },
     guardrailInputPassed: { type: Boolean, default: true, required: true },
@@ -274,7 +274,7 @@ const paymentSchema = new mongoose.Schema(
     insuranceShare: dec128("0"),
     burnAmount: dec128("0"),
     onChainReceiptPda: { type: String, default: null, maxlength: 64 },
-    settlementMethod: { type: String, enum: ["legacy_transfer", "aegis_program"], default: "legacy_transfer", required: true },
+    settlementMethod: { type: String, enum: ["aegis_program"], default: "aegis_program", required: true },
     status: { type: String, enum: ["pending", "settled", "failed", "refunded"], default: "pending", required: true },
     settledAt: { type: Date, default: null },
   },
@@ -547,11 +547,19 @@ export async function getOperatorBySlug(slug: string) {
 }
 
 export async function getOperatorById(id: number | string) {
-  // Try by _id first, then by numeric id if applicable
-  let doc = await OperatorModel.findById(id).lean();
-  if (!doc && typeof id === "number") {
+  let doc = null;
+
+  if (typeof id === "number") {
     doc = await OperatorModel.findOne({ id }).lean();
+  } else if (/^\d+$/.test(id)) {
+    doc = await OperatorModel.findOne({ id: Number(id) }).lean();
+    if (!doc && mongoose.Types.ObjectId.isValid(id)) {
+      doc = await OperatorModel.findById(id).lean();
+    }
+  } else if (mongoose.Types.ObjectId.isValid(id)) {
+    doc = await OperatorModel.findById(id).lean();
   }
+
   return toPlain(doc);
 }
 
@@ -663,7 +671,20 @@ export async function getInvocationById(id: number | string) {
 }
 
 export async function getInvocationsByOperator(operatorId: number | string, limit = 50) {
-  const docs = await InvocationModel.find({ operatorId })
+  const candidates: Array<number | string | mongoose.Types.ObjectId> = [operatorId];
+
+  if (typeof operatorId === "string") {
+    if (/^\d+$/.test(operatorId)) {
+      candidates.push(Number(operatorId));
+    }
+    if (mongoose.Types.ObjectId.isValid(operatorId)) {
+      candidates.push(new mongoose.Types.ObjectId(operatorId));
+    }
+  } else {
+    candidates.push(String(operatorId));
+  }
+
+  const docs = await InvocationModel.find({ operatorId: { $in: candidates } })
     .sort({ createdAt: -1 })
     .limit(limit)
     .lean();
@@ -717,13 +738,25 @@ export async function getOperatorEarnings(operatorId: number | string) {
   const week = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const month = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+  const candidateIds: Array<number | string | mongoose.Types.ObjectId> = [operatorId];
+  if (typeof operatorId === "string") {
+    if (/^\d+$/.test(operatorId)) {
+      candidateIds.push(Number(operatorId));
+    }
+    if (mongoose.Types.ObjectId.isValid(operatorId)) {
+      candidateIds.push(new mongoose.Types.ObjectId(operatorId));
+    }
+  } else {
+    candidateIds.push(String(operatorId));
+  }
+
   const sumCreatorShare = (match: Record<string, any>) =>
     InvocationModel.aggregate([
       { $match: match },
       { $group: { _id: null, sum: { $sum: { $toDouble: "$creatorShare" } } } },
     ]).then(r => String(r[0]?.sum || 0));
 
-  const baseMatch = { operatorId };
+  const baseMatch = { operatorId: { $in: candidateIds } };
   const [total, last24h, last7d, last30d, countResult] = await Promise.all([
     sumCreatorShare(baseMatch),
     sumCreatorShare({ ...baseMatch, createdAt: { $gte: day } }),

@@ -72,6 +72,33 @@ function shortWallet(w: string): string {
   return `${w.slice(0, 6)}…${w.slice(-4)}`;
 }
 
+function fmtUsdLike(value: unknown, digits = 6): string {
+  const amount = parseDecimal(value);
+  return `$${amount.toFixed(digits)}`;
+}
+
+function fmtTimestamp(value: unknown): string {
+  if (!value) return "Unknown time";
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return "Unknown time";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getSolscanClusterParam(cluster?: string | null): string {
+  if (!cluster || cluster === "mainnet-beta") return "";
+  return `?cluster=${cluster}`;
+}
+
+function buildSolscanTxUrl(signature: string, cluster?: string | null): string {
+  return `https://solscan.io/tx/${signature}${getSolscanClusterParam(cluster)}`;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    TABS
 ───────────────────────────────────────────────────────────────────────────── */
@@ -493,9 +520,20 @@ export default function OperatorDetail() {
     { enabled: !!slug }
   );
 
-  const { data: invocations } = trpc.invoke.byOperator.useQuery(
-    { operatorId: operator?.id || 0, limit: 20 },
-    { enabled: !!operator?.id }
+  const operatorHistoryId = operator?.id ? String(operator.id) : "";
+
+  const {
+    data: invocations,
+    isLoading: invocationsLoading,
+    error: invocationsError,
+  } = trpc.invoke.byOperator.useQuery(
+    { operatorId: operatorHistoryId, limit: 20 },
+    { enabled: !!operatorHistoryId }
+  );
+
+  const { data: operatorEarnings } = trpc.operator.earnings.useQuery(
+    { operatorId: operatorHistoryId },
+    { enabled: !!operatorHistoryId }
   );
 
   const handleInvoke = async () => {
@@ -545,6 +583,9 @@ export default function OperatorDetail() {
   const avgResponseMs = invocations && invocations.length > 0
     ? Math.round(invocations.reduce((a, b) => a + b.responseMs, 0) / invocations.length)
     : null;
+  const creatorEarningsTotal = operatorEarnings?.total != null
+    ? parseFloat(String(operatorEarnings.total))
+    : parseFloat(String(operator.totalEarned || 0));
 
   // Correct fee split: 85/10/3/1.5/0.5
   const feeCreator    = price * 0.85;
@@ -559,12 +600,44 @@ export default function OperatorDetail() {
 
   // ── Code examples (dynamic with real slug) ───────────────────────────────
   const invokeUrl = `https://aegisplace.com/api/v1/operators/${slug}/invoke`;
+  const checkoutUrl = `https://aegisplace.com/checkout?operatorSlug=${slug}`;
 
-  const curlExample = `curl -X POST ${invokeUrl} \\
-  -H "Content-Type: application/json" \\
-  -H "X-Payment-Proof: <solana-usdc-tx-signature>" \\
-  -H "X-Payer-Wallet: <your-wallet-address>" \\
-  -d '{"input": "your query here"}'`;
+  const curlExample = `# 1. Start with a normal invoke request. No payment headers yet.
+curl \
+  -X POST \
+  ${invokeUrl} \
+  -H "Content-Type: application/json" \
+  -d '{"input": "your query here"}'
+
+# 2. A paid operator returns HTTP 402 with a checkout URL.
+#    The response includes the amount due and where to complete payment.
+{
+  "error": "PAYMENT_REQUIRED",
+  "payment": {
+    "amount": "${price.toFixed(6)}",
+    "token": "USDC"
+  },
+  "instructions": {
+    "step1": "Open checkout and sign the payment",
+    "step2": "Copy the updated curl after payment",
+    "step3": "Retry the invoke to get the result"
+  },
+  "checkoutUrl": "${checkoutUrl}"
+}
+
+# 3. Open the checkout URL, connect your wallet, and sign/send the USDC payment.
+#    Checkout returns the transaction signature and wallet address to reuse.
+
+# 4. Retry the same invoke with the payment proof headers added.
+curl \
+  -X POST \
+  ${invokeUrl} \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Proof: <confirmed-solana-tx-signature>" \
+  -H "X-Payer-Wallet: <wallet-used-in-checkout>" \
+  -d '{"input": "your query here"}'
+
+# 5. The retry returns the unlocked private SKILL.md result.`;
 
   const mcpExample = `{
   "mcpServers": {
@@ -577,31 +650,15 @@ export default function OperatorDetail() {
   const mcpUsage = `# Then use the tool in Claude Code or Cursor:
 1. Use aegis_get_operator with slug "${slug}"
 2. Copy the returned operatorId
-3. Use aegis_invoke_operator with that operatorId and your payload`;
-
-  const a2aExample = `# 1. Discover backend capabilities:
-POST https://aegisplace.com/api/a2a
-Content-Type: application/json
-
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "agent/discover"
-}
-
-# 2. Resolve the invoke URL for this skill:
-POST https://aegisplace.com/api/a2a
-Content-Type: application/json
-
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "skills/invoke",
-  "params": {
-    "skillId": "${slug}",
-    "payload": { "input": "your query" }
-  }
-}`;
+3. Use aegis_invoke_operator with that operatorId
+4. If the operator is paid, the tool returns PAYMENT_REQUIRED plus the checkout URL
+5. Open checkout, connect the wallet, and sign/send the USDC payment
+6. Copy the confirmed transaction signature from checkout
+7. Run aegis_invoke_operator again with:
+   - operatorId
+   - x-payer-wallet
+   - x-payment-proof
+8. The second call returns the unlocked private SKILL.md result`;
 
   const jsExample = `const response = await fetch(
   '${invokeUrl}',
@@ -631,6 +688,27 @@ response = requests.post(
     json={"input": "your query here"},
 )
 print(response.json()["result"])`;
+
+  const responseSchemaRows = [
+    { field: "success", type: "boolean", desc: "Whether the private skill unlock completed successfully" },
+    { field: "operatorId", type: "string", desc: "The Mongo operator identifier returned by the backend for this skill" },
+    { field: "operatorName", type: "string", desc: "Human-readable operator name for the unlocked skill" },
+    { field: "operator.slug", type: "string", desc: "Marketplace slug for the operator that was unlocked" },
+    { field: "operator.skillStatus", type: "string", desc: "Readiness state of the private skill payload, such as ready" },
+    { field: "result.kind", type: "string", desc: "Result payload type returned by the invoke route, currently skill_markdown" },
+    { field: "result.skill", type: "string", desc: "The unlocked private SKILL.md markdown content" },
+    { field: "result.requestedWith.source", type: "string", desc: "Which entrypoint executed the unlock, for example rest or mcp" },
+    { field: "result.requestedWith.callerWallet", type: "string", desc: "Wallet that paid for the unlock when a paid call is made" },
+    { field: "execution.durationMs", type: "number", desc: "Backend processing time for the invoke flow" },
+    { field: "execution.timestamp", type: "string", desc: "ISO timestamp for when the invoke completed" },
+    { field: "payment.amount", type: "string", desc: "Total skill charge settled for this unlock in USDC base units as a decimal string" },
+    { field: "payment.txSignature", type: "string", desc: "Confirmed Solana transaction signature used as payment proof" },
+    { field: "payment.settlementMethod", type: "string", desc: "Settlement backend used for payment verification, currently aegis_program" },
+    { field: "payment.feeSplit.creator", type: "string", desc: "Creator share percentage for this invocation payment" },
+    { field: "invocationId", type: "string", desc: "Stored invocation record id for history, payments, and audits" },
+    { field: "guardrails.inputPassed", type: "boolean", desc: "Whether the input guardrails allowed the request" },
+    { field: "guardrails.violations", type: "string[]", desc: "List of guardrail violation codes, empty when the invoke passes cleanly" },
+  ];
 
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: FONT_SANS }}>
@@ -1104,7 +1182,7 @@ print(response.json()["result"])`;
                       Creator Earnings
                     </div>
                     <div style={{ fontSize: 28, fontWeight: 300, color: T.text95, fontFamily: FONT_MONO, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>
-                      ${parseFloat(operator.totalEarned).toFixed(2)}
+                      ${creatorEarningsTotal.toFixed(2)}
                     </div>
                     <div style={{ fontSize: 10, color: T.text20, fontFamily: FONT_SANS, marginTop: 4 }}>USDC paid to creator wallet</div>
                   </div>
@@ -1128,15 +1206,14 @@ print(response.json()["result"])`;
                   Integration Guide
                 </h2>
                 <p style={{ fontSize: 14, color: T.text50, fontFamily: FONT_SANS, lineHeight: 1.6, margin: 0 }}>
-                  Five backend-supported ways to unlock <span style={{ color: T.text80, fontFamily: FONT_MONO }}>{slug}</span>, from one-line cURL to MCP and A2A.
-                  The REST invoke route is now the paywalled reveal path for the private SKILL.md document, with A2A discovery and MCP tools resolving back into the same backend-managed unlock.
+                  Four backend-supported ways to unlock <span style={{ color: T.text80, fontFamily: FONT_MONO }}>{slug}</span>, from one-line cURL to MCP and language SDKs.
                 </p>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                 <IntegrationCard
                   title="Via x402 HTTP Micropayment"
-                  description="The most direct path. First satisfy the x402 challenge by making the required USDC transfer, then retry the unlock route with the payment proof headers to receive the private SKILL.md content."
+                  description="The direct REST flow used by Aegis: send a plain curl first, receive the 402 payment challenge and checkout URL, pay through checkout with your wallet, then retry the same curl with X-Payment-Proof and X-Payer-Wallet to unlock the private SKILL.md content."
                   code={curlExample}
                   lang="bash"
                   learnMore="https://x402.org"
@@ -1170,14 +1247,6 @@ print(response.json()["result"])`;
                 </div>
 
                 <IntegrationCard
-                  title="Via A2A (Agent-to-Agent)"
-                  description="The backend exposes an A2A-flavored JSON-RPC endpoint at /api/a2a. Discover the agent, resolve the skill, and then call the returned unlock URL through the backend."
-                  code={a2aExample}
-                  lang="bash"
-                  learnMore="https://google.github.io/A2A"
-                />
-
-                <IntegrationCard
                   title="Via JavaScript / TypeScript SDK"
                   description="Fetch directly from any JS runtime: Node.js, Deno, Bun, or the browser. Retry the unlock call after your wallet submits the USDC transfer and returns a transaction signature."
                   code={jsExample}
@@ -1201,21 +1270,13 @@ print(response.json()["result"])`;
                   borderRadius: 10,
                   overflow: "hidden",
                 }}>
-                  {[
-                    { field: "success", type: "boolean", desc: "Whether the private skill unlock completed without errors" },
-                    { field: "result.skill", type: "string", desc: "The private SKILL.md markdown returned after payment or free unlock" },
-                    { field: "result.description", type: "string", desc: "Public marketplace description echoed alongside the private skill content" },
-                    { field: "execution.durationMs", type: "number", desc: "Backend processing latency for the unlock flow" },
-                    { field: "payment.amount", type: "number", desc: "Total amount charged to unlock the skill" },
-                    { field: "payment.feeSplit.creator", type: "string", desc: "Creator revenue share percentage for this unlock" },
-                    { field: "operator.skillStatus", type: "string", desc: "Whether the listing has private skill content configured" },
-                  ].map((row, i) => (
+                  {responseSchemaRows.map((row, i) => (
                     <div key={row.field} style={{
                       display: "grid",
                       gridTemplateColumns: "180px 80px 1fr",
                       gap: 16,
                       padding: "12px 20px",
-                      borderBottom: i < 6 ? `1px solid ${T.borderSubtle}` : "none",
+                      borderBottom: i < responseSchemaRows.length - 1 ? `1px solid ${T.borderSubtle}` : "none",
                       alignItems: "baseline",
                     }}>
                       <span style={{ fontSize: 11.5, fontFamily: FONT_MONO, color: "rgba(196,181,253,0.8)" }}>{row.field}</span>
@@ -1397,80 +1458,162 @@ print(response.json()["result"])`;
                 Invocation History
               </h2>
 
-              {invocations && invocations.length > 0 ? (
+              {invocationsLoading ? (
                 <div style={{
+                  textAlign: "center",
+                  padding: "80px 40px",
+                  color: T.text30,
+                  fontSize: 13,
+                  fontFamily: FONT_SANS,
                   background: T.card,
                   border: `1px solid ${T.border}`,
                   borderRadius: 10,
-                  overflow: "hidden",
                 }}>
-                  {/* Header row */}
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 110px 70px 90px 80px",
-                    gap: 12,
-                    padding: "10px 20px",
-                    borderBottom: `1px solid ${T.borderSubtle}`,
-                    background: T.white2,
-                  }}>
-                    {["Caller", "Amount", "Status", "Response", "Delta"].map((h) => (
-                      <span key={h} style={{ fontSize: 10, fontWeight: 500, color: T.text20, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: FONT_SANS }}>{h}</span>
-                    ))}
-                  </div>
-                  {invocations.map((inv: InvocationRecord, idx) => (
-                    <motion.div
-                      key={inv.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2, delay: idx * 0.03 }}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 110px 70px 90px 80px",
-                        gap: 12,
-                        padding: "12px 20px",
-                        borderBottom: idx < invocations.length - 1 ? `1px solid ${T.borderSubtle}` : "none",
-                        alignItems: "center",
-                        transition: "background 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = T.white2; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                    >
-                      <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_MONO, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {inv.callerWallet ? shortWallet(inv.callerWallet) : "Anonymous"}
-                      </span>
-                      <span style={{ fontSize: 12, color: T.text80, fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
-                        ${parseFloat(inv.amountPaid).toFixed(5)}
-                      </span>
-                      <span style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 40,
-                        padding: "3px 8px",
-                        fontSize: 9,
-                        fontWeight: 600,
-                        fontFamily: FONT_MONO,
-                        letterSpacing: "0.06em",
-                        borderRadius: 4,
-                        color: inv.success ? "rgba(52,211,153,0.7)" : "rgba(239,68,68,0.7)",
-                        background: inv.success ? "rgba(52,211,153,0.06)" : "rgba(239,68,68,0.06)",
-                        border: `1px solid ${inv.success ? "rgba(52,211,153,0.15)" : "rgba(239,68,68,0.15)"}`,
-                      }}>
-                        {inv.success ? "OK" : "ERR"}
-                      </span>
-                      <span style={{ fontSize: 12, color: T.text30, fontFamily: FONT_MONO, fontVariantNumeric: "tabular-nums" }}>
-                        {inv.responseMs}ms
-                      </span>
-                      <span style={{
-                        fontSize: 12,
-                        fontFamily: FONT_MONO,
-                        fontVariantNumeric: "tabular-nums",
-                        color: inv.trustDelta > 0 ? "rgba(52,211,153,0.65)" : inv.trustDelta < 0 ? "rgba(239,68,68,0.65)" : T.text20,
-                      }}>
-                        {inv.trustDelta > 0 ? "+" : ""}{inv.trustDelta}
-                      </span>
-                    </motion.div>
-                  ))}
+                  Loading invocation history...
+                </div>
+              ) : invocationsError ? (
+                <div style={{
+                  textAlign: "center",
+                  padding: "80px 40px",
+                  color: "rgba(239,68,68,0.75)",
+                  fontSize: 13,
+                  fontFamily: FONT_SANS,
+                  background: T.card,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 10,
+                }}>
+                  Failed to load invocation history: {invocationsError.message}
+                </div>
+              ) : invocations && invocations.length > 0 ? (
+                <div style={{ display: "grid", gap: 14 }}>
+                  {invocations.map((inv: InvocationRecord, idx) => {
+                    const txLink = inv.txSignature ? buildSolscanTxUrl(inv.txSignature, operator.onChainCluster || null) : null;
+                    const successTone = inv.success ? "rgba(52,211,153,0.7)" : "rgba(239,68,68,0.7)";
+                    const successBg = inv.success ? "rgba(52,211,153,0.06)" : "rgba(239,68,68,0.06)";
+                    const successBorder = inv.success ? "rgba(52,211,153,0.15)" : "rgba(239,68,68,0.15)";
+
+                    return (
+                      <motion.div
+                        key={inv.id}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22, delay: idx * 0.03 }}
+                        style={{
+                          background: T.card,
+                          border: `1px solid ${T.border}`,
+                          borderRadius: 10,
+                          padding: 18,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 13, color: T.text95, fontFamily: FONT_MONO }}>
+                                {fmtTimestamp(inv.createdAt)}
+                              </span>
+                              <span style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "4px 8px",
+                                fontSize: 9,
+                                fontWeight: 600,
+                                fontFamily: FONT_MONO,
+                                letterSpacing: "0.06em",
+                                borderRadius: 4,
+                                color: successTone,
+                                background: successBg,
+                                border: `1px solid ${successBorder}`,
+                              }}>
+                                {inv.success ? "SUCCESS" : "FAILED"}
+                              </span>
+                              <span style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "4px 8px",
+                                fontSize: 9,
+                                fontWeight: 600,
+                                fontFamily: FONT_MONO,
+                                letterSpacing: "0.06em",
+                                borderRadius: 4,
+                                color: inv.paymentVerified ? T.accent : T.text30,
+                                background: inv.paymentVerified ? T.accentSubtle : T.white2,
+                                border: `1px solid ${inv.paymentVerified ? T.accentBorder : T.borderSubtle}`,
+                              }}>
+                                {inv.paymentVerified ? "PAID" : "UNVERIFIED"}
+                              </span>
+                            </div>
+                            <div style={{ marginTop: 8, fontSize: 11, color: T.text30, fontFamily: FONT_MONO }}>
+                              Invocation ID: {String(inv.id)}
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 11, color: T.text30, textTransform: "uppercase", letterSpacing: "0.08em" }}>Amount Paid</div>
+                            <div style={{ fontSize: 18, color: T.text95, fontFamily: FONT_MONO }}>{fmtUsdLike(inv.amountPaid)}</div>
+                            <div style={{ marginTop: 4, fontSize: 11, color: T.text50, fontFamily: FONT_MONO }}>
+                              {inv.responseMs ?? 0}ms · HTTP {inv.statusCode ?? "-"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginBottom: 14 }}>
+                          {[
+                            { label: "Invoked By", value: inv.callerWallet || "Anonymous" },
+                            { label: "Settlement", value: inv.settlementMethod || "N/A" },
+                            { label: "Receipt PDA", value: inv.onChainReceiptPda || "Not captured" },
+                            { label: "Trust Delta", value: `${inv.trustDelta > 0 ? "+" : ""}${inv.trustDelta}` },
+                          ].map((item) => (
+                            <div key={item.label} style={{ padding: "10px 12px", borderRadius: 8, background: T.white2, border: `1px solid ${T.borderSubtle}` }}>
+                              <div style={{ fontSize: 10, color: T.text20, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{item.label}</div>
+                              <div style={{ fontSize: 12, color: T.text80, fontFamily: FONT_MONO, wordBreak: "break-all" }}>
+                                {item.label === "Invoked By" && inv.callerWallet ? shortWallet(inv.callerWallet) : item.value}
+                              </div>
+                              {item.label === "Invoked By" && inv.callerWallet ? (
+                                <div style={{ marginTop: 4, fontSize: 10, color: T.text30, fontFamily: FONT_MONO, wordBreak: "break-all" }}>{inv.callerWallet}</div>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
+                          <div style={{ fontSize: 11, color: T.text30, textTransform: "uppercase", letterSpacing: "0.08em" }}>Payment Proof</div>
+                          {inv.txSignature ? (
+                            <>
+                              <span style={{ fontSize: 12, color: T.text80, fontFamily: FONT_MONO }}>{shortWallet(inv.txSignature)}</span>
+                              <CopyButton text={inv.txSignature} />
+                              {txLink ? (
+                                <a href={txLink} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, color: T.accent, fontSize: 11, textDecoration: "none", fontFamily: FONT_SANS }}>
+                                  Solscan <IconExternalLink />
+                                </a>
+                              ) : null}
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 12, color: T.text50, fontFamily: FONT_MONO }}>No tx signature saved</span>
+                          )}
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: 11, color: T.text30, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Revenue Split</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+                            {[
+                              { label: "Creator", value: inv.creatorShare },
+                              { label: "Validator", value: inv.validatorShare },
+                              { label: "Treasury", value: inv.treasuryShare },
+                              { label: "Insurance", value: inv.insuranceShare },
+                              { label: "Burned", value: inv.burnAmount },
+                            ].map((split) => (
+                              <div key={split.label} style={{ padding: "10px 12px", borderRadius: 8, background: T.white2, border: `1px solid ${T.borderSubtle}` }}>
+                                <div style={{ fontSize: 10, color: T.text20, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>{split.label}</div>
+                                <div style={{ fontSize: 13, color: T.text95, fontFamily: FONT_MONO }}>{fmtUsdLike(split.value)}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div style={{

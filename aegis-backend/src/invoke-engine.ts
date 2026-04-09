@@ -14,17 +14,14 @@ import {
 } from "./db";
 import { calculateFees } from "./validator";
 import { broadcastEvent } from "./sse";
-import { getDecodedOperator, verifyPayment, verifyProgramPayment } from "./solana";
-import { ENV } from "./_core/env";
+import { getDecodedOperator, verifyProgramPayment } from "./solana";
 
 export interface InvokeParams {
   operatorId: number | string;
   callerWallet?: string;
   payload?: unknown;
   txSignature?: string;
-  receiptPda?: string;
   paymentToken?: string;
-  settlementMethod?: "legacy_transfer" | "aegis_program";
   source: "trpc" | "rest" | "mcp";
 }
 
@@ -73,7 +70,7 @@ export class InvocationError extends Error {
 }
 
 export async function executeInvocation(params: InvokeParams): Promise<InvokeResult> {
-  const { operatorId, callerWallet, payload, txSignature, receiptPda, paymentToken, settlementMethod, source } = params;
+  const { operatorId, callerWallet, payload, txSignature, paymentToken, source } = params;
 
   const operator: any = await getOperatorById(operatorId);
   if (!operator) {
@@ -84,7 +81,7 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
   }
 
   let price = parseFloat(operator.pricePerCall || "0");
-  if ((settlementMethod === "aegis_program" || receiptPda) && operator.onChainOperatorPda) {
+  if (operator.onChainOperatorPda) {
     const onChainOperator = await getDecodedOperator(operator.onChainOperatorPda);
     price = Number(onChainOperator.priceUsdcBase) / 1_000_000;
   }
@@ -105,8 +102,8 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
       statusCode: 409,
       trustDelta: 0,
       paymentVerified: false,
-      settlementMethod: settlementMethod || null,
-      onChainReceiptPda: receiptPda || null,
+      settlementMethod: null,
+      onChainReceiptPda: null,
       guardrailInputPassed: true,
       guardrailOutputPassed: true,
       guardrailLatencyMs: 0,
@@ -164,38 +161,31 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
   }
 
   let paymentVerified = false;
+  let verifiedReceiptPda: string | null = null;
   if (txSignature) {
     if (!callerWallet) {
       throw new InvocationError("BAD_REQUEST", "callerWallet is required when providing txSignature", 400);
     }
-    if ((settlementMethod === "aegis_program" || receiptPda) && (!operator.onChainProgramId || !operator.onChainConfigPda || !operator.onChainOperatorPda)) {
+    if (!operator.onChainProgramId || !operator.onChainConfigPda || !operator.onChainOperatorPda) {
       throw new InvocationError("PAYMENT_FAILED", "Operator is missing required on-chain settlement metadata.", 409);
-    }
-    if (settlementMethod === "aegis_program" && !receiptPda) {
-      throw new InvocationError("BAD_REQUEST", "receiptPda is required for on-chain Aegis settlement verification", 400);
-    }
-    if (!ENV.treasuryWallet && settlementMethod !== "aegis_program") {
-      throw new InvocationError("INTERNAL_SERVER_ERROR", "Treasury wallet not configured", 500);
     }
     if (await hasPaymentTxSignature(txSignature)) {
       throw new InvocationError("PAYMENT_PROOF_ALREADY_USED", "This payment transaction signature has already been used for a previous invocation.", 409);
     }
 
-    const verification = settlementMethod === "aegis_program" || !!receiptPda
-      ? await verifyProgramPayment({
-          txSignature,
-          expectedAmount: price,
-          callerWallet,
-          programId: operator.onChainProgramId || ENV.aegisProgramId,
-          operatorPda: operator.onChainOperatorPda,
-          configPda: operator.onChainConfigPda,
-          receiptPda: receiptPda || "",
-        })
-      : await verifyPayment(txSignature, price, callerWallet, ENV.treasuryWallet);
+    const verification = await verifyProgramPayment({
+      txSignature,
+      expectedAmount: price,
+      callerWallet,
+      programId: operator.onChainProgramId,
+      operatorPda: operator.onChainOperatorPda,
+      configPda: operator.onChainConfigPda,
+    });
 
     if (!verification.verified) {
       throw new InvocationError("PAYMENT_FAILED", `Payment verification failed: ${verification.error}`, 400);
     }
+    verifiedReceiptPda = verification.receiptPda || null;
     paymentVerified = true;
   } else if (price > 0) {
     throw new InvocationError("PAYMENT_REQUIRED", "This skill requires payment. Provide a confirmed on-chain settlement proof for the paid unlock transaction.", 402);
@@ -217,8 +207,8 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
     txSignature: txSignature || null,
     paymentToken,
     paymentVerified,
-    settlementMethod: settlementMethod || (receiptPda ? "aegis_program" : null),
-    onChainReceiptPda: receiptPda || null,
+    settlementMethod: paymentVerified ? "aegis_program" : null,
+    onChainReceiptPda: verifiedReceiptPda,
     guardrailInputPassed: true,
     guardrailOutputPassed: true,
     guardrailLatencyMs: 0,
@@ -235,8 +225,8 @@ export async function executeInvocation(params: InvokeParams): Promise<InvokeRes
       validatorShare: fees.validators.toFixed(8),
       burnAmount: fees.burn.toFixed(8),
       insuranceShare: fees.insurance.toFixed(8),
-      settlementMethod: settlementMethod || (receiptPda ? "aegis_program" : "legacy_transfer"),
-      onChainReceiptPda: receiptPda || null,
+      settlementMethod: "aegis_program",
+      onChainReceiptPda: verifiedReceiptPda,
       status: paymentVerified ? "settled" : "pending",
       settledAt: paymentVerified ? new Date() : undefined,
     });

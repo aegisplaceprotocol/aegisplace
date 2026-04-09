@@ -28,6 +28,7 @@ const USDC_DECIMALS = 6;
 export interface PaymentVerificationResult {
   verified: boolean;
   error?: string;
+  receiptPda?: string;
 }
 
 export interface ProtocolConfigSnapshot {
@@ -57,7 +58,7 @@ export interface ProgramPaymentVerificationParams {
   programId: string;
   operatorPda: string;
   configPda: string;
-  receiptPda: string;
+  receiptPda?: string;
 }
 
 let connection: Connection | null = null;
@@ -327,8 +328,8 @@ export async function verifyProgramPayment(
     const programId = new PublicKey(params.programId).toBase58();
     const operatorPda = new PublicKey(params.operatorPda).toBase58();
     const configPda = new PublicKey(params.configPda).toBase58();
-    const receiptPda = new PublicKey(params.receiptPda).toBase58();
     const callerWallet = new PublicKey(params.callerWallet).toBase58();
+    const explicitReceiptPda = params.receiptPda ? new PublicKey(params.receiptPda).toBase58() : null;
 
     const accountKeys = tx.transaction.message.accountKeys.map((key) =>
       typeof key === "string" ? key : key.pubkey.toBase58(),
@@ -338,37 +339,75 @@ export async function verifyProgramPayment(
       return { verified: false, error: `Transaction does not reference Aegis program ${programId}.` };
     }
 
-    for (const required of [operatorPda, configPda, receiptPda, callerWallet]) {
+    for (const required of [operatorPda, configPda, callerWallet]) {
       if (!accountKeys.includes(required)) {
         return { verified: false, error: `Transaction is missing required account ${required}.` };
       }
     }
 
     const config = await getDecodedProtocolConfig(configPda);
-    const receiptInfo = await client.getAccountInfo(new PublicKey(receiptPda), "confirmed");
-    if (!receiptInfo) {
-      return { verified: false, error: `Invocation receipt ${receiptPda} was not created.` };
-    }
-
-    if (!receiptInfo.owner.equals(new PublicKey(programId))) {
-      return { verified: false, error: `Invocation receipt ${receiptPda} is not owned by the Aegis program.` };
-    }
-
-    const receipt = decodeInvocationReceiptAccount(receiptInfo.data);
     const expectedAmountBaseUnits = BigInt(Math.round(params.expectedAmount * 1_000_000));
 
-    if (receipt.operator !== operatorPda) {
-      return { verified: false, error: `Receipt operator ${receipt.operator} does not match expected operator ${operatorPda}.` };
+    const excludedAccounts = new Set([
+      programId,
+      operatorPda,
+      configPda,
+      callerWallet,
+      config.treasury,
+      config.validatorPool,
+      config.stakerPool,
+      config.insuranceFund,
+    ]);
+    const receiptCandidates = explicitReceiptPda
+      ? [explicitReceiptPda]
+      : accountKeys.filter((account) => !excludedAccounts.has(account));
+
+    let matchedReceiptPda: string | null = null;
+    let matchedReceipt: ReturnType<typeof decodeInvocationReceiptAccount> | null = null;
+
+    for (const candidate of receiptCandidates) {
+      const receiptInfo = await client.getAccountInfo(new PublicKey(candidate), "confirmed");
+      if (!receiptInfo || !receiptInfo.owner.equals(new PublicKey(programId))) {
+        continue;
+      }
+
+      try {
+        const decoded = decodeInvocationReceiptAccount(receiptInfo.data);
+        if (
+          decoded.operator === operatorPda &&
+          decoded.caller === callerWallet &&
+          decoded.amountPaid === expectedAmountBaseUnits
+        ) {
+          matchedReceiptPda = candidate;
+          matchedReceipt = decoded;
+          break;
+        }
+      } catch {
+        // Ignore other Aegis-owned accounts that are not invocation receipts.
+      }
     }
 
-    if (receipt.caller !== callerWallet) {
-      return { verified: false, error: `Receipt caller ${receipt.caller} does not match expected payer ${callerWallet}.` };
-    }
-
-    if (receipt.amountPaid !== expectedAmountBaseUnits) {
+    if (!matchedReceiptPda || !matchedReceipt) {
       return {
         verified: false,
-        error: `Receipt amount ${receipt.amountPaid.toString()} does not match expected ${expectedAmountBaseUnits.toString()} base units.`,
+        error: explicitReceiptPda
+          ? `Invocation receipt ${explicitReceiptPda} was not created or does not match the transaction.`
+          : "Could not locate a matching invocation receipt in the confirmed Aegis transaction.",
+      };
+    }
+
+    if (matchedReceipt.operator !== operatorPda) {
+      return { verified: false, error: `Receipt operator ${matchedReceipt.operator} does not match expected operator ${operatorPda}.` };
+    }
+
+    if (matchedReceipt.caller !== callerWallet) {
+      return { verified: false, error: `Receipt caller ${matchedReceipt.caller} does not match expected payer ${callerWallet}.` };
+    }
+
+    if (matchedReceipt.amountPaid !== expectedAmountBaseUnits) {
+      return {
+        verified: false,
+        error: `Receipt amount ${matchedReceipt.amountPaid.toString()} does not match expected ${expectedAmountBaseUnits.toString()} base units.`,
       };
     }
 
@@ -382,7 +421,7 @@ export async function verifyProgramPayment(
       };
     }
 
-    return { verified: true };
+    return { verified: true, receiptPda: matchedReceiptPda };
   } catch (err: any) {
     return { verified: false, error: `Program payment verification error: ${err.message}` };
   }

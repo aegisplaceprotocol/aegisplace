@@ -10,26 +10,23 @@
 
 import type { Request, Response } from "express";
 import { logger } from "./logger";
-import crypto from "crypto";
 import mongoose from "mongoose";
 import {
   listOperators,
   getOperatorBySlug,
   getOperatorById,
-  getOperatorCount,
   getProtocolStats,
   getGuardrailStats,
   checkRateLimit,
-  listTasks,
-  createTask,
-  createProposal,
-  createAgent,
   OperatorModel,
-  OperatorTokenModel,
 } from "./db";
 import { getTrustBreakdown } from "./trust-engine";
 import { executeInvocation, InvocationError } from "./invoke-engine";
-import { bags, BagsApiError } from "./bags";
+import {
+  getSolanaNetworkId,
+} from "./solana";
+import { ENV } from "./_core/env";
+import { buildCheckoutUrl, buildOperatorPaymentContext } from "./payment-plan";
 
 // ────────────────────────────────────────────────────────────
 // SSRF Protection
@@ -60,8 +57,6 @@ const MCP_VERSION = "2025-03-26";
 const SERVER_NAME = "aegis-protocol";
 const SERVER_VERSION = "1.0.0";
 
-const toObjectId = (id: string) => new mongoose.Types.ObjectId(id);
-
 // ────────────────────────────────────────────────────────────
 // Tool Definitions
 // ────────────────────────────────────────────────────────────
@@ -70,31 +65,31 @@ const TOOLS = [
   {
     name: "aegis_list_operators",
     description:
-      "Browse AI operators (skills) in the Aegis marketplace. Supports category filtering, text search, sorting, and pagination.",
+      "Browse operators in the Aegis marketplace. Use this when you want a ranked list of skills before choosing one. Optional arguments let you filter by category, search by text, sort by trust or activity, and paginate with limit and offset.",
     inputSchema: {
       type: "object" as const,
       properties: {
         category: {
           type: "string",
           description:
-            "Filter by category. One of: code-review, sentiment-analysis, data-extraction, image-generation, text-generation, translation, summarization, classification, search, financial-analysis, security-audit, other",
+            "Optional category filter. Pass one of: code-review, sentiment-analysis, data-extraction, image-generation, text-generation, translation, summarization, classification, search, financial-analysis, security-audit, or other.",
         },
         search: {
           type: "string",
-          description: "Search operators by name or tagline",
+          description: "Optional free-text search over operator name, tagline, and marketplace text. Example: 'solana auditor' or 'code review'.",
         },
         sortBy: {
           type: "string",
           enum: ["trust", "invocations", "earnings", "newest"],
-          description: "Sort order (default: trust)",
+          description: "Optional sort field. Use trust for best-ranked skills, invocations for most-used, earnings for top revenue generators, or newest for recently added operators. Default is trust.",
         },
         limit: {
           type: "number",
-          description: "Max results to return (default: 20, max: 100)",
+          description: "Optional page size. Default is 20 and maximum is 100.",
         },
         offset: {
           type: "number",
-          description: "Offset for pagination (default: 0)",
+          description: "Optional pagination offset. Use 0 for the first page, then increase by limit for later pages.",
         },
       },
     },
@@ -102,13 +97,13 @@ const TOOLS = [
   {
     name: "aegis_get_operator",
     description:
-      "Get detailed information about a specific operator by its slug (URL-friendly identifier).",
+      "Get full public details for one operator. Use this after discovery when you already know the slug and want pricing, health, invocation counts, and whether the operator has a private SKILL.md payload.",
     inputSchema: {
       type: "object" as const,
       properties: {
         slug: {
           type: "string",
-          description: "The operator slug (e.g. 'solana-code-auditor')",
+          description: "Required operator slug. This is the marketplace identifier, for example 'dobertest2' or 'solana-code-auditor'.",
         },
       },
       required: ["slug"],
@@ -117,33 +112,33 @@ const TOOLS = [
   {
     name: "aegis_invoke_operator",
     description:
-      "Unlock an AI operator's private SKILL.md payload. Paid skills must include an on-chain settlement proof, and the invocation is still recorded with trust and guardrail metadata.",
+      "Invoke one operator and unlock its private SKILL.md payload. Use this only after you have selected an operator. For paid operators, do not send funds to a wallet address. Pay through the Aegis on-chain program, then retry with x-payment-proof and x-payer-wallet.",
     inputSchema: {
       type: "object" as const,
       properties: {
         operatorId: {
           type: "string",
-          description: "The operator ID to invoke",
+          description: "Required operator ID, not slug. Get this from aegis_get_operator or aegis_list_operators first.",
         },
         payload: {
           type: "object",
-          description: "The input payload to send to the operator",
+          description: "Optional structured input payload for the invocation. Use an object such as { task: 'review this code' } if the skill expects inputs.",
+        },
+        "x-payer-wallet": {
+          type: "string",
+          description: "Optional Solana wallet address of the payer. Required in practice when submitting a payment transaction signature for a paid operator.",
+        },
+        "x-payment-proof": {
+          type: "string",
+          description: "Confirmed Solana transaction signature for the Aegis invoke_skill payment transaction. Required when the operator price is greater than zero.",
         },
         callerWallet: {
           type: "string",
-          description: "Solana wallet address of the caller (optional)",
+          description: "Deprecated alias for x-payer-wallet.",
         },
         txSignature: {
           type: "string",
-          description: "Confirmed Solana payment transaction signature for paid skills (required when pricePerCall > 0)",
-        },
-        receiptPda: {
-          type: "string",
-          description: "Invocation receipt PDA created by the Aegis invoke_skill instruction for on-chain fee settlement",
-        },
-        settlementMethod: {
-          type: "string",
-          description: "Settlement proof method: use 'aegis_program' when providing an on-chain invocation receipt",
+          description: "Deprecated alias for x-payment-proof.",
         },
       },
       required: ["operatorId"],
@@ -152,13 +147,13 @@ const TOOLS = [
   {
     name: "aegis_get_trust_score",
     description:
-      "Get the 5-dimension trust score breakdown for an operator: responseQuality, guardrailPassRate, uptimeRate, reviewScore, disputeRate, and overall score.",
+      "Get the trust breakdown for one operator. Use this to evaluate whether a skill is reliable before invoking it. Returns the weighted component scores plus the overall trust score.",
     inputSchema: {
       type: "object" as const,
       properties: {
         operatorId: {
           type: "string",
-          description: "The operator ID",
+          description: "Required operator ID. Fetch it from aegis_get_operator or aegis_list_operators first.",
         },
       },
       required: ["operatorId"],
@@ -167,17 +162,17 @@ const TOOLS = [
   {
     name: "aegis_search_operators",
     description:
-      "Full-text search across all operators by name and tagline. Returns matching operators with relevance.",
+      "Search operators by free text when you do not know the exact slug. This is the fastest tool for finding candidates by name or short description.",
     inputSchema: {
       type: "object" as const,
       properties: {
         query: {
           type: "string",
-          description: "Search query string",
+          description: "Required search text. Example: 'sentiment analysis', 'code review', or 'solana security'.",
         },
         limit: {
           type: "number",
-          description: "Max results (default: 10)",
+          description: "Optional maximum number of matches to return. Default is 10.",
         },
       },
       required: ["query"],
@@ -186,148 +181,61 @@ const TOOLS = [
   {
     name: "aegis_get_categories",
     description:
-      "Get all operator categories with the count of active operators in each.",
+      "List all active marketplace categories and the number of operators in each one. Use this to discover what kinds of skills are available before filtering.",
     inputSchema: {
       type: "object" as const,
       properties: {},
     },
   },
+];
+
+const RESOURCE_TEMPLATES = [
   {
-    name: "aegis_get_stats",
-    description:
-      "Get overall Aegis marketplace statistics: total operators, invocations, earnings, validators, trust scores, disputes, and guardrail stats.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {},
-    },
+    uriTemplate: "aegis://operators/{slug}/metadata",
+    name: "operator-metadata",
+    description: "Public metadata for a marketplace operator, including pricing, tags, and on-chain pointers.",
+    mimeType: "application/json",
   },
   {
-    name: "aegis_discover_tools",
-    description:
-      "Trigger the Aegis Discovery Engine to crawl GitHub, MCP registries, and AI tool directories for new operators. Returns a summary of what was found and onboarded.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        source: {
-          type: "string",
-          enum: ["github", "awesome-lists", "huggingface", "all"],
-          default: "all",
-        },
+    uriTemplate: "aegis://operators/{slug}/trust",
+    name: "operator-trust",
+    description: "Trust breakdown for a marketplace operator.",
+    mimeType: "application/json",
+  },
+];
+
+const PROMPTS = [
+  {
+    name: "marketplace_explore",
+    description: "Generate a guided workflow for discovering the best Aegis operators for a task.",
+    arguments: [
+      {
+        name: "goal",
+        description: "What the agent is trying to accomplish.",
+        required: true,
       },
-    },
-  },
-  {
-    name: "aegis_discovery_stats",
-    description:
-      "Get statistics about the Aegis Discovery Engine - how many operators were auto-discovered vs manually registered, security scan results, and growth metrics.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {},
-    },
-  },
-  {
-    name: "aegis_list_tasks",
-    description:
-      "Browse open tasks and bounties on the Aegis marketplace. Filter by category, status, search term. Agents can find work to bid on.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        category: { type: "string" },
-        status: { type: "string", enum: ["open", "assigned", "in-review", "completed"], default: "open" },
-        search: { type: "string" },
-        limit: { type: "number", default: 10 },
+      {
+        name: "constraints",
+        description: "Optional cost, latency, category, or trust constraints.",
+        required: false,
       },
-    },
+    ],
   },
   {
-    name: "aegis_create_task",
-    description:
-      "Post a new task/bounty on Aegis. Set title, description, category, budget in USDC, and requirements. AI agents will compete to deliver.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        title: { type: "string" },
-        description: { type: "string" },
-        category: { type: "string" },
-        budgetAmount: { type: "number" },
-        tags: { type: "array", items: { type: "string" } },
-        requirements: { type: "string" },
+    name: "operator_unlock",
+    description: "Generate a workflow for evaluating and unlocking one operator's private SKILL.md content.",
+    arguments: [
+      {
+        name: "slug",
+        description: "The operator slug to inspect and unlock.",
+        required: true,
       },
-      required: ["title", "description", "category", "budgetAmount"],
-    },
-  },
-  {
-    name: "aegis_submit_proposal",
-    description:
-      "Submit a proposal/bid for a task. Include your price, cover letter, and time estimate.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        taskId: { type: "string" },
-        amount: { type: "number" },
-        coverLetter: { type: "string" },
-        timeEstimate: { type: "string" },
+      {
+        name: "wallet",
+        description: "Optional caller wallet to use for paid invocation flows.",
+        required: false,
       },
-      required: ["taskId", "amount", "coverLetter"],
-    },
-  },
-  {
-    name: "aegis_agent_register",
-    description:
-      "Register as an AI agent on Aegis. Get an API key for programmatic access. Set your name, bio, and capabilities.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        name: { type: "string" },
-        bio: { type: "string" },
-        capabilities: { type: "array", items: { type: "string" } },
-        walletAddress: { type: "string" },
-        createWallet: { type: "boolean", description: "Create an OWS wallet for this agent (requires OWS installed)" },
-      },
-      required: ["name"],
-    },
-  },
-  {
-    name: "aegis_launch_operator_token",
-    description:
-      "Launch a Bags token for an operator. Creates token metadata and generates launch transactions via the Bags API.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        operatorSlug: { type: "string", description: "The operator slug (e.g. 'solana-code-auditor')" },
-        symbol: { type: "string", description: "Token symbol, max 10 characters" },
-        description: { type: "string", description: "Token description" },
-        imageUrl: { type: "string", description: "URL to the token image" },
-      },
-      required: ["operatorSlug", "symbol", "description", "imageUrl"],
-    },
-  },
-  {
-    name: "aegis_get_operator_token",
-    description:
-      "Get Bags token data for an operator, including mint address, status, pool info, and fee share config.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        operatorSlug: { type: "string", description: "The operator slug" },
-      },
-      required: ["operatorSlug"],
-    },
-  },
-  {
-    name: "aegis_trade_operator_token",
-    description:
-      "Get a trade quote for an operator's Bags token. Specify buy or sell and the amount in lamports.",
-    inputSchema: {
-      type: "object" as const,
-      properties: {
-        operatorSlug: { type: "string", description: "The operator slug" },
-        action: { type: "string", enum: ["buy", "sell"], description: "Buy or sell" },
-        amountLamports: { type: "string", description: "Amount in lamports" },
-        slippageBps: { type: "number", description: "Slippage tolerance in basis points (default: 50)" },
-      },
-      required: ["operatorSlug", "action", "amountLamports"],
-    },
+    ],
   },
 ];
 
@@ -360,6 +268,301 @@ function jsonrpcError(
   data?: unknown,
 ): JsonRpcResponse {
   return { jsonrpc: "2.0", id, error: { code, message, data } };
+}
+
+function serializeOperatorSummary(op: any) {
+  return {
+    id: op._id,
+    slug: op.slug,
+    name: op.name,
+    tagline: op.tagline,
+    description: op.description,
+    category: op.category,
+    trustScore: op.trustScore,
+    totalInvocations: op.totalInvocations,
+    successfulInvocations: op.successfulInvocations,
+    totalEarned: op.totalEarned,
+    pricePerCall: op.pricePerCall,
+    avgResponseMs: op.avgResponseMs,
+    hasPrivateSkill: typeof op.skill === "string" && op.skill.trim().length > 0,
+    healthStatus: op.healthStatus,
+    tags: op.tags || [],
+    docsUrl: op.docsUrl || null,
+    githubUrl: op.githubUrl || null,
+    metadataUri: op.onChainMetadataUri || null,
+    creatorWallet: op.creatorWallet || null,
+    createdAt: op.createdAt,
+    updatedAt: op.updatedAt,
+  };
+}
+
+async function buildMcpPaymentRequiredResponse(operator: any, callerWallet: string) {
+  const operatorId = String(operator.id);
+  const checkoutUrl = buildCheckoutUrl({ mode: "mcp", operatorId });
+  const { amount, amountAtomic, assetMint, hasAegisSettlement } = await buildOperatorPaymentContext({
+    operator,
+    callerWallet: callerWallet && callerWallet !== "mcp-agent" ? callerWallet : undefined,
+  });
+
+  return {
+    error: "Payment Required",
+    code: 402,
+    message: hasAegisSettlement
+      ? `This skill requires payment of ${amount.toFixed(6)} USDC to invoke.`
+      : "This skill requires payment, but the operator is missing on-chain settlement metadata required for MCP payment instructions.",
+    x402Version: 2,
+    operatorId,
+    operatorSlug: operator.slug,
+    operatorName: operator.name,
+    payment: {
+      amount: amount.toFixed(6),
+      amountAtomic,
+      currency: "USDC",
+      chain: "solana",
+      network: getSolanaNetworkId(),
+      asset: assetMint,
+      recipient: operator.onChainProgramId || null,
+      checkoutUrl,
+      settlement: {
+        method: "aegis_program",
+        programId: operator.onChainProgramId || null,
+        configPda: operator.onChainConfigPda || null,
+        operatorPda: operator.onChainOperatorPda || null,
+        operatorId: operator.onChainOperatorId ?? null,
+        creatorWallet: operator.creatorWallet || null,
+      },
+    },
+    instructions: hasAegisSettlement
+      ? {
+          step1: "Open payment.checkoutUrl and sign and send the payment.",
+          step2: "Get the updated MCP command from checkout and call aegis_invoke_operator again.",
+          step3: "Use that MCP command to get the result.",
+        }
+      : {
+          step1: "Register this operator on-chain with Aegis settlement metadata before using paid MCP invocation.",
+        },
+  };
+}
+
+async function listMcpResources() {
+  const topOperators = await listOperators({
+    sortBy: "trust",
+    limit: 20,
+    offset: 0,
+    activeOnly: true,
+  });
+
+  return [
+    {
+      uri: "aegis://marketplace/operators",
+      name: "marketplace-operators",
+      description: "Searchable operator listing. Supports query params: limit, offset, search, category, sortBy.",
+      mimeType: "application/json",
+    },
+    {
+      uri: "aegis://marketplace/categories",
+      name: "marketplace-categories",
+      description: "Marketplace operator counts grouped by category.",
+      mimeType: "application/json",
+    },
+    {
+      uri: "aegis://marketplace/stats",
+      name: "marketplace-stats",
+      description: "Aegis marketplace and guardrail summary statistics.",
+      mimeType: "application/json",
+    },
+    ...topOperators.operators.flatMap((op: any) => ([
+      {
+        uri: `aegis://operators/${op.slug}/metadata`,
+        name: `${op.slug}-metadata`,
+        description: `Public metadata for ${op.name}`,
+        mimeType: "application/json",
+      },
+      {
+        uri: `aegis://operators/${op.slug}/trust`,
+        name: `${op.slug}-trust`,
+        description: `Trust score breakdown for ${op.name}`,
+        mimeType: "application/json",
+      },
+    ])),
+  ];
+}
+
+async function readMcpResource(uri: string) {
+  const parsed = new URL(uri);
+  if (parsed.protocol !== "aegis:") {
+    throw new Error(`Unsupported resource URI: ${uri}`);
+  }
+
+  if (parsed.hostname === "marketplace") {
+    if (parsed.pathname === "/stats") {
+      const [protocol, guardrails] = await Promise.all([getProtocolStats(), getGuardrailStats()]);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify({ protocol, guardrails }, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (parsed.pathname === "/categories") {
+      const result = await OperatorModel.aggregate([
+        { $match: { isActive: true } },
+        { $group: { _id: "$category", count: { $sum: 1 }, avgTrust: { $avg: "$trustScore" } } },
+        { $sort: { count: -1 } },
+      ]);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify({
+              categories: result.map((row: any) => ({
+                category: row._id || "other",
+                count: row.count,
+                avgTrust: Math.round(row.avgTrust ?? 0),
+              })),
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    if (parsed.pathname === "/operators") {
+      const limit = Math.min(Number(parsed.searchParams.get("limit")) || 20, 100);
+      const offset = Math.max(Number(parsed.searchParams.get("offset")) || 0, 0);
+      const sortBy = (parsed.searchParams.get("sortBy") as "trust" | "invocations" | "earnings" | "newest" | null) || "trust";
+      const search = parsed.searchParams.get("search") || undefined;
+      const category = parsed.searchParams.get("category") || undefined;
+      const result = await listOperators({
+        limit,
+        offset,
+        sortBy,
+        search,
+        category,
+        activeOnly: true,
+      });
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify({
+              total: result.total,
+              count: result.operators.length,
+              operators: result.operators.map(serializeOperatorSummary),
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  if (parsed.hostname === "operators") {
+    const [, slug, leaf] = parsed.pathname.split("/");
+    if (!slug || !leaf) {
+      throw new Error(`Invalid operator resource URI: ${uri}`);
+    }
+
+    const operator: any = await getOperatorBySlug(slug);
+    if (!operator) {
+      throw new Error(`Operator not found for slug: ${slug}`);
+    }
+
+    if (leaf === "metadata") {
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify(serializeOperatorSummary(operator), null, 2),
+          },
+        ],
+      };
+    }
+
+    if (leaf === "trust") {
+      const operatorId = operator.id ?? operator._id;
+      const trust = await getTrustBreakdown(operatorId as any);
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: "application/json",
+            text: JSON.stringify({
+              operatorId,
+              slug: operator.slug,
+              name: operator.name,
+              trust,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  throw new Error(`Unknown resource URI: ${uri}`);
+}
+
+function getPrompt(name: string, args: Record<string, unknown>) {
+  switch (name) {
+    case "marketplace_explore": {
+      const goal = (args.goal as string) || "Find the best Aegis operators for the current task.";
+      const constraints = (args.constraints as string) || "No additional constraints provided.";
+      return {
+        description: "Guided marketplace discovery workflow",
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: [
+                `Goal: ${goal}`,
+                `Constraints: ${constraints}`,
+                "Use aegis_list_operators or the aegis://marketplace/operators resource to gather candidates.",
+                "For the strongest candidates, inspect aegis_get_operator and aegis_get_trust_score or read aegis://operators/{slug}/metadata and aegis://operators/{slug}/trust.",
+                "Recommend the best operator choices with a tradeoff table covering trust, price, latency, and category fit.",
+              ].join("\n"),
+            },
+          },
+        ],
+      };
+    }
+
+    case "operator_unlock": {
+      const slug = args.slug as string;
+      if (!slug) {
+        throw new Error("slug is required for operator_unlock");
+      }
+      const wallet = args.wallet as string | undefined;
+      return {
+        description: "Guided operator evaluation and unlock workflow",
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: [
+                `Inspect operator slug: ${slug}`,
+                "First review public metadata and trust before invoking.",
+                `Read aegis://operators/${slug}/metadata and aegis://operators/${slug}/trust, or call aegis_get_operator for the same operator.`,
+                wallet
+                  ? `If the operator is paid, use x-payer-wallet ${wallet} and provide x-payment-proof when calling aegis_invoke_operator.`
+                  : "If the operator is paid, obtain confirmed payment proof before calling aegis_invoke_operator.",
+                "After unlock, summarize the private SKILL.md content as executable instructions for the calling agent.",
+              ].join("\n"),
+            },
+          },
+        ],
+      };
+    }
+
+    default:
+      throw new Error(`Unknown prompt: ${name}`);
+  }
 }
 
 // ────────────────────────────────────────────────────────────
@@ -496,11 +699,26 @@ async function executeTool(
           };
         }
 
-        const callerWallet = (args.callerWallet as string) || "mcp-agent";
+        const callerWallet = (args["x-payer-wallet"] as string) || (args.callerWallet as string) || "mcp-agent";
         const payload = args.payload ?? {};
-        const txSignature = args.txSignature as string | undefined;
-        const receiptPda = args.receiptPda as string | undefined;
-        const settlementMethod = args.settlementMethod as "legacy_transfer" | "aegis_program" | undefined;
+        const txSignature = (args["x-payment-proof"] as string) || (args.txSignature as string | undefined);
+
+        const listedPrice = parseFloat(operator.pricePerCall || "0");
+        if (listedPrice > 0 && !txSignature) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  await buildMcpPaymentRequiredResponse(operator, callerWallet),
+                  null,
+                  2,
+                ),
+              },
+            ],
+            isError: true,
+          };
+        }
 
         // Rate limit by caller wallet
         const rl = await checkRateLimit(`wallet:${callerWallet}`, "invoke.execute", 60, 60);
@@ -522,8 +740,6 @@ async function executeTool(
             callerWallet,
             payload,
             txSignature,
-            receiptPda,
-            settlementMethod,
             source: "mcp",
           });
 
@@ -565,8 +781,8 @@ async function executeTool(
                       message: err.message,
                       operatorId: operator.id,
                       operatorSlug: operator.slug,
-                      callerWallet,
                       pricePerCall: operator.pricePerCall,
+                      payment: await buildMcpPaymentRequiredResponse(operator, callerWallet),
                     },
                     null,
                     2,
@@ -682,446 +898,6 @@ async function executeTool(
         };
       }
 
-      // ── Get Stats ──
-      case "aegis_get_stats": {
-        const [protocol, guardrail] = await Promise.all([
-          getProtocolStats(),
-          getGuardrailStats(),
-        ]);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
-                {
-                  protocol,
-                  guardrails: guardrail,
-                },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
-
-      // ── Discover Tools ──
-      case "aegis_discover_tools": {
-        try {
-          // @ts-ignore - discovery module may not exist yet
-          const { runDiscoveryPipeline } = await import("./discovery/pipeline");
-          const run = await runDiscoveryPipeline();
-          return { content: [{ type: "text", text: JSON.stringify(run, null, 2) }] };
-        } catch (err: any) {
-          return { content: [{ type: "text", text: `Discovery engine not available: ${err.message}` }] };
-        }
-      }
-
-      // ── Discovery Stats ──
-      case "aegis_discovery_stats": {
-        // @ts-ignore - import path resolved at runtime
-        const { OperatorModel } = await import("./db");
-        const discovered = await OperatorModel.countDocuments({ source: "discovery-engine" });
-        const manual = await OperatorModel.countDocuments({ source: { $ne: "discovery-engine" } });
-        const total = discovered + manual;
-        const avgTrust = await OperatorModel.aggregate([
-          { $match: { source: "discovery-engine" } },
-          { $group: { _id: null, avg: { $avg: "$trustScore" } } },
-        ]);
-        return {
-          content: [{ type: "text", text: JSON.stringify({
-            totalOperators: total,
-            discoveredOperators: discovered,
-            manualOperators: manual,
-            discoveryPercentage: total > 0 ? Math.round((discovered / total) * 100) : 0,
-            avgDiscoveredTrustScore: avgTrust[0]?.avg ?? 0,
-          }, null, 2) }],
-        };
-      }
-
-      // ── List Tasks ──
-      case "aegis_list_tasks": {
-        const limit = Math.min(Number(args.limit) || 10, 50);
-        const result = await listTasks({
-          category: args.category as string | undefined,
-          status: (args.status as string) || "open",
-          search: args.search as string | undefined,
-          limit,
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
-                {
-                  total: result.total,
-                  count: result.tasks.length,
-                  tasks: result.tasks.map((t: any) => ({
-                    id: t._id,
-                    title: t.title,
-                    category: t.category,
-                    status: t.status,
-                    budgetAmount: t.budgetAmount,
-                    proposalsCount: t.proposalsCount,
-                    createdAt: t.createdAt,
-                  })),
-                },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
-
-      // ── Create Task ──
-      case "aegis_create_task": {
-        const title = args.title as string;
-        const description = args.description as string;
-        const category = args.category as string;
-        const budgetAmount = Number(args.budgetAmount);
-        if (typeof args.title === 'string' && args.title.length > 200) {
-          return { content: [{ type: "text", text: "Title too long (max 200 chars)" }], isError: true };
-        }
-        if (typeof args.description === 'string' && args.description.length > 5000) {
-          return { content: [{ type: "text", text: "Description too long (max 5000 chars)" }], isError: true };
-        }
-        if (!title || !description || !category || !budgetAmount) {
-          return {
-            content: [{ type: "text", text: "Error: title, description, category, and budgetAmount are required" }],
-            isError: true,
-          };
-        }
-        const task = await createTask({
-          title,
-          description,
-          category: category as any,
-          budgetAmount,
-          budget: String(budgetAmount) as any,
-          tags: (args.tags as string[]) || [],
-          requirements: (args.requirements as string) || null,
-          clientWallet: "mcp-agent",
-          status: "open" as any,
-          proposalsCount: 0,
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
-                { success: true, taskId: task._id, title: task.title, status: task.status },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
-
-      // ── Submit Proposal ──
-      case "aegis_submit_proposal": {
-        const taskId = args.taskId as string;
-        const amount = Number(args.amount);
-        const coverLetter = args.coverLetter as string;
-        if (typeof args.coverLetter === 'string' && args.coverLetter.length > 5000) {
-          return { content: [{ type: "text", text: "Cover letter too long (max 5000 chars)" }], isError: true };
-        }
-        if (!taskId || !amount || !coverLetter) {
-          return {
-            content: [{ type: "text", text: "Error: taskId, amount, and coverLetter are required" }],
-            isError: true,
-          };
-        }
-        const proposal = await createProposal({
-          taskId: toObjectId(taskId) as any,
-          agentId: toObjectId("000000000000000000000000") as any,
-          amount,
-          coverLetter,
-          timeEstimate: (args.timeEstimate as string) || null,
-          status: "pending" as any,
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(
-                { success: true, proposalId: proposal._id, taskId, amount, status: proposal.status },
-                null,
-                2,
-              ),
-            },
-          ],
-        };
-      }
-
-      // ── Agent Register ──
-      case "aegis_agent_register": {
-        const agentName = args.name as string;
-        if (typeof args.name === 'string' && args.name.length > 100) {
-          return { content: [{ type: "text", text: "Name too long (max 100 chars)" }], isError: true };
-        }
-        if (typeof args.bio === 'string' && args.bio.length > 2000) {
-          return { content: [{ type: "text", text: "Bio too long (max 2000 chars)" }], isError: true };
-        }
-        if (!agentName) {
-          return {
-            content: [{ type: "text", text: "Error: name is required" }],
-            isError: true,
-          };
-        }
-        const rawKey = `aegis_${crypto.randomBytes(32).toString("hex")}`;
-        const apiKeyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
-        const agent = await createAgent({
-          name: agentName,
-          bio: (args.bio as string) || null,
-          capabilities: (args.capabilities as string[]) || [],
-          walletAddress: (args.walletAddress as string) || null,
-          apiKeyHash,
-          apiKeyExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
-          reputation: 0,
-          completedTasks: 0,
-          totalProposals: 0,
-          isVerified: false,
-        });
-        // OWS wallet creation (optional)
-        let wallet = null;
-        if (args.createWallet) {
-          const { isOwsInstalled, createOwsWallet } = await import("./ows");
-          if (await isOwsInstalled()) {
-            wallet = await createOwsWallet(`aegis-agent-${agent._id}`);
-          }
-        }
-
-        // Include wallet info in response if created
-        const response: any = {
-          success: true,
-          agentId: agent._id,
-          name: agent.name,
-          apiKey: rawKey,
-          warning: "Store this API key securely - it cannot be retrieved again.",
-        };
-        if (wallet) {
-          response.wallet = {
-            name: wallet.name,
-            solanaAddress: wallet.solanaAddress,
-            message: "Fund your Solana address with USDC to start invoking operators",
-          };
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(response, null, 2),
-            },
-          ],
-        };
-      }
-
-      // ── Launch Operator Token (Bags) ──
-      case "aegis_launch_operator_token": {
-        const operatorSlug = args.operatorSlug as string;
-        const symbol = args.symbol as string;
-        const description = args.description as string;
-        const imageUrl = args.imageUrl as string;
-
-        if (!operatorSlug || !symbol || !description || !imageUrl) {
-          return {
-            content: [{ type: "text", text: "Error: operatorSlug, symbol, description, and imageUrl are required" }],
-            isError: true,
-          };
-        }
-
-        if (symbol.length > 10) {
-          return {
-            content: [{ type: "text", text: "Error: symbol must be 10 characters or fewer" }],
-            isError: true,
-          };
-        }
-
-        const existingOp = await getOperatorBySlug(operatorSlug);
-        if (!existingOp) {
-          return {
-            content: [{ type: "text", text: `No operator found with slug "${operatorSlug}"` }],
-            isError: true,
-          };
-        }
-
-        const existingToken = await OperatorTokenModel.findOne({ operatorSlug });
-        if (existingToken) {
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify({
-                error: "Token already launched for this operator",
-                tokenMint: existingToken.tokenMint,
-                symbol: existingToken.symbol,
-                status: existingToken.status,
-              }, null, 2),
-            }],
-            isError: true,
-          };
-        }
-
-        try {
-          const tokenName = `Aegis: ${(existingOp as any).name}`;
-          const info = await bags.tokenLaunch.createInfo({
-            name: tokenName,
-            symbol,
-            description,
-            image: imageUrl,
-          });
-
-          const launchTx = await bags.tokenLaunch.createLaunchTx({
-            tokenMint: info.metadataUri,
-            payer: (existingOp as any).creatorWallet,
-          });
-
-          await OperatorTokenModel.create({
-            operatorSlug,
-            tokenMint: launchTx.tokenMint,
-            symbol,
-            name: tokenName,
-            status: "PRE_LAUNCH",
-            configKey: launchTx.configKey,
-            launchedAt: new Date(),
-          });
-
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify({
-                success: true,
-                tokenMint: launchTx.tokenMint,
-                metadataUri: info.metadataUri,
-                configKey: launchTx.configKey,
-                transactions: launchTx.transactions,
-                operatorSlug,
-                symbol,
-                name: tokenName,
-              }, null, 2),
-            }],
-          };
-        } catch (err: any) {
-          const msg = err instanceof BagsApiError
-            ? `Bags API error (${err.status}): ${err.message}`
-            : err.message || String(err);
-          return { content: [{ type: "text", text: msg }], isError: true };
-        }
-      }
-
-      // ── Get Operator Token (Bags) ──
-      case "aegis_get_operator_token": {
-        const slug = args.operatorSlug as string;
-        if (!slug) {
-          return { content: [{ type: "text", text: "Error: operatorSlug is required" }], isError: true };
-        }
-
-        const token = await OperatorTokenModel.findOne({ operatorSlug: slug }).lean();
-        if (!token) {
-          return { content: [{ type: "text", text: `No token found for operator "${slug}"` }], isError: true };
-        }
-
-        // Try to enrich with live data
-        let poolInfo = null;
-        let feeShareConfig = null;
-        try {
-          poolInfo = await bags.pool.byTokenMint({ tokenMint: token.tokenMint });
-        } catch { /* ignore */ }
-
-        try {
-          const partnerWallet = process.env.BAGS_PARTNER_WALLET;
-          if (partnerWallet) {
-            const adminList = await bags.feeShare.adminList(partnerWallet);
-            if (adminList) {
-              const match = adminList.tokens.find((t: any) => t.baseMint === token.tokenMint);
-              if (match) {
-                feeShareConfig = { claimers: match.claimers, basisPoints: match.basisPoints };
-              }
-            }
-          }
-        } catch { /* ignore */ }
-
-        return {
-          content: [{
-            type: "text",
-            text: JSON.stringify({
-              operatorSlug: token.operatorSlug,
-              tokenMint: token.tokenMint,
-              name: token.name,
-              symbol: token.symbol,
-              status: token.status,
-              configKey: token.configKey,
-              currentPrice: token.currentPrice,
-              totalTradingVolume: token.totalTradingVolume,
-              totalFeesEarned: token.totalFeesEarned,
-              pool: poolInfo,
-              feeShareConfig: feeShareConfig || token.feeShareConfig,
-              launchedAt: token.launchedAt,
-            }, null, 2),
-          }],
-        };
-      }
-
-      // ── Trade Operator Token (Bags) ──
-      case "aegis_trade_operator_token": {
-        const slug = args.operatorSlug as string;
-        const action = args.action as string;
-        const amountLamports = args.amountLamports as string;
-        const slippageBps = (args.slippageBps as number) || 50;
-
-        if (!slug || !action || !amountLamports) {
-          return {
-            content: [{ type: "text", text: "Error: operatorSlug, action, and amountLamports are required" }],
-            isError: true,
-          };
-        }
-
-        const token = await OperatorTokenModel.findOne({ operatorSlug: slug }).lean();
-        if (!token) {
-          return { content: [{ type: "text", text: `No token found for operator "${slug}"` }], isError: true };
-        }
-
-        const SOL_MINT = "So11111111111111111111111111111111111111112";
-        const inputMint = action === "buy" ? SOL_MINT : token.tokenMint;
-        const outputMint = action === "buy" ? token.tokenMint : SOL_MINT;
-
-        try {
-          const quote = await bags.trade.quote({
-            inputMint,
-            outputMint,
-            amount: amountLamports,
-            slippageBps,
-          });
-
-          if (!quote) {
-            return { content: [{ type: "text", text: "Could not get quote - Bags API key may not be configured" }], isError: true };
-          }
-
-          return {
-            content: [{
-              type: "text",
-              text: JSON.stringify({
-                operatorSlug: slug,
-                action,
-                tokenMint: token.tokenMint,
-                symbol: token.symbol,
-                inAmount: quote.inAmount,
-                outAmount: quote.outAmount,
-                priceImpactPct: quote.priceImpactPct,
-                route: quote.routePlan,
-                slippageBps,
-              }, null, 2),
-            }],
-          };
-        } catch (err: any) {
-          const msg = err instanceof BagsApiError
-            ? `Bags API error (${err.status}): ${err.message}`
-            : err.message || String(err);
-          return { content: [{ type: "text", text: msg }], isError: true };
-        }
-      }
-
       default:
         return {
           content: [{ type: "text", text: `Unknown tool: ${name}` }],
@@ -1144,15 +920,6 @@ export async function handleMCP(req: Request, res: Response) {
   // Security response headers
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
-
-  // MCP API key authentication (when MCP_API_KEY env var is set)
-  const mcpKey = process.env.MCP_API_KEY;
-  if (mcpKey) {
-    const providedKey = (req.headers["x-api-key"] as string) || (req.headers["authorization"] as string || "").replace("Bearer ", "");
-    if (providedKey !== mcpKey) {
-      return res.status(401).json(jsonrpcError(null, -32000, "Unauthorized"));
-    }
-  }
 
   // Validate content type
   const contentType = req.headers["content-type"];
@@ -1184,6 +951,8 @@ export async function handleMCP(req: Request, res: Response) {
             protocolVersion: MCP_VERSION,
             capabilities: {
               tools: { listChanged: false },
+              resources: { subscribe: false, listChanged: false },
+              prompts: { listChanged: false },
             },
             serverInfo: {
               name: SERVER_NAME,
@@ -1208,6 +977,73 @@ export async function handleMCP(req: Request, res: Response) {
             tools: TOOLS,
           }),
         );
+        return;
+      }
+
+      // ── List Resources ──
+      case "resources/list": {
+        const resources = await listMcpResources();
+        res.json(
+          jsonrpcSuccess(id ?? null, {
+            resources,
+          }),
+        );
+        return;
+      }
+
+      // ── List Resource Templates ──
+      case "resources/templates/list": {
+        res.json(
+          jsonrpcSuccess(id ?? null, {
+            resourceTemplates: RESOURCE_TEMPLATES,
+          }),
+        );
+        return;
+      }
+
+      // ── Read Resource ──
+      case "resources/read": {
+        const uri = (params as any)?.uri as string;
+        if (!uri) {
+          res.json(jsonrpcError(id ?? null, -32602, "Missing resource URI in params.uri"));
+          return;
+        }
+
+        try {
+          const result = await readMcpResource(uri);
+          res.json(jsonrpcSuccess(id ?? null, result));
+        } catch (err: any) {
+          res.json(jsonrpcError(id ?? null, -32002, err.message || "Failed to read resource"));
+        }
+        return;
+      }
+
+      // ── List Prompts ──
+      case "prompts/list": {
+        res.json(
+          jsonrpcSuccess(id ?? null, {
+            prompts: PROMPTS,
+          }),
+        );
+        return;
+      }
+
+      // ── Get Prompt ──
+      case "prompts/get": {
+        const promptName = (params as any)?.name as string;
+        const promptArgs = ((params as any)?.arguments ?? {}) as Record<string, unknown>;
+
+        if (!promptName) {
+          res.json(jsonrpcError(id ?? null, -32602, "Missing prompt name in params.name"));
+          return;
+        }
+
+        try {
+          const prompt = getPrompt(promptName, promptArgs);
+          res.json(jsonrpcSuccess(id ?? null, prompt));
+        } catch (err: any) {
+          res.json(jsonrpcError(id ?? null, -32602, err.message || "Failed to load prompt"));
+        }
         return;
       }
 
@@ -1264,9 +1100,21 @@ export function handleMCPDiscovery(_req: Request, res: Response) {
     name: SERVER_NAME,
     version: SERVER_VERSION,
     description:
-      "AI Agent Skills Marketplace on Solana - 400+ operators, 16 MCP tools, trust scoring, NeMo guardrails, task marketplace, Bags token trading, and USDC payments",
+      "AI Agent Skills Marketplace on Solana - operator discovery, paid skill unlocks, trust scoring, NeMo guardrails, and USDC payments",
     protocolVersion: MCP_VERSION,
+    capabilities: {
+      tools: true,
+      resources: true,
+      prompts: true,
+    },
     tools: TOOLS.map((t) => ({ name: t.name, description: t.description })),
+    resources: [
+      "aegis://marketplace/operators",
+      "aegis://marketplace/categories",
+      "aegis://marketplace/stats",
+    ],
+    resourceTemplates: RESOURCE_TEMPLATES,
+    prompts: PROMPTS.map((prompt) => ({ name: prompt.name, description: prompt.description })),
     endpoint: "/api/mcp",
   });
 }

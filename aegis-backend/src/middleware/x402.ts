@@ -6,7 +6,8 @@
 import { Request, Response, NextFunction } from "express";
 import { OperatorModel } from "../db.js";
 import { ENV } from "../_core/env.js";
-import { getDecodedOperator, getDecodedProtocolConfig, getSolanaNetworkId, getUsdcMintForCluster } from "../solana.js";
+import { getSolanaNetworkId, getUsdcMintForCluster } from "../solana.js";
+import { buildCheckoutUrl, buildOperatorPaymentContext, buildRestRetryTemplate, sanitizeInvokePayload } from "../payment-plan.js";
 
 export interface X402PaymentInfo {
   required: boolean;
@@ -17,9 +18,14 @@ export interface X402PaymentInfo {
   network: string;
   assetMint?: string;
   description: string;
+  operatorId?: string;
   operatorSlug: string;
+  operatorName?: string;
+  callerWallet?: string;
+  requestBody?: unknown;
+  checkoutUrl?: string;
   settlement?: {
-    method: "legacy_transfer" | "aegis_program";
+    method: "aegis_program";
     programId?: string;
     configPda?: string;
     operatorPda?: string;
@@ -71,6 +77,7 @@ export function send402(res: Response, info: X402PaymentInfo): void {
   const amountAtomic = String(Math.round(parseFloat(info.amount) * 1e6));
   const usdcMint = info.assetMint || getUsdcMintForCluster();
   const networkId = getSolanaNetworkId();
+  const step1 = "Open payment.checkoutUrl and sign and send the payment.";
 
   const x402Body = {
     x402Version: 2,
@@ -111,6 +118,9 @@ export function send402(res: Response, info: X402PaymentInfo): void {
     code: 402,
     message: `This skill requires payment of ${info.amount} ${info.currency} to invoke.`,
     x402Version: 2,
+    operatorId: info.operatorId || null,
+    operatorSlug: info.operatorSlug,
+    operatorName: info.operatorName || info.operatorSlug,
     payment: {
       amount: info.amount,
       amountAtomic,
@@ -119,21 +129,13 @@ export function send402(res: Response, info: X402PaymentInfo): void {
       recipient: info.recipient,
       network: info.network,
       asset: usdcMint,
+      checkoutUrl: info.checkoutUrl || null,
       settlement: info.settlement,
     },
     instructions: {
-      step1: info.settlement?.method === "aegis_program"
-        ? "Sign an Aegis invoke_skill transaction on Solana to settle the fee split on-chain"
-        : "Sign a Solana USDC transfer transaction to the recipient address",
-      step2: "Retry this request with X-Payment-Proof header containing the transaction signature",
-      step3: "Include X-Payer-Wallet header with your wallet address",
-      step4: info.settlement?.method === "aegis_program"
-        ? "Include X-Invocation-Receipt with the receipt PDA created by the Aegis program"
-        : undefined,
-    },
-    protocols: {
-      x402: "https://x402.org",
-      mpp: "https://docs.stripe.com/payments/machine/mpp",
+      step1,
+      step2: "Get the updated curl command from checkout and call the invoke endpoint again.",
+      step3: "Use that curl command to get the result.",
     },
   });
 }
@@ -183,43 +185,40 @@ export function x402PaymentGate() {
         return next();
       }
 
-      let assetMint: string | undefined;
-      if (operator.onChainProgramId && operator.onChainConfigPda && operator.onChainOperatorPda) {
-        try {
-          const [config, onChainOperator] = await Promise.all([
-            getDecodedProtocolConfig(operator.onChainConfigPda),
-            getDecodedOperator(operator.onChainOperatorPda),
-          ]);
-          assetMint = config.usdcMint;
-          price = Number(onChainOperator.priceUsdcBase) / 1_000_000;
-        } catch {
-          assetMint = undefined;
-        }
-      }
+      const callerWallet = (req.body?.callerWallet as string | undefined) || undefined;
+      const requestPayload = sanitizeInvokePayload(req.body);
+      const paymentContext = await buildOperatorPaymentContext({
+        operator,
+        callerWallet,
+      });
+      price = paymentContext.amount;
 
       send402(res, {
         required: true,
         amount: price.toFixed(6),
         currency: "USDC",
         chain: "solana",
-        recipient: ENV.treasuryWallet || operator.creatorWallet || "",
+        recipient: operator.onChainProgramId || "",
         network: ENV.solanaCluster,
-        assetMint,
+        assetMint: paymentContext.assetMint,
         description: `Unlock ${operator.name} (${operator.slug})`,
+        operatorId: String(operator.id ?? operator._id ?? ""),
         operatorSlug: operator.slug,
-        settlement:
-          operator.onChainProgramId && operator.onChainConfigPda && operator.onChainOperatorPda
-            ? {
-                method: "aegis_program",
-                programId: operator.onChainProgramId,
-                configPda: operator.onChainConfigPda,
-                operatorPda: operator.onChainOperatorPda,
-                operatorId: operator.onChainOperatorId ?? undefined,
-                creatorWallet: operator.creatorWallet || undefined,
-              }
-            : {
-                method: "legacy_transfer",
-              },
+        operatorName: operator.name,
+        callerWallet,
+        requestBody: requestPayload,
+        checkoutUrl: buildCheckoutUrl({
+          mode: "rest",
+          operatorSlug: operator.slug,
+        }),
+        settlement: {
+          method: "aegis_program",
+          programId: operator.onChainProgramId,
+          configPda: operator.onChainConfigPda,
+          operatorPda: operator.onChainOperatorPda,
+          operatorId: operator.onChainOperatorId ?? undefined,
+          creatorWallet: operator.creatorWallet || undefined,
+        },
       });
     } catch (err: any) {
       next(err);
