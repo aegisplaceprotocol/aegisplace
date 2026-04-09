@@ -2,6 +2,7 @@
  * Aegis Dashboard. Activity Panel
  */
 import { useMemo, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
 import { T } from "./theme";
 import { SIcon, BrandIcon } from "./icons";
@@ -9,15 +10,20 @@ import { Card, PageHeader, StatusBadge } from "./primitives";
 import { type LiveTx, formatInvocationAsTx } from "./constants";
 
 export default function ActivityPanel() {
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
   const [filter, setFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
   const [visibleCount, setVisibleCount] = useState(20);
 
-  const recentQuery = trpc.invoke.recent.useQuery(
-    { limit: 100 },
-    { staleTime: 30_000, refetchInterval: 30_000 },
+  const recentQuery = trpc.creator.recentInvocationsByWallet.useQuery(
+    { walletAddress, limit: 100 },
+    { staleTime: 30_000, refetchInterval: 30_000, enabled: queryEnabled },
   );
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
-  const rawStats = statsQuery.data as Record<string, unknown> | undefined;
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
 
   const allTxs: LiveTx[] = useMemo(() => {
     if (!recentQuery.data) return [];
@@ -33,7 +39,7 @@ export default function ActivityPanel() {
     ? Math.round(allTxs.reduce((acc, tx) => acc + (parseInt(tx.latency) || 0), 0) / allTxs.length)
     : null;
   const avgLatency = avgLatencyMs != null ? `${avgLatencyMs}ms` : "—";
-  const totalFees = rawStats?.totalEarnings ? `$${parseFloat(String(rawStats.totalEarnings)).toFixed(2)}` : "—";
+  const totalFees = earningsQuery.data?.total ? `$${parseFloat(String(earningsQuery.data.total)).toFixed(2)}` : "—";
 
   const filterTabs: Array<{ key: typeof filter; label: string }> = [
     { key: "all",       label: "All" },
@@ -44,7 +50,7 @@ export default function ActivityPanel() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <PageHeader title="Activity" subtitle="Transaction log. real-time invocation history" />
+      <PageHeader title="Activity" subtitle="Invocation history for operators owned by the connected wallet" />
 
       {/* Filter tabs + stats bar */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>

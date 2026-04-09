@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { toast } from "sonner";
 import ConnectWalletButton from "@/components/ConnectWalletButton";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 /* -- Link types ---------------------------------------------------------- */
 interface NavLink {
@@ -33,7 +33,6 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Earn",
     links: [
       { label: "Creator Economy", href: "/earn", page: true, description: "Upload skills, earn per invocation" },
-      { label: "Create Skill", href: "/skill-marketplace?tab=earn", page: true, description: "Register a wallet-owned skill on Solana" },
       { label: "Deploy Operator", href: "/submit", page: true, description: "Bond stake and start earning" },
       { label: "Bags.fm Integration", href: "/skill-fi", page: true, description: "Trade operator tokens on Bags", iconUrl: "/assets/solana-gradient_e9806652.png" },
       { label: "Tasks & Bounties", href: "/tasks", page: true, description: "Open work and rewards" },
@@ -77,7 +76,7 @@ const FLAT_LINKS: NavLink[] = [
 /* -- Component ----------------------------------------------------------- */
 
 export default function Navbar() {
-  const { isAuthenticated } = useAuth();
+  const { connected } = useWallet();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -280,12 +279,7 @@ export default function Navbar() {
 
           {/* -- Right side CTAs ----------------------------------------- */}
           <div className="hidden xl:flex items-center gap-1.5 shrink-0">
-            {/* Dashboard (authenticated) */}
-            {isAuthenticated && (
-              <a href="/dashboard" className="text-[12px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors px-3 py-2">
-                Dashboard
-              </a>
-            )}
+            <ConnectWalletButton />
 
             <button
               type="button"
@@ -296,13 +290,14 @@ export default function Navbar() {
               Open IDE
             </button>
 
-            <button
-              type="button"
-              onClick={() => showComingSoonToast("Launch App")}
-              className="text-[12px] font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-md hover:bg-zinc-200 transition-colors duration-200"
-            >
-              Launch App
-            </button>
+            {connected && (
+              <a
+                href="/dashboard"
+                className="text-[12px] font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-md hover:bg-zinc-200 transition-colors duration-200"
+              >
+                Dashboard
+              </a>
+            )}
           </div>
 
           {/* -- Mobile toggle ------------------------------------------- */}
@@ -400,6 +395,15 @@ export default function Navbar() {
 
             {/* Mobile CTAs */}
             <div className="pt-4 border-t border-white/[0.07] space-y-3">
+              {connected && (
+                <a
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-center py-2.5 text-[12px] font-medium text-zinc-950 bg-white rounded-lg hover:bg-zinc-200 transition-colors duration-200"
+                >
+                  Dashboard
+                </a>
+              )}
               <button
                 onClick={() => { toast("Source code coming soon", { description: "The repository will be public once the protocol launches." }); setMobileOpen(false); }}
                 className="flex items-center gap-3 py-2.5 px-3 text-[13px] font-medium text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer w-full"

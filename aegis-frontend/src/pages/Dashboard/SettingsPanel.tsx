@@ -1,38 +1,23 @@
 /**
  * Aegis Dashboard. Settings Panel
  */
-import { useState, useCallback } from "react";
+import { useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { T } from "./theme";
-import { SIcon } from "./icons";
 import { Card, PageHeader, CardHead } from "./primitives";
 
 export default function SettingsPanel() {
-  const [displayName, setDisplayName] = useState("");
-  const [apiKeyCopied, setApiKeyCopied] = useState(false);
+  const { publicKey } = useWallet();
   const [preferences, setPreferences] = useState({
     guardrailNotifications: true,
     emailAlerts: false,
     autoClaimFees: true,
   });
 
-  const WALLET = "7f3aGh23jKlMnOpQrStUvWxDk9x";
-  const MASKED_KEY = "sk-aegis-\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022DK9x";
-
-  const handleCopyKey = useCallback(() => {
-    navigator.clipboard.writeText(MASKED_KEY).then(() => {
-      setApiKeyCopied(true);
-      setTimeout(() => setApiKeyCopied(false), 1500);
-    });
-  }, []);
+  const walletAddress = publicKey?.toBase58() ?? "No wallet connected";
 
   const togglePref = (key: keyof typeof preferences) => {
     setPreferences((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "10px 12px", borderRadius: 6, fontSize: 13,
-    color: T.text95, background: T.white3, border: `1px solid ${T.border}`,
-    outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -53,51 +38,24 @@ export default function SettingsPanel() {
               padding: "10px 12px", borderRadius: 6, fontSize: 12, color: T.text30,
               background: T.white3, fontFamily: "'JetBrains Mono', monospace",
               border: `1px solid ${T.border}`, letterSpacing: "0.04em",
-            }}>{WALLET}</div>
-          </div>
-          <div>
-            <label style={labelStyle}>Display Name</label>
-            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter display name..." style={inputStyle} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button style={{
-              padding: "8px 20px", borderRadius: 6, border: `1px solid ${T.border}`,
-              background: T.white6, color: T.text50, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-            }}>Save Changes</button>
+            }}>{walletAddress}</div>
           </div>
         </div>
       </Card>
 
       <Card>
         <CardHead label="API Keys" />
-        <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={labelStyle}>Active API Key</label>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
-              borderRadius: 6, background: T.white3, border: `1px solid ${T.border}`,
-            }}>
-              <code style={{ flex: 1, fontSize: 12, color: T.text30, fontFamily: "'JetBrains Mono', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
-                {MASKED_KEY}
-              </code>
-              <button onClick={handleCopyKey} style={{
-                display: "flex", alignItems: "center", gap: 4, padding: "4px 10px",
-                borderRadius: 4, border: `1px solid ${T.border}`, background: T.white6,
-                color: apiKeyCopied ? T.text80 : T.text30, fontSize: 11, fontWeight: 500,
-                cursor: "pointer", letterSpacing: "0.02em", transition: "all 0.15s", flexShrink: 0,
-              }}>
-                <SIcon name="copy" size={11} />
-                {apiKeyCopied ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button style={{
-              padding: "8px 20px", borderRadius: 6, border: `1px solid rgba(245,158,11,0.25)`,
-              background: "rgba(245,158,11,0.06)", color: "rgba(245,158,11,0.75)",
-              fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
-            }}>Regenerate Key</button>
+        <div style={{ padding: 20 }}>
+          <div style={{
+            padding: "12px 14px",
+            borderRadius: 6,
+            background: T.white3,
+            border: `1px solid ${T.border}`,
+            fontSize: 12,
+            color: T.text30,
+            lineHeight: 1.6,
+          }}>
+            API key management is locked in this dashboard view.
           </div>
         </div>
       </Card>

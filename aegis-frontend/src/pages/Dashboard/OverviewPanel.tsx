@@ -4,14 +4,21 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
 import { PremiumAreaChart } from "@/components/PremiumAreaChart";
 import { T } from "./theme";
 import { SIcon, BrandIcon, Spark } from "./icons";
 import {
-  type LiveTx, formatInvocationAsTx, computeNetworkHealth,
-  DEMO_SPARKLINE, DEMO_REVENUE, DEMO_OPS, FEE_SPLIT,
+  type LiveTx, formatInvocationAsTx, DEMO_SPARKLINE, FEE_SPLIT, formatUsd, parseNumericValue,
 } from "./constants";
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 /* ── Local card primitives (inline, panel-specific) ────────────────────── */
 
@@ -45,21 +52,50 @@ function CardHead({ title }: { title: string }) {
 /* ── OverviewPanel ─────────────────────────────────────────────────────── */
 
 export default function OverviewPanel() {
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
-  const opsQuery = trpc.operator.list.useQuery({ limit: 8, sortBy: "invocations" }, { staleTime: 300_000 });
-  const recentQuery = trpc.invoke.recent.useQuery(
-    { limit: 14 },
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
+
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const analyticsQuery = trpc.creator.analyticsByWallet.useQuery(
+    { walletAddress, days: 90 },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const opsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const recentQuery = trpc.creator.recentInvocationsByWallet.useQuery(
+    { walletAddress, limit: 14 },
     { staleTime: 30_000, refetchInterval: 30_000 },
   );
 
-  const stats = statsQuery.data as Record<string, unknown> | undefined;
-  const realOps: Record<string, unknown>[] = ((opsQuery.data as Record<string, unknown>)?.operators as Record<string, unknown>[]) ?? [];
+  const creatorEarnings = earningsQuery.data;
+  const creatorAnalytics = analyticsQuery.data;
+  const realOps = (opsQuery.data ?? []) as Array<Record<string, unknown>>;
+  const earningsByOperator = creatorEarnings?.byOperator ?? [];
 
-  const totalInvocations: number = (stats?.totalInvocations as number) ?? 0;
-  const totalEarnings: number = stats?.totalEarnings ? parseFloat(String(stats.totalEarnings)) : 0;
-  const totalOperators: number = (stats?.totalOperators as number) ?? 0;
-  const realOperators: number = (stats?.realOperators as number) ?? 0;
-  const guardrailStatus: string = ((stats?.guardrails as Record<string, unknown>)?.serverStatus as string) ?? "standby";
+  const earningsTotal = parseNumericValue(creatorEarnings?.total);
+  const operatorRevenueTotal = realOps.reduce((sum, op) => sum + parseNumericValue(op.totalEarned), 0);
+  const byOperatorRevenueTotal = earningsByOperator.reduce((sum, op) => sum + parseNumericValue(op.total), 0);
+  const totalEarnings = Math.max(earningsTotal, operatorRevenueTotal, byOperatorRevenueTotal);
+  const totalInvocations = realOps.reduce((sum, op) => sum + Number(op.totalInvocations ?? 0), 0);
+  const totalOperators = realOps.length;
+  const activeOperators = realOps.filter((op) => Boolean(op.isActive)).length;
+  const successfulInvocations = realOps.reduce((sum, op) => sum + Number(op.successfulInvocations ?? 0), 0);
+  const avgResponseMs = totalInvocations > 0
+    ? realOps.reduce((sum, op) => sum + (Number(op.avgResponseMs ?? 0) * Number(op.totalInvocations ?? 0)), 0) / totalInvocations
+    : 0;
+  const successRate = totalInvocations > 0 ? (successfulInvocations / totalInvocations) * 100 : 0;
+  const last30dRevenue = parseNumericValue(creatorEarnings?.last30d);
+
+  const operatorRevenueMap = useMemo(() => {
+    const entries = earningsByOperator.map((entry) => [String(entry.operatorId), parseNumericValue(entry.total)]);
+    return new Map(entries);
+  }, [earningsByOperator]);
 
   const feed = useMemo<LiveTx[]>(() => {
     if (!recentQuery.data) return [];
@@ -67,12 +103,33 @@ export default function OverviewPanel() {
   }, [recentQuery.data]);
 
   const revenueData = useMemo(() => {
-    const scale = totalEarnings / (DEMO_REVENUE.reduce((a, b) => a + b, 0) * 100 / DEMO_REVENUE.length);
-    return DEMO_REVENUE.map((v, i) => ({
-      date: new Date(Date.now() - (27 - i) * 86400000),
-      value: v * scale,
-    }));
-  }, [totalEarnings]);
+    const daily = creatorAnalytics?.daily ?? [];
+    const revenueByDay = new Map(daily.map((entry) => [entry.date, parseNumericValue(entry.revenue)]));
+    const series = [] as { date: Date; value: number }[];
+
+    for (let offset = 89; offset >= 0; offset -= 1) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - offset);
+      const key = toDateKey(date);
+      series.push({
+        date: new Date(date),
+        value: revenueByDay.get(key) ?? 0,
+      });
+    }
+
+    return series;
+  }, [creatorAnalytics]);
+
+  const networkHealth = useMemo(() => ([
+    { label: "Invocation Success", value: totalInvocations > 0 ? Number(successRate.toFixed(1)) : "--", unit: totalInvocations > 0 ? "%" : "", bar: successRate },
+    { label: "Avg Response", value: totalInvocations > 0 ? Math.round(avgResponseMs) : "--", unit: totalInvocations > 0 ? "ms" : "", bar: totalInvocations > 0 ? Math.max(0, 100 - Math.min(avgResponseMs / 20, 100)) : 0 },
+    { label: "Active Operators", value: totalOperators > 0 ? activeOperators : "--", unit: "", bar: totalOperators > 0 ? (activeOperators / totalOperators) * 100 : 0 },
+    { label: "30d Revenue", value: formatUsd(last30dRevenue), unit: "", bar: totalEarnings > 0 ? Math.min((last30dRevenue / Math.max(totalEarnings, 1)) * 100, 100) : 0 },
+    { label: "Portfolio Share", value: totalOperators > 0 ? `${totalOperators}` : "--", unit: totalOperators > 0 ? " ops" : "", bar: totalOperators > 0 ? 100 : 0 },
+  ]), [activeOperators, avgResponseMs, last30dRevenue, successRate, totalEarnings, totalInvocations, totalOperators]);
+
+  const estimatedGrossFees = totalEarnings > 0 ? totalEarnings / (FEE_SPLIT[0].pct / 100) : 0;
 
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
@@ -90,7 +147,7 @@ export default function OverviewPanel() {
           borderRadius: 20, background: "rgba(255,255,255,0.03)", border: `1px solid ${T.borderSubtle}`,
         }}>
           <span style={{ fontSize: 11, color: T.text30 }}>
-            {"\u2022"} All Systems Live
+            {"\u2022"} Creator Dashboard
           </span>
         </div>
       </div>
@@ -98,10 +155,10 @@ export default function OverviewPanel() {
       {/* Hero stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 32 }}>
         {[
-          { label: "Total Invocations", value: totalInvocations.toLocaleString(), delta: "real executions", sub: "across all operators" },
-          { label: "Protocol Revenue", value: `$${Math.floor(totalEarnings).toLocaleString()}`, delta: "from real usage", sub: "USDC settled on Solana" },
-          { label: "Active Operators", value: totalOperators.toLocaleString(), delta: `${realOperators} with endpoints`, sub: "skills available to agents" },
-          { label: "Guardrails", value: guardrailStatus === "active" ? "Active" : "Standby", delta: guardrailStatus === "active" ? "NVIDIA NeMo" : "not enabled", sub: `${(stats?.guardrails as Record<string, unknown>)?.totalChecks ?? 0} checks performed` },
+          { label: "Live Invocations", value: totalInvocations.toLocaleString(), delta: "real executions", sub: "across your operators" },
+          { label: "Revenue", value: formatUsd(totalEarnings), delta: "creator share", sub: "earned by your wallet" },
+          { label: "Your Operators", value: totalOperators.toLocaleString(), delta: `${activeOperators} active`, sub: "owned by connected wallet" },
+          { label: "Execution Success", value: totalInvocations > 0 ? `${successRate.toFixed(1)}%` : "--", delta: `${successfulInvocations.toLocaleString()} successful`, sub: "based on your operator calls" },
         ].map((s, i) => (
           <div key={i}>
             <div style={{ fontSize: 11, letterSpacing: "0.04em", fontWeight: 500, color: T.text20, marginBottom: 12 }}>{s.label}</div>
@@ -118,16 +175,21 @@ export default function OverviewPanel() {
         <Card>
           <CardHead title="Revenue (90d)" />
           <div style={{ padding: "4px 0 0" }}>
-            <PremiumAreaChart data={revenueData} height={260} formatValue={(v: number) => `$${Math.round(v).toLocaleString()}`} />
+            <PremiumAreaChart data={revenueData} height={260} formatValue={(v: number) => formatUsd(v)} />
           </div>
         </Card>
 
         <Card>
           <div style={{ padding: "13px 16px 10px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 11, letterSpacing: "0.02em", fontWeight: 500, color: T.text25 }}>Live Invocations</span>
-            <span style={{ fontSize: 10, color: T.text30 }}>{"\u2022"} Live</span>
+            <span style={{ fontSize: 10, color: T.text30 }}>{"\u2022"} Your Operators</span>
           </div>
           <div style={{ overflow: "hidden", height: 250 }}>
+            {feed.length === 0 && (
+              <div style={{ padding: "20px 14px", fontSize: 11, color: T.text20 }}>
+                No recent invocations for this wallet's operators yet.
+              </div>
+            )}
             <AnimatePresence initial={false}>
               {feed.map((tx) => (
                 <motion.div
@@ -157,10 +219,10 @@ export default function OverviewPanel() {
       {/* Top Operators */}
       <Card>
         <div style={{ padding: "13px 20px 11px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 11, letterSpacing: "0.02em", fontWeight: 500, color: T.text25 }}>Top Operators</span>
+          <span style={{ fontSize: 11, letterSpacing: "0.02em", fontWeight: 500, color: T.text25 }}>Your Operators</span>
           <Link href="/marketplace">
             <span style={{ fontSize: 11, color: T.text20, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, transition: "color 0.15s" }}>
-              View all {totalOperators.toLocaleString()} <SIcon name="arrow-right" size={12} />
+              View marketplace <SIcon name="arrow-right" size={12} />
             </span>
           </Link>
         </div>
@@ -176,14 +238,12 @@ export default function OverviewPanel() {
             <span style={{ fontSize: 10, letterSpacing: "0.02em", fontWeight: 500, color: T.text12, width: 72, textAlign: "right" as const }}>Revenue</span>
           </div>
         </div>
-        {(realOps.length ? realOps : DEMO_OPS).slice(0, 8).map((op: Record<string, unknown>, i: number) => {
+        {realOps.slice(0, 8).map((op: Record<string, unknown>, i: number) => {
           const name = (op.name as string) ?? "";
           const cat = ((op.category as string) ?? "").replace(/-/g, " ");
           const invocations: number = (op.totalInvocations as number) ?? (op.invocations as number) ?? 0;
-          const totalEarnedObj = op.totalEarned as Record<string, string> | undefined;
-          const earned: number = totalEarnedObj?.$numberDecimal
-            ? parseFloat(totalEarnedObj.$numberDecimal)
-            : (op.earned as number) ?? 0;
+          const opId = String(op.id ?? "");
+          const earned = operatorRevenueMap.get(opId) ?? parseNumericValue(op.totalEarned ?? op.earned);
           const sr: number = (op.successfulInvocations as number) && (op.totalInvocations as number)
             ? ((op.successfulInvocations as number) / (op.totalInvocations as number)) * 100
             : (op.successRate as number) ?? 0;
@@ -209,13 +269,18 @@ export default function OverviewPanel() {
                 <span style={{ fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums", width: 50, textAlign: "right" as const, fontWeight: 500 }}>{sr.toFixed(1)}%</span>
                 <Spark data={sparkData} width={64} height={20} />
                 <span style={{ fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums", width: 80, textAlign: "right" as const }}>{invocations.toLocaleString()}</span>
-                <span style={{ fontSize: 12, color: T.text80, fontVariantNumeric: "tabular-nums", width: 72, textAlign: "right" as const, fontWeight: 500 }}>${Math.round(earned).toLocaleString()}</span>
+                <span style={{ fontSize: 12, color: T.text80, fontVariantNumeric: "tabular-nums", width: 72, textAlign: "right" as const, fontWeight: 500 }}>{formatUsd(earned)}</span>
               </div>
             </div>
           );
         })}
+        {realOps.length === 0 && (
+          <div style={{ padding: "24px 20px", fontSize: 12, color: T.text20 }}>
+            No operators connected to this wallet yet.
+          </div>
+        )}
         <div style={{ padding: "9px 20px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: T.text20 }}>Showing 8 of {totalOperators.toLocaleString()} active operators</span>
+          <span style={{ fontSize: 11, color: T.text20 }}>Showing {Math.min(realOps.length, 8)} of {totalOperators.toLocaleString()} operators owned by this wallet</span>
           <Link href="/marketplace">
             <span style={{ fontSize: 11, color: T.text20, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
               Browse marketplace <SIcon name="arrow-right" size={11} />
@@ -229,7 +294,7 @@ export default function OverviewPanel() {
         <Card>
           <CardHead title="Network Health" />
           <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-            {computeNetworkHealth(stats).map((h) => {
+            {networkHealth.map((h) => {
               const numVal = typeof h.value === "number" ? h.value : 0;
               const barW = h.bar ?? numVal;
               return (
@@ -278,12 +343,12 @@ export default function OverviewPanel() {
             </div>
             <div style={{ paddingTop: 14, borderTop: `1px solid ${T.border}`, display: "flex", flexDirection: "column", gap: 7 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                <span style={{ color: T.text30 }}>Creator earnings (total)</span>
-                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * (FEE_SPLIT[0].pct / 100)).toLocaleString()}</span>
+                <span style={{ color: T.text30 }}>Estimated gross fees</span>
+                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{formatUsd(estimatedGrossFees)}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                <span style={{ color: T.text30 }}>Total burned (est.)</span>
-                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>${Math.floor(totalEarnings * 0.005).toLocaleString()} USDC</span>
+                <span style={{ color: T.text30 }}>Creator earnings (wallet)</span>
+                <span style={{ color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>{formatUsd(totalEarnings)} USDC</span>
               </div>
             </div>
           </div>

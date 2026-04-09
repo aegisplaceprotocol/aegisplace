@@ -13,7 +13,7 @@ import { scaleTime, scaleLinear } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { LinearGradient } from "@visx/gradient";
 import { GridRows } from "@visx/grid";
-import { useTooltip, TooltipWithBounds } from "@visx/tooltip";
+import { useTooltip } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { bisector } from "d3-array";
 
@@ -113,8 +113,14 @@ function ChartInner({
     fontWeight: 300 as const,
   };
 
+  const tooltipWidth = 112;
+  const tooltipLeftPx = Math.min(
+    Math.max((tooltipLeft ?? 0) - tooltipWidth / 2, 8),
+    Math.max(8, width - tooltipWidth - 8),
+  );
+
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", overflow: "hidden", width: "100%" }}>
       <svg width={width} height={height}>
         <LinearGradient id="chart-area-fill" from={fillColorFrom} to={fillColorTo} fromOpacity={1} toOpacity={0} />
         <Group left={margin.left} top={margin.top}>
@@ -225,25 +231,30 @@ function ChartInner({
         </Group>
       </svg>
       {tooltipOpen && tooltipData && (
-        <TooltipWithBounds
-          left={tooltipLeft}
-          top={(tooltipTop ?? 0) - 44}
+        <div
           style={{
+            position: "absolute",
+            left: tooltipLeftPx,
+            top: Math.max((tooltipTop ?? 0) - 44, 8),
             background: tooltipBg,
             border: `1px solid ${tooltipBorder}`,
             borderRadius: 3,
             padding: "6px 10px",
             fontSize: 11,
+            width: tooltipWidth,
+            boxSizing: "border-box",
             boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
             pointerEvents: "none" as const,
             fontFamily: "'JetBrains Mono', 'SF Mono', monospace",
+            overflow: "hidden",
+            zIndex: 2,
           }}
         >
-          <div style={{ fontWeight: 400, color: "rgba(255,255,255,0.72)", fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
+          <div style={{ fontWeight: 400, color: "rgba(255,255,255,0.72)", fontVariantNumeric: "tabular-nums", fontSize: 12, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
             {formatValue(tooltipData.value)}
           </div>
-          <div style={{ color: "rgba(255,255,255,0.25)", marginTop: 2, fontSize: 9, fontWeight: 300 }}>{formatDate(tooltipData.date)}</div>
-        </TooltipWithBounds>
+          <div style={{ color: "rgba(255,255,255,0.25)", marginTop: 2, fontSize: 9, fontWeight: 300, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{formatDate(tooltipData.date)}</div>
+        </div>
       )}
     </div>
   );

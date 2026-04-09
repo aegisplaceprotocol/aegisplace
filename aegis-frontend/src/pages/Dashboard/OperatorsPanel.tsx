@@ -1,37 +1,68 @@
 /**
  * Aegis Dashboard. Operators Panel
  */
-import { Link } from "wouter";
+import { useMemo } from "react";
+import { Link, useLocation } from "wouter";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
-import { PremiumSparkline } from "@/components/PremiumSparkline";
 import { T } from "./theme";
 import { SIcon, BrandIcon } from "./icons";
-import { Card, PageHeader, StatTile, StatusBadge } from "./primitives";
-import { DEMO_SPARKLINE, DEMO_OPS } from "./constants";
+import { Card, PageHeader, StatTile, StatusBadge, ConnectWalletPrompt } from "./primitives";
+import { formatUsd, parseNumericValue } from "./constants";
 
 export default function OperatorsPanel() {
-  const opsQuery = trpc.operator.list.useQuery({ limit: 50, sortBy: "invocations" }, { staleTime: 300_000 });
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
-  const ops: Record<string, unknown>[] = ((opsQuery.data as Record<string, unknown>)?.operators as Record<string, unknown>[]) ?? [];
-  const stats = statsQuery.data as Record<string, unknown> | undefined;
+  const [, navigate] = useLocation();
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
 
-  const totalOps: number = (stats?.totalOperators as number) ?? 0;
-  const displayOps = ops.length ? ops : DEMO_OPS;
-  const activeCount = displayOps.filter((op: Record<string, unknown>) => op.isActive !== false).length;
+  const opsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const analyticsQuery = trpc.creator.analyticsByWallet.useQuery(
+    { walletAddress, days: 30 },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
 
-  const avgSuccess = displayOps.length
-    ? displayOps.reduce((acc: number, op: Record<string, unknown>) => {
-        const sr: number = (op.successfulInvocations as number) && (op.totalInvocations as number)
-          ? ((op.successfulInvocations as number) / (op.totalInvocations as number)) * 100
-          : (op.successRate as number) ?? 0;
+  const displayOps = (opsQuery.data ?? []) as Array<Record<string, unknown>>;
+  const totalOps = displayOps.length;
+  const activeCount = displayOps.filter((op) => op.isActive !== false).length;
+
+  const earningsByOperator = useMemo(() => {
+    const entries = (earningsQuery.data?.byOperator ?? []).map((entry) => [String(entry.operatorId), parseNumericValue(entry.total)]);
+    return new Map(entries);
+  }, [earningsQuery.data?.byOperator]);
+
+  const totalRevenue = Math.max(
+    parseNumericValue(earningsQuery.data?.total),
+    displayOps.reduce((sum, op) => sum + parseNumericValue(op.totalEarned), 0),
+  );
+
+  const avgSuccess = totalOps
+    ? displayOps.reduce((acc, op) => {
+        const totalInvocations = Number(op.totalInvocations ?? 0);
+        const successfulInvocations = Number(op.successfulInvocations ?? 0);
+        const sr = totalInvocations > 0 ? (successfulInvocations / totalInvocations) * 100 : 0;
         return acc + sr;
-      }, 0) / displayOps.length
+      }, 0) / totalOps
     : 0;
 
-  const opsWithLatency = displayOps.filter((op: Record<string, unknown>) => (op.avgResponseMs as number) != null);
+  const opsWithLatency = displayOps.filter((op) => Number(op.avgResponseMs ?? 0) > 0);
   const avgResponse = opsWithLatency.length
-    ? opsWithLatency.reduce((acc: number, op: Record<string, unknown>) => acc + (op.avgResponseMs as number), 0) / opsWithLatency.length
+    ? opsWithLatency.reduce((acc, op) => acc + Number(op.avgResponseMs ?? 0), 0) / opsWithLatency.length
     : null;
+
+  const monthlyInvocations = (analyticsQuery.data?.daily ?? []).reduce((sum, day) => sum + Number(day.invocations ?? 0), 0);
+  const monthlyRevenue = (analyticsQuery.data?.daily ?? []).reduce((sum, day) => sum + parseNumericValue(day.revenue), 0);
+
+  if (!queryEnabled) {
+    return <ConnectWalletPrompt />;
+  }
 
   return (
     <div>
@@ -55,10 +86,10 @@ export default function OperatorsPanel() {
 
       {/* 4-stat banner row */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, marginBottom: 24 }}>
-        <StatTile label="Total Operators" value={totalOps.toLocaleString()} delta="+12 this week" sub="across all categories" />
-        <StatTile label="Active Now" value={activeCount.toString()} delta="currently serving" sub="of deployed operators" />
-        <StatTile label="Avg Success Rate" value={`${avgSuccess.toFixed(1)}%`} delta="+0.5% vs last week" sub="invocation success" />
-        <StatTile label="Avg Response" value={avgResponse != null ? `${Math.round(avgResponse)}ms` : "—"} delta="p95 latency" sub="median response time" />
+        <StatTile label="Total Operators" value={totalOps.toLocaleString()} delta={`${monthlyInvocations.toLocaleString()} calls in 30d`} sub="owned by connected wallet" />
+        <StatTile label="Active Now" value={activeCount.toString()} delta={`${Math.max(totalOps - activeCount, 0)} inactive`} sub="currently serving" />
+        <StatTile label="Avg Success Rate" value={totalOps > 0 ? `${avgSuccess.toFixed(1)}%` : "—"} delta={`${monthlyInvocations.toLocaleString()} wallet-scoped invocations`} sub="across your operators" />
+        <StatTile label="Creator Revenue" value={formatUsd(totalRevenue)} delta={`${formatUsd(monthlyRevenue)} in 30d`} sub="creator share from backend" />
       </div>
 
       <Card>
@@ -86,14 +117,19 @@ export default function OperatorsPanel() {
               </tr>
             </thead>
             <tbody>
+              {displayOps.length === 0 && (
+                <tr>
+                  <td colSpan={9} style={{ padding: "28px 16px", textAlign: "center", fontSize: 12, color: T.text20 }}>
+                    No operators found for the connected wallet.
+                  </td>
+                </tr>
+              )}
               {displayOps.map((op: Record<string, unknown>, i: number) => {
                 const name: string = (op.name as string) ?? "";
+                const slug: string = (op.slug as string) ?? "";
                 const cat: string = ((op.category as string) ?? "").replace(/-/g, " ");
                 const invocations: number = (op.totalInvocations as number) ?? (op.invocations as number) ?? 0;
-                const totalEarnedObj = op.totalEarned as Record<string, string> | undefined;
-                const earned: number = totalEarnedObj?.$numberDecimal
-                  ? parseFloat(totalEarnedObj.$numberDecimal)
-                  : (op.earned as number) ?? 0;
+                const earned = earningsByOperator.get(String(op.id ?? "")) ?? parseNumericValue(op.totalEarned ?? op.earned);
                 const sr: number = (op.successfulInvocations as number) && (op.totalInvocations as number)
                   ? ((op.successfulInvocations as number) / (op.totalInvocations as number)) * 100
                   : (op.successRate as number) ?? 0;
@@ -102,7 +138,11 @@ export default function OperatorsPanel() {
                 const isActive: boolean = op.isActive !== false;
                 return (
                   <tr key={i}
-                    style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s" }}
+                    onClick={() => {
+                      if (!slug) return;
+                      navigate(`/marketplace/${slug}`);
+                    }}
+                    style={{ borderBottom: `1px solid ${T.border}`, transition: "background 0.15s", cursor: slug ? "pointer" : "default" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                   >
@@ -129,7 +169,7 @@ export default function OperatorsPanel() {
                     </td>
                     <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums" }}>{avgMs != null ? `${avgMs}ms` : "—"}</td>
                     <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text50, fontVariantNumeric: "tabular-nums" }}>{invocations.toLocaleString()}</td>
-                    <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text80, fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>${Math.round(earned).toLocaleString()}</td>
+                    <td style={{ padding: "11px 16px", textAlign: "right", fontSize: 12, color: T.text80, fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>{formatUsd(earned)}</td>
                     <td style={{ padding: "11px 16px", textAlign: "center" }}>
                       <StatusBadge status={isActive ? "active" : "inactive"} />
                     </td>
@@ -143,7 +183,7 @@ export default function OperatorsPanel() {
           </table>
         </div>
         <div style={{ padding: "10px 20px", borderTop: `1px solid ${T.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: T.text20 }}>Showing {displayOps.length} of {totalOps.toLocaleString()} operators</span>
+          <span style={{ fontSize: 11, color: T.text20 }}>Showing {displayOps.length} of {totalOps.toLocaleString()} operators owned by this wallet</span>
           <Link href="/marketplace">
             <span style={{ fontSize: 11, color: T.text20, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, transition: "color 0.15s" }}>
               Browse all <SIcon name="arrow-right" size={11} />

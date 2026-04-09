@@ -37,15 +37,39 @@ export interface ApiOperator {
   successRate: string;
 }
 
+export function parseNumericValue(value: unknown): number {
+  if (value == null) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  if (typeof value === "object" && value !== null && "$numberDecimal" in value) {
+    const parsed = parseFloat(String((value as { $numberDecimal?: unknown }).$numberDecimal ?? "0"));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  const parsed = parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function formatUsd(value: unknown): string {
+  const amount = parseNumericValue(value);
+  const absAmount = Math.abs(amount);
+  const fractionDigits = absAmount > 0 && absAmount < 1 ? 4 : 2;
+  return `$${amount.toLocaleString(undefined, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })}`;
+}
+
 /* ── Constants ─────────────────────────────────────────────────────────── */
 
 export const FEE_SPLIT = [
   { label: "Creator", pct: 85 },
   { label: "Validators", pct: 10 },
-  { label: "Stakers", pct: 3 },
-  { label: "Treasury", pct: 1.5 },
-  { label: "Insurance", pct: 0.5 },
-  { label: "Burned", pct: 0 },
+  { label: "Treasury", pct: 3 },
+  { label: "Insurance", pct: 1.5 },
+  { label: "Burn", pct: 0.5 },
 ];
 
 export interface NetworkHealthItem {
@@ -117,7 +141,7 @@ export function formatInvocationAsTx(row: {
   invocation: {
     id?: number | string;
     callerWallet?: string | null;
-    amountPaid?: string | null;
+    amountPaid?: unknown;
     success?: boolean;
     responseMs?: number | null;
     createdAt?: string | Date | null;
@@ -130,7 +154,7 @@ export function formatInvocationAsTx(row: {
   const shortCaller = wallet
     ? `${wallet.slice(0, 4)}...${wallet.slice(-4)}`
     : "anon";
-  const amount = inv.amountPaid ? `$${parseFloat(inv.amountPaid).toFixed(2)}` : "$0.00";
+  const amount = formatUsd(inv.amountPaid);
   const status: LiveTx["status"] = inv.success ? "completed" : inv.responseMs === 0 ? "pending" : "failed";
   const latency = inv.responseMs != null ? `${inv.responseMs}ms` : "--";
   const time = inv.createdAt

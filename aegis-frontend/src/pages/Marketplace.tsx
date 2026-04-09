@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -73,11 +73,6 @@ const CATEGORY_MAP: Record<string, string> = {
   "security-audit":     "Security",
   "other":              "Other",
 };
-
-const CATEGORIES = [
-  "All", "Development", "Security", "Data", "AI / ML",
-  "DeFi", "Infrastructure", "Other",
-];
 
 function shortWallet(w: string): string {
   if (!w) return "";
@@ -346,6 +341,35 @@ export default function Marketplace() {
 
   const { data: stats } = trpc.stats.overview.useQuery();
 
+  const availableCategories = useMemo(() => {
+    const ops = (data?.operators || []) as DbOperator[];
+    const present = new Set(
+      ops
+        .map((op) => CATEGORY_MAP[op.category] || op.category)
+        .filter(Boolean)
+    );
+
+    return ["All", ...Array.from(present).sort((left, right) => left.localeCompare(right))];
+  }, [data]);
+
+  const categoryCounts = useMemo(() => {
+    const ops = (data?.operators || []) as DbOperator[];
+    const counts = new Map<string, number>();
+
+    for (const op of ops) {
+      const displayCategory = CATEGORY_MAP[op.category] || op.category;
+      counts.set(displayCategory, (counts.get(displayCategory) || 0) + 1);
+    }
+
+    return counts;
+  }, [data]);
+
+  useEffect(() => {
+    if (category !== "All" && !availableCategories.includes(category)) {
+      setCategory("All");
+    }
+  }, [availableCategories, category]);
+
   const operators = useMemo(() => {
     const ops = (data?.operators || []) as DbOperator[];
     if (category === "All") return ops;
@@ -570,7 +594,7 @@ export default function Marketplace() {
             />
             <StatBlock
               label="Categories"
-              value={String(CATEGORIES.length - 1)}
+              value={String(Math.max(availableCategories.length - 1, 0))}
             />
           </motion.div>
         </div>
@@ -586,11 +610,11 @@ export default function Marketplace() {
           maxWidth: 1520, margin: "0 auto", padding: "0 48px",
           display: "flex", gap: 0, overflowX: "auto",
         }}>
-          {CATEGORIES.map((cat) => {
+          {availableCategories.map((cat) => {
             const isActive = category === cat;
             const count = cat === "All"
               ? (data?.operators || []).length
-              : (data?.operators || []).filter(op => (CATEGORY_MAP[op.category] || op.category) === cat).length;
+              : (categoryCounts.get(cat) || 0);
             return (
               <button
                 key={cat}

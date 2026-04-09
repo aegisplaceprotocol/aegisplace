@@ -18,15 +18,6 @@ interface Feature {
 
 const FEATURES: Feature[] = [
   {
-    title: "Bonded Operator Registration",
-    shortDesc: "Operators stake $AEGIS to list. Slashed if malicious.",
-    desc: "Operator creators stake $AEGIS to list. The bond is slashed if the operator is malicious, broken, or misrepresented. Economic accountability replaces GitHub stars.",
-    cmd: "agent-aegis register --stake 1000",
-    paper: "Haupt et al., MIT CSAIL",
-    category: "Security",
-    color: T.positive,
-  },
-  {
     title: "x402 Micropayments",
     shortDesc: "Native HTTP 402 payments with USDC-to-$AEGIS swap.",
     desc: "Native x402 protocol integration. Agents pay for operator invocations with USDC via standard HTTP 402. Aegis swaps USDC to $AEGIS on the backend, creating constant buy pressure from every call.",
@@ -42,7 +33,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis validate --attest --trace",
     paper: "Chan & Anderljung, GovAI",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "on-chain quality",
@@ -78,7 +69,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis invoke --sandbox strict --wasm",
     paper: "Alibaba ROME Breach, Mar 2026",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "Encrypted Credential Vault",
@@ -87,7 +78,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis vault add --key OPENAI_KEY --encrypt",
     paper: "TEE Credential Isolation",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "Network Allowlisting",
@@ -96,7 +87,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis config set --allowlist api.openai.com,github.com",
     paper: "Zero-Trust Network Architecture",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "ERC-8004 Bridge",
@@ -132,7 +123,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis challenge code-review --stake 500",
     paper: "Vitalik Buterin",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "PDA State Architecture",
@@ -168,7 +159,7 @@ const FEATURES: Feature[] = [
     cmd: "agent-aegis validator bid --operator my-translate --stake 2000",
     paper: "Two-Sided Market Design",
     category: "Security",
-    color: T.positive,
+    color: T.text50,
   },
   {
     title: "Operator Evolution",
@@ -276,7 +267,7 @@ export default function ArsenalPanel() {
     <div>
       <PageHeader
         title="Protocol Arsenal"
-        subtitle="24 technologies powering the Aegis skills marketplace"
+        subtitle="23 technologies powering the Aegis skills marketplace"
       />
 
       <div style={{ marginBottom: 24 }}>
@@ -455,7 +446,7 @@ export default function ArsenalPanel() {
           letterSpacing: "0.02em",
         }}
       >
-        24 active technologies &middot; {nvidiaCount} NVIDIA integrations &middot; {paymentCount} payment protocols
+        23 active technologies &middot; {nvidiaCount} NVIDIA integrations &middot; {paymentCount} payment protocols
         {stats.data && (
           <span> &middot; {stats.data.totalOperators.toLocaleString()} operators registered &middot; {stats.data.totalInvocations.toLocaleString()} invocations</span>
         )}

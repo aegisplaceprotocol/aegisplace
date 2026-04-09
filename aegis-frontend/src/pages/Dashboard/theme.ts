@@ -140,7 +140,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Settings",      section: "settings",      icon: "settings" },
       { label: "API Keys",      section: "api-keys",      icon: "key" },
-      { label: "Notifications", section: "notifications", icon: "bell" },
+      // { label: "Notifications", section: "notifications", icon: "bell" },
     ],
   },
 ];

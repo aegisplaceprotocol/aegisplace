@@ -9,7 +9,7 @@ import {
   updateOperator, softDeleteOperator, getOperatorsByCreator, getOperatorsByUserId,
   getOperatorCount, getOperatorEarnings,
   recordInvocation, getInvocationById, getInvocationsByOperator,
-  getInvocationsByCaller, getRecentInvocations,
+  getInvocationsByCaller, getRecentInvocations, getRecentInvocationsByCreator,
   createValidator, getValidatorByWallet, getValidatorById, listValidators,
   updateValidator, incrementValidatorCount, slashValidator,
   createBond, getBondsByOperator, releaseBond, slashBond,
@@ -165,7 +165,9 @@ export const appRouter = router({
           "code-review", "sentiment-analysis", "data-extraction",
           "image-generation", "text-generation", "translation",
           "summarization", "classification", "search",
-          "financial-analysis", "security-audit", "other"
+          "financial-analysis", "security-audit",
+          "development", "security", "data", "ai-ml", "defi", "infrastructure",
+          "other"
         ]),
         pricePerCall: z.string().optional(),
         creatorWallet: z.string().min(32).max(64),
@@ -909,6 +911,31 @@ export const appRouter = router({
   // Creator Dashboard
   // ────────────────────────────────────────────────────────
   creator: router({
+    earningsByWallet: publicProcedure
+      .input(z.object({ walletAddress: z.string().min(32).max(64) }))
+      .query(async ({ input }) => {
+        return getCreatorEarnings(input.walletAddress);
+      }),
+
+    analyticsByWallet: publicProcedure
+      .input(z.object({ walletAddress: z.string().min(32).max(64), days: z.number().min(1).max(365).default(30) }))
+      .query(async ({ input }) => {
+        return getCreatorAnalytics(input.walletAddress, input.days);
+      }),
+
+    operatorsByWallet: publicProcedure
+      .input(z.object({ walletAddress: z.string().min(32).max(64) }))
+      .query(async ({ input }) => {
+        return getCreatorOperators(input.walletAddress);
+      }),
+
+    recentInvocationsByWallet: publicProcedure
+      .input(z.object({ walletAddress: z.string().min(32).max(64), limit: z.number().min(1).max(100).default(20) }).optional())
+      .query(async ({ input }) => {
+        if (!input?.walletAddress) return [];
+        return getRecentInvocationsByCreator(input.walletAddress, input.limit ?? 20);
+      }),
+
     /** Get earnings summary for the authenticated creator */
     earnings: protectedProcedure.query(async ({ ctx }) => {
       const wallet = ctx.user.walletAddress;
@@ -937,6 +964,16 @@ export const appRouter = router({
       }
       return getCreatorOperators(wallet);
     }),
+
+    recentInvocations: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional())
+      .query(async ({ input, ctx }) => {
+        const wallet = ctx.user.walletAddress;
+        if (!wallet) {
+          return [];
+        }
+        return getRecentInvocationsByCreator(wallet, input?.limit ?? 20);
+      }),
   }),
 
   // ────────────────────────────────────────────────────────

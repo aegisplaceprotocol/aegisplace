@@ -24,6 +24,12 @@ const CATEGORY_OPTIONS = [
   ["search", "Search"],
   ["financial-analysis", "Financial Analysis"],
   ["security-audit", "Security Audit"],
+  ["development", "Development"],
+  ["security", "Security"],
+  ["data", "Data"],
+  ["ai-ml", "AI/ML"],
+  ["defi", "DeFi"],
+  ["infrastructure", "Infrastructure"],
   ["other", "Other"],
 ] as const;
 
@@ -31,8 +37,12 @@ type OnChainCluster = "devnet" | "mainnet-beta" | "testnet";
 
 export function SkillUploadPanel({
   onSuccess,
+  variant = "modal",
+  mode = "skill",
 }: {
   onSuccess?: (slug: string) => void;
+  variant?: "modal" | "page";
+  mode?: "skill" | "operator";
 }) {
   const [, navigate] = useLocation();
   const { connection } = useConnection();
@@ -53,6 +63,23 @@ export function SkillUploadPanel({
   const [docsUrl, setDocsUrl] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const isOperatorMode = mode === "operator";
+  const entityLabel = isOperatorMode ? "Operator" : "Skill";
+  const entityLabelLower = entityLabel.toLowerCase();
+  const shellStyle = variant === "page"
+    ? {
+        background: "#0d0d0f",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: "8px",
+        boxShadow: "0 0 60px rgba(0,0,0,0.5), 0 0 24px rgba(16,185,129,0.04)",
+      }
+    : {
+        background: "#0d0d0f",
+        border: "1px solid rgba(255,255,255,0.10)",
+        borderRadius: "6px",
+        boxShadow: "0 0 60px rgba(0,0,0,0.8), 0 0 24px rgba(16,185,129,0.05)",
+        height: "min(720px, calc(100vh - 2rem))",
+      } as const;
 
   const userWalletAddress = (user as { walletAddress?: string } | null)?.walletAddress ?? "";
   const walletAddress = publicKey?.toBase58() ?? userWalletAddress;
@@ -65,11 +92,12 @@ export function SkillUploadPanel({
   const slugValue = sanitizeSlug(skillSlug || skillName);
   const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
   const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
-  const canAdvance =
-    (step === 1 && Boolean(skillName.trim() && slugValue && skillCategory)) ||
-    (step === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && priceAmount.trim())) ||
-    step === 3 ||
-    step === 4;
+  const canAdvanceForStep = (currentStep: number) =>
+    (currentStep === 1 && Boolean(skillName.trim() && slugValue && skillCategory)) ||
+    (currentStep === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && priceAmount.trim())) ||
+    currentStep === 3 ||
+    currentStep === 4;
+  const canAdvance = canAdvanceForStep(step);
 
   useEffect(() => {
     if (!connected || !publicKey || authReady) return;
@@ -152,7 +180,11 @@ export function SkillUploadPanel({
         utils.operator.mine.invalidate(),
       ]);
 
-      toast.success("Skill registered on Solana and published to the marketplace");
+      toast.success(
+        isOperatorMode
+          ? "Operator registered on Solana and published to the marketplace"
+          : "Skill registered on Solana and published to the marketplace"
+      );
       if (onSuccess) {
         onSuccess(slugValue);
       } else {
@@ -161,7 +193,7 @@ export function SkillUploadPanel({
     } catch (error: any) {
       toast.error(error?.message || "Failed to upload skill");
     } finally {
-      setSubmitting(false);
+        setSubmitting(false);
     }
   }
 
@@ -172,66 +204,26 @@ export function SkillUploadPanel({
     borderRadius: "5px",
   };
   const inputFocusStyle = { borderColor: "rgba(16,185,129,0.40)" };
-  const shellStyle = {
-    background: "#0d0d0f",
-    border: "1px solid rgba(255,255,255,0.10)",
-    borderRadius: "6px",
-    boxShadow: "0 0 60px rgba(0,0,0,0.8), 0 0 24px rgba(16,185,129,0.05)",
-    height: "min(720px, calc(100vh - 2rem))",
-  } as const;
   const cardStyle = {
     border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: "5px",
     background: "rgba(255,255,255,0.03)",
   } as const;
+  const stepMeta = [
+    { id: 1, label: "Basic Info", title: `Define the ${entityLabelLower}` },
+    { id: 2, label: "Description", title: "Add private instructions" },
+    { id: 3, label: "Links", title: "Attach links and publish metadata" },
+    { id: 4, label: "Review", title: `Review and submit your ${entityLabelLower}` },
+  ] as const;
 
-  return (
-    <div className="flex w-full max-w-xl flex-col overflow-hidden" style={shellStyle} data-lenis-prevent>
-      <div className="border-b border-white/6 p-4">
-        <h2 className="text-lg font-medium tracking-[-0.025em] text-white/95">Upload Your Skill</h2>
-        <div className="mt-1 flex items-center gap-2">
-          {[1, 2, 3, 4].map((currentStep) => (
-            <div key={currentStep} className="flex items-center gap-1">
-              <div
-                className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold transition-all"
-                style={{
-                  background: currentStep <= step ? "#10B981" : "rgba(255,255,255,0.06)",
-                  color: currentStep <= step ? "#000" : "rgba(255,255,255,0.30)",
-                  boxShadow: currentStep === step ? "0 0 10px rgba(16,185,129,0.35)" : "none",
-                }}
-              >
-                {currentStep}
-              </div>
-              {currentStep < 4 ? (
-                <div
-                  className="h-px w-6 transition-all"
-                  style={{ background: currentStep < step ? "#10B981" : "rgba(255,255,255,0.08)" }}
-                />
-              ) : null}
-            </div>
-          ))}
-          <span className="ml-1 text-[10px] text-white/35">Step {step} of 4</span>
-        </div>
-      </div>
-
-      <div className="h-0.5 bg-white/4">
-        <div
-          className="h-full transition-all duration-500"
-          style={{
-            width: `${(step / 4) * 100}%`,
-            background: "#10B981",
-            boxShadow: "0 0 8px rgba(16,185,129,0.5)",
-          }}
-        />
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-4" data-lenis-prevent>
-        <div className="space-y-4">
-        {step === 1 ? (
+  function renderStepContent(currentStep: number) {
+    switch (currentStep) {
+      case 1:
+        return (
           <>
             <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Basic Info</div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/55">Skill Name</label>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">{entityLabel} Name</label>
               <input
                 type="text"
                 value={skillName}
@@ -239,7 +231,7 @@ export function SkillUploadPanel({
                   setSkillName(event.target.value);
                   if (!skillSlug) setSkillSlug(sanitizeSlug(event.target.value));
                 }}
-                placeholder="e.g. Smart Contract Auditor"
+                placeholder={isOperatorMode ? "e.g. Smart Contract Auditor" : "e.g. Smart Contract Auditor"}
                 className={inputClass}
                 style={inputStyle}
                 onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
@@ -247,7 +239,7 @@ export function SkillUploadPanel({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/55">Slug</label>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">{entityLabel} Slug</label>
               <input
                 type="text"
                 value={skillSlug}
@@ -265,7 +257,7 @@ export function SkillUploadPanel({
                 type="text"
                 value={tagline}
                 onChange={(event) => setTagline(event.target.value)}
-                placeholder="One-line value proposition for the marketplace card"
+                placeholder={`One-line value proposition for the ${entityLabelLower} card`}
                 className={inputClass}
                 style={inputStyle}
                 onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
@@ -299,11 +291,11 @@ export function SkillUploadPanel({
               </div>
             </div>
           </>
-        ) : null}
-
-        {step === 2 ? (
+        );
+      case 2:
+        return (
           <>
-            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Public Description, Private Skill & Pricing</div>
+            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Public Description, Private Instructions & Pricing</div>
             <p className="mb-3 text-xs text-white/45">Write a public marketplace description, then add the private SKILL.md content buyers unlock after payment.</p>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/55">Public Description (.md)</label>
@@ -319,7 +311,7 @@ export function SkillUploadPanel({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-white/55">Private Skill (SKILL.md)</label>
+              <label className="mb-1.5 block text-xs font-medium text-white/55">Private Instructions (SKILL.md)</label>
               <textarea
                 value={privateSkill}
                 onChange={(event) => setPrivateSkill(event.target.value)}
@@ -360,9 +352,9 @@ export function SkillUploadPanel({
               />
             </div>
           </>
-        ) : null}
-
-        {step === 3 ? (
+        );
+      case 3:
+        return (
           <>
             <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-white/40">Links & Publish</div>
             <p className="mb-3 text-xs text-white/45">Attach reference links for the marketplace listing. The public description is published openly, while the private SKILL.md stays paywalled behind the invoke route.</p>
@@ -405,7 +397,9 @@ export function SkillUploadPanel({
                   "The backend reserves your slug and stores both the public description and the private SKILL.md content",
                   "Your wallet signs the on-chain register_operator transaction",
                   "The Solana program stores the listing with a metadata URI that points to the public metadata document",
-                  "The skill becomes discoverable publicly, and the private SKILL.md is revealed only after payment",
+                  isOperatorMode
+                    ? "The operator becomes discoverable publicly, and the private SKILL.md is revealed only after payment"
+                    : "The skill becomes discoverable publicly, and the private SKILL.md is revealed only after payment",
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-2">
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0" style={{ color: "#10B981" }}>
@@ -417,15 +411,15 @@ export function SkillUploadPanel({
               </div>
             </div>
           </>
-        ) : null}
-
-        {step === 4 ? (
+        );
+      case 4:
+        return (
           <>
             <div className="mb-4 text-[9px] font-bold uppercase tracking-widest text-white/40">Review and Submit</div>
             <div className="space-y-4">
               <div className="p-4" style={cardStyle}>
-                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Skill Name</div>
-                <div className="text-sm text-white/80">{skillName || "Untitled Skill"}</div>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">{entityLabel} Name</div>
+                <div className="text-sm text-white/80">{skillName || `Untitled ${entityLabel}`}</div>
               </div>
               <div className="p-4" style={cardStyle}>
                 <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Slug</div>
@@ -468,7 +462,7 @@ export function SkillUploadPanel({
                   <ConnectWalletButton />
                 </div>
                 <p className="mt-3 text-[11px] text-white/45">
-                  Connect and authenticate a wallet first. The Upload CTA unlocks after the session refresh completes for the connected wallet.
+                  Connect and authenticate a wallet first. The {isOperatorMode ? "register" : "upload"} CTA unlocks after the session refresh completes for the connected wallet.
                 </p>
                 {connected && !authReady && authLoading ? (
                   <p className="mt-2 text-[11px] text-[#10B981]">Finalizing wallet session...</p>
@@ -476,78 +470,208 @@ export function SkillUploadPanel({
               </div>
             </div>
           </>
-        ) : null}
+        );
+      default:
+        return null;
+    }
+  }
 
-        </div>
-      </div>
+  function renderPrimaryAction(currentStep: number) {
+    if (currentStep < 4) {
+      const canContinue = canAdvanceForStep(currentStep);
+      return (
+        <button
+          type="button"
+          disabled={!canContinue}
+          onClick={() => setStep(currentStep + 1)}
+          className="bg-white/10 text-zinc-300 border border-white/25 hover:bg-white/15 hover:border-white/40 text-[13px] font-normal px-8 py-3 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Continue to Step {currentStep + 1}
+        </button>
+      );
+    }
 
-      <div className="border-t border-white/6 p-4">
-        <div className="flex gap-3">
-          {step > 1 ? (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="px-5 py-2.5 text-sm font-medium text-white/50 transition-all hover:text-white/75"
-              style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "5px" }}
-            >
-              Back
-            </button>
-          ) : null}
+    return (
+      <button
+        type="button"
+        disabled={!uploadEnabled}
+        onClick={handleUpload}
+        className="w-full py-3 text-sm font-semibold transition-all disabled:cursor-not-allowed"
+        style={{
+          background: uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)",
+          color: uploadEnabled ? "#000" : "rgba(255,255,255,0.35)",
+          borderRadius: "5px",
+          boxShadow: uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+        }}
+      >
+        {submitting || registerMutation.isPending
+          ? isOperatorMode ? "Registering Operator..." : "Uploading Skill..."
+          : connected && authReady
+            ? isOperatorMode ? "Register Operator" : "Upload Skill"
+            : isOperatorMode ? "Connect Wallet To Register" : "Connect Wallet To Upload"}
+      </button>
+    );
+  }
 
-          {step < 4 ? (
-            <button
-              type="button"
-              disabled={!canAdvance}
-              onClick={() => setStep(step + 1)}
-              className="flex-1 py-2.5 text-sm font-semibold transition-all"
+  return (
+    <div className={`flex w-full flex-col overflow-hidden ${variant === "modal" ? "max-w-xl" : "max-w-none"}`} style={shellStyle} data-lenis-prevent>
+      {variant === "modal" ? (
+        <>
+          <div className="border-b border-white/6 p-4">
+            <h2 className="text-lg font-medium tracking-[-0.025em] text-white/95">
+              {isOperatorMode ? "Register Your Operator" : "Upload Your Skill"}
+            </h2>
+            <div className="mt-1 flex items-center gap-2">
+              {[1, 2, 3, 4].map((currentStep) => (
+                <div key={currentStep} className="flex items-center gap-1">
+                  <div
+                    className="flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold transition-all"
+                    style={{
+                      background: currentStep <= step ? "#10B981" : "rgba(255,255,255,0.06)",
+                      color: currentStep <= step ? "#000" : "rgba(255,255,255,0.30)",
+                      boxShadow: currentStep === step ? "0 0 10px rgba(16,185,129,0.35)" : "none",
+                    }}
+                  >
+                    {currentStep}
+                  </div>
+                  {currentStep < 4 ? (
+                    <div
+                      className="h-px w-6 transition-all"
+                      style={{ background: currentStep < step ? "#10B981" : "rgba(255,255,255,0.08)" }}
+                    />
+                  ) : null}
+                </div>
+              ))}
+              <span className="ml-1 text-[10px] text-white/35">Step {step} of 4</span>
+            </div>
+          </div>
+
+          <div className="h-0.5 bg-white/4">
+            <div
+              className="h-full transition-all duration-500"
               style={{
-                background: canAdvance ? "#10B981" : "rgba(255,255,255,0.08)",
-                color: canAdvance ? "#000" : "rgba(255,255,255,0.35)",
-                borderRadius: "5px",
-                boxShadow: canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+                width: `${(step / 4) * 100}%`,
+                background: "#10B981",
+                boxShadow: "0 0 8px rgba(16,185,129,0.5)",
               }}
-              onMouseEnter={(event) => {
-                if (!canAdvance) return;
-                event.currentTarget.style.background = "#059669";
-                event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.background = canAdvance ? "#10B981" : "rgba(255,255,255,0.08)";
-                event.currentTarget.style.boxShadow = canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none";
-              }}
-            >
-              Continue
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={!uploadEnabled}
-              onClick={handleUpload}
-              className="flex-1 py-2.5 text-sm font-semibold transition-all"
-              style={{
-                background: uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)",
-                color: uploadEnabled ? "#000" : "rgba(255,255,255,0.35)",
-                borderRadius: "5px",
-                boxShadow: uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none",
-              }}
-              onMouseEnter={(event) => {
-                if (!uploadEnabled) return;
-                event.currentTarget.style.background = "#059669";
-                event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.background = uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)";
-                event.currentTarget.style.boxShadow = uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none";
-              }}
-            >
-              {submitting || registerMutation.isPending
-                ? "Uploading Skill..."
-                : connected && authReady
-                  ? "Upload Skill"
-                  : "Connect Wallet To Upload"}
-            </button>
-          )}
+            />
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-4" data-lenis-prevent>
+            <div className="space-y-4">{renderStepContent(step)}</div>
+          </div>
+
+          <div className="border-t border-white/6 p-4">
+            <div className="flex gap-3">
+              {step > 1 ? (
+                <button
+                  onClick={() => setStep(step - 1)}
+                  className="px-5 py-2.5 text-sm font-medium text-white/50 transition-all hover:text-white/75"
+                  style={{ border: "1px solid rgba(255,255,255,0.09)", borderRadius: "5px" }}
+                >
+                  Back
+                </button>
+              ) : null}
+
+              {step < 4 ? (
+                <button
+                  type="button"
+                  disabled={!canAdvance}
+                  onClick={() => setStep(step + 1)}
+                  className="flex-1 py-2.5 text-sm font-semibold transition-all"
+                  style={{
+                    background: canAdvance ? "#10B981" : "rgba(255,255,255,0.08)",
+                    color: canAdvance ? "#000" : "rgba(255,255,255,0.35)",
+                    borderRadius: "5px",
+                    boxShadow: canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+                  }}
+                  onMouseEnter={(event) => {
+                    if (!canAdvance) return;
+                    event.currentTarget.style.background = "#059669";
+                    event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
+                  }}
+                  onMouseLeave={(event) => {
+                    event.currentTarget.style.background = canAdvance ? "#10B981" : "rgba(255,255,255,0.08)";
+                    event.currentTarget.style.boxShadow = canAdvance ? "0 0 16px rgba(16,185,129,0.25)" : "none";
+                  }}
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!uploadEnabled}
+                  onClick={handleUpload}
+                  className="flex-1 py-2.5 text-sm font-semibold transition-all"
+                  style={{
+                    background: uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)",
+                    color: uploadEnabled ? "#000" : "rgba(255,255,255,0.35)",
+                    borderRadius: "5px",
+                    boxShadow: uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none",
+                  }}
+                  onMouseEnter={(event) => {
+                    if (!uploadEnabled) return;
+                    event.currentTarget.style.background = "#059669";
+                    event.currentTarget.style.boxShadow = "0 0 24px rgba(16,185,129,0.40)";
+                  }}
+                  onMouseLeave={(event) => {
+                    event.currentTarget.style.background = uploadEnabled ? "#10B981" : "rgba(255,255,255,0.08)";
+                    event.currentTarget.style.boxShadow = uploadEnabled ? "0 0 16px rgba(16,185,129,0.25)" : "none";
+                  }}
+                >
+                  {submitting || registerMutation.isPending
+                    ? isOperatorMode ? "Registering Operator..." : "Uploading Skill..."
+                    : connected && authReady
+                      ? isOperatorMode ? "Register Operator" : "Upload Skill"
+                      : isOperatorMode ? "Connect Wallet To Register" : "Connect Wallet To Upload"}
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="p-6 md:p-8">
+          <div className="space-y-10">
+            {stepMeta.map((meta) => {
+              const isUnlocked = step >= meta.id;
+              const isCurrent = step === meta.id;
+              const isComplete = step > meta.id;
+
+              return (
+                <section
+                  key={meta.id}
+                  className={`border border-white/8 bg-white/2 p-6 transition-all duration-300 ${isUnlocked ? "opacity-100" : "opacity-35 pointer-events-none select-none"}`}
+                >
+                  <div className="mb-6 flex items-start gap-4">
+                    <div className={`flex h-9 w-9 shrink-0 items-center justify-center text-[11px] font-medium ${isUnlocked ? "bg-white/10 text-zinc-300 border border-white/30" : "bg-white/3 text-white/30 border border-white/8"}`}>
+                      {meta.id}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-[10px] font-medium tracking-[0.18em] text-white/30">{meta.label}</div>
+                      <h3 className="mt-1 text-xl font-normal text-white/90">{meta.title}</h3>
+                    </div>
+                    {isComplete ? (
+                      <span className="ml-auto rounded-full border border-[#10B981]/30 bg-[#10B981]/10 px-2.5 py-1 text-[10px] font-medium tracking-[0.16em] text-[#10B981]">
+                        COMPLETE
+                      </span>
+                    ) : isCurrent ? (
+                      <span className="ml-auto rounded-full border border-white/10 bg-white/4 px-2.5 py-1 text-[10px] font-medium tracking-[0.16em] text-white/55">
+                        ACTIVE
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-4">{renderStepContent(meta.id)}</div>
+
+                  {isCurrent ? (
+                    <div className="mt-8">{renderPrimaryAction(meta.id)}</div>
+                  ) : null}
+                </section>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

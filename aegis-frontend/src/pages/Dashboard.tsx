@@ -1,6 +1,9 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useLocation } from "wouter";
+import { toast } from "sonner";
+import ConnectWalletButton from "@/components/ConnectWalletButton";
 import { type DashSection } from "./Dashboard/theme";
 import { T } from "./Dashboard/theme";
 import { SIcon } from "./Dashboard/icons";
@@ -57,7 +60,35 @@ function PanelSuspense({ children }: { children: React.ReactNode }) {
 export default function Dashboard() {
   const [section, setSection] = useState<DashSection>("overview");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user } = useAuth();
+  const [canEnforceAccess, setCanEnforceAccess] = useState(false);
+  const { connected, connecting, publicKey } = useWallet();
+  const [, navigate] = useLocation();
+  const hasWalletSession = connected || Boolean(publicKey);
+
+  useEffect(() => {
+    if (hasWalletSession || connecting) {
+      setCanEnforceAccess(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setCanEnforceAccess(true);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [connecting, hasWalletSession]);
+
+  useEffect(() => {
+    if (!canEnforceAccess) return;
+    toast("Please connect your wallet", {
+      description: "Connect a Solana wallet to access the dashboard.",
+    });
+    navigate("/");
+  }, [canEnforceAccess, navigate]);
+
+  if (!hasWalletSession) {
+    return null;
+  }
 
   const renderContent = () => {
     switch (section) {
@@ -135,8 +166,19 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Main content */}
-      <main style={{ flex: 1, overflowY: "auto", scrollbarWidth: "thin" as const }}>
+      <main
+        data-lenis-prevent
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          scrollbarWidth: "thin" as const,
+          overscrollBehavior: "contain",
+        }}
+      >
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+            <ConnectWalletButton />
+          </div>
           {renderContent()}
         </div>
       </main>

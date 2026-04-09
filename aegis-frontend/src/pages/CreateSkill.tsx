@@ -21,7 +21,7 @@ export default function CreateSkill() {
           </Link>
         </div>
 
-        <SkillUploadPanel />
+        <SkillUploadPanel variant="page" />
       </main>
       <MobileBottomNav />
     </div>

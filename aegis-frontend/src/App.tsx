@@ -137,6 +137,7 @@ function SmoothScroll({ children }: { children: React.ReactNode }) {
       duration: 1.1,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       touchMultiplier: 1.5,
+      prevent: (node) => node instanceof HTMLElement && Boolean(node.closest("[data-lenis-prevent]")),
     });
     function raf(time: number) {
       lenis.raf(time);

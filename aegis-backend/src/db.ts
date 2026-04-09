@@ -80,7 +80,9 @@ const operatorSchema = new mongoose.Schema(
         "code-review", "sentiment-analysis", "data-extraction",
         "image-generation", "text-generation", "translation",
         "summarization", "classification", "search",
-        "financial-analysis", "security-audit", "other",
+        "financial-analysis", "security-audit",
+        "development", "security", "data", "ai-ml", "defi", "infrastructure",
+        "other",
       ],
       default: "other",
       required: true,
@@ -721,6 +723,28 @@ export async function getRecentInvocations(limit = 20) {
   const opIds = Array.from(new Set(invocations.map(i => i.operatorId)));
   const operators = await OperatorModel.find({ _id: { $in: opIds } }).lean();
   const opMap = new Map(operators.map(o => [(o as any)._id?.toString(), o]));
+
+  return invocations.map(inv => {
+    const op = opMap.get(String(inv.operatorId)) as any;
+    return {
+      invocation: toPlain(inv),
+      operatorName: op?.name || null,
+      operatorSlug: op?.slug || null,
+    };
+  });
+}
+
+export async function getRecentInvocationsByCreator(walletAddress: string, limit = 20) {
+  const creatorOps = await OperatorModel.find({ creatorWallet: walletAddress }).select("_id name slug").lean();
+  if (creatorOps.length === 0) return [];
+
+  const opIds = creatorOps.map((op: any) => op._id);
+  const opMap = new Map(creatorOps.map((op: any) => [String(op._id), op]));
+
+  const invocations = await InvocationModel.find({ operatorId: { $in: opIds } })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
 
   return invocations.map(inv => {
     const op = opMap.get(String(inv.operatorId)) as any;
@@ -1380,7 +1404,9 @@ export async function getCreatorOperatorsWithStats(walletAddress: string) {
     id: doc._id,
     name: doc.name,
     slug: doc.slug,
+    creatorWallet: doc.creatorWallet,
     category: doc.category,
+    pricePerCall: doc.pricePerCall?.toString() || "0",
     trustScore: doc.trustScore,
     totalInvocations: doc.totalInvocations,
     successfulInvocations: doc.successfulInvocations,
@@ -1388,6 +1414,9 @@ export async function getCreatorOperatorsWithStats(walletAddress: string) {
     avgResponseMs: doc.avgResponseMs,
     isActive: doc.isActive,
     isVerified: doc.isVerified,
+    description: doc.description ?? null,
+    tagline: doc.tagline ?? null,
+    tags: Array.isArray(doc.tags) ? doc.tags : [],
     createdAt: doc.createdAt,
   }));
 }

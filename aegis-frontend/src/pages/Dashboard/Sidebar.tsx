@@ -1,25 +1,79 @@
 /**
  * Aegis Dashboard. Sidebar Navigation
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link } from "wouter";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
 import { T } from "./theme";
 import { type DashSection, NAV_GROUPS } from "./theme";
 import { SIcon } from "./icons";
 import { Spark } from "./icons";
-import { DEMO_SPARKLINE } from "./constants";
+import { DEMO_SPARKLINE, formatUsd, parseNumericValue } from "./constants";
+
+const LOCKED_SECTIONS = new Set([
+  "royalties",
+  "missions",
+  "delegation",
+  "leaderboard",
+  "mission-blueprints",
+  "validators",
+  "disputes",
+  "x402-tracker",
+  "burn-tracker",
+  "economics",
+  "swarms",
+  "research",
+  "bags",
+  "playground",
+  "ecosystem",
+  "api-keys"
+]);
 
 export function Sidebar({ section, setSection, onClose, isMobile }: {
   section: DashSection; setSection: (s: DashSection) => void; onClose?: () => void; isMobile?: boolean;
 }) {
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
   const [copied, setCopied] = useState(false);
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
-  const stats = statsQuery.data as Record<string, unknown> | undefined;
-  const displayRevenue = stats?.totalEarnings
-    ? `$${Math.floor(parseFloat(String(stats.totalEarnings))).toLocaleString()}`
-    : "...";
-  const displayOps = (stats?.totalOperators as number)?.toLocaleString() ?? "0";
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const analyticsQuery = trpc.creator.analyticsByWallet.useQuery(
+    { walletAddress, days: 14 },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const operatorsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+
+  const operators = operatorsQuery.data ?? [];
+  const earningsTotal = parseNumericValue(earningsQuery.data?.total);
+  const byOperatorTotal = (earningsQuery.data?.byOperator ?? []).reduce((sum, entry) => sum + parseNumericValue(entry.total), 0);
+  const operatorTotal = operators.reduce((sum, op) => sum + parseNumericValue(op.totalEarned), 0);
+  const creatorRevenue = Math.max(earningsTotal, byOperatorTotal, operatorTotal);
+  const displayRevenue = queryEnabled ? formatUsd(creatorRevenue) : "...";
+  const displayOps = operators.length.toLocaleString();
+  const totalInvocations = operators.reduce((sum, op) => sum + Number(op.totalInvocations ?? 0), 0);
+  const successfulInvocations = operators.reduce((sum, op) => sum + Number(op.successfulInvocations ?? 0), 0);
+  const successRate = totalInvocations > 0 ? `${((successfulInvocations / totalInvocations) * 100).toFixed(1)}%` : "--";
+
+  const revenueSpark = useMemo(() => {
+    const entries = analyticsQuery.data?.daily ?? [];
+    if (entries.length === 0) return DEMO_SPARKLINE.map(() => 0);
+
+    const revenueByDay = new Map(entries.map((entry) => [entry.date, parseNumericValue(entry.revenue)]));
+    return Array.from({ length: 14 }, (_, index) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - (13 - index));
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      return revenueByDay.get(key) ?? 0;
+    });
+  }, [analyticsQuery.data]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText("7f3aGh23jKlMnOpQrStUvWxDk9x").then(() => {
@@ -48,7 +102,9 @@ export function Sidebar({ section, setSection, onClose, isMobile }: {
   }, []);
 
   return (
-    <div style={{
+    <div
+      data-lenis-prevent
+      style={{
       width: 260,
       height: "100%",
       background: T.bg,
@@ -72,7 +128,7 @@ export function Sidebar({ section, setSection, onClose, isMobile }: {
           </div>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <Spark data={DEMO_SPARKLINE} width={210} height={20} />
+          <Spark data={revenueSpark} width={210} height={20} />
         </div>
         <div style={{ display: "flex", gap: 24 }}>
           <div>
@@ -82,16 +138,17 @@ export function Sidebar({ section, setSection, onClose, isMobile }: {
           <div>
             <div style={{ fontSize: 9, fontWeight: 400, color: T.text20, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4 }}>Success</div>
             <div style={{ fontSize: 13, fontWeight: 300, color: T.text50, fontVariantNumeric: "tabular-nums" }}>
-              {(stats?.totalInvocations as number) > 0
-                ? `${(((stats?.health as Record<string, number>)?.healthy || 0) / Math.max(1, (stats?.realOperators as number || 1)) * 100).toFixed(1)}%`
-                : "--"}
+              {successRate}
             </div>
           </div>
         </div>
       </div>
 
       {/* Nav groups */}
-      <nav style={{ flex: 1, overflowY: "auto", padding: "0 8px" }}>
+      <nav
+        data-lenis-prevent
+        style={{ flex: 1, overflowY: "auto", padding: "0 8px", overscrollBehavior: "contain" }}
+      >
         {NAV_GROUPS.map((g) => {
           const isOpen = openGroups[g.title] ?? false;
           const hasActive = g.items.some(item => item.section === section);
@@ -147,6 +204,7 @@ export function Sidebar({ section, setSection, onClose, isMobile }: {
               }}>
                 {g.items.map((item, index) => {
                   const active = item.section === section;
+                  const isLocked = LOCKED_SECTIONS.has(item.section);
                   return (
                     <div
                       key={item.section}
@@ -157,31 +215,45 @@ export function Sidebar({ section, setSection, onClose, isMobile }: {
                       }}
                     >
                       <button
-                        onClick={() => { setSection(item.section); onClose?.(); }}
+                        onClick={() => {
+                          if (isLocked) return;
+                          setSection(item.section);
+                          onClose?.();
+                        }}
+                        disabled={isLocked}
+                        aria-disabled={isLocked}
                         style={{
                           width: "100%",
                           display: "flex",
                           alignItems: "center",
-                          gap: 10,
+                          justifyContent: "space-between",
                           padding: "9px 12px",
                           borderRadius: 0,
                           border: "none",
                           textAlign: "left" as const,
                           fontSize: 12,
-                          cursor: "pointer",
+                          cursor: isLocked ? "not-allowed" : "pointer",
                           background: "transparent",
                           borderLeft: active ? `1.5px solid rgba(255,255,255,0.15)` : "1.5px solid transparent",
-                          color: active ? T.text50 : T.text20,
+                          color: active ? T.text50 : isLocked ? T.text12 : T.text20,
                           fontWeight: 400,
                           transition: "all 0.15s",
+                          opacity: isLocked ? 0.8 : 1,
                         }}
                       >
-                        {item.section === "bags" ? (
-                          <img src="/assets/icons/bags.svg" alt="" width={13} height={13} style={{ opacity: active ? 0.5 : 0.2, flexShrink: 0 }} />
-                        ) : (
-                          <SIcon name={item.icon} size={13} className={active ? "text-white/30" : "text-white/10"} />
+                        <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          {item.section === "bags" ? (
+                            <img src="/assets/icons/bags.svg" alt="" width={13} height={13} style={{ opacity: active ? 0.5 : isLocked ? 0.12 : 0.2, flexShrink: 0 }} />
+                          ) : (
+                            <SIcon name={item.icon} size={13} className={active ? "text-white/30" : isLocked ? "text-white/5" : "text-white/10"} />
+                          )}
+                          <span>{item.label}</span>
+                        </span>
+                        {isLocked && (
+                          <span style={{ display: "inline-flex", alignItems: "center", color: T.text20, flexShrink: 0 }}>
+                            <SIcon name="lock" size={12} />
+                          </span>
                         )}
-                        <span>{item.label}</span>
                       </button>
                     </div>
                   );

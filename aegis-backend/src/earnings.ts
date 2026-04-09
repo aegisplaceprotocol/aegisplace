@@ -39,7 +39,9 @@ export interface CreatorOperatorStats {
   id: number;
   name: string;
   slug: string;
+  creatorWallet: string;
   category: string;
+  pricePerCall: string;
   trustScore: number;
   totalInvocations: number;
   successfulInvocations: number;
@@ -47,6 +49,9 @@ export interface CreatorOperatorStats {
   avgResponseMs: number;
   isActive: boolean;
   isVerified: boolean;
+  description: string | null;
+  tagline: string | null;
+  tags: string[];
   createdAt: Date;
 }
 

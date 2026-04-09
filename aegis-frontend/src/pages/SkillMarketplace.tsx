@@ -102,19 +102,26 @@ function mapOperatorToSkill(op: any): MarketplaceSkill {
   };
 }
 
-const CATEGORIES = ["All", "Security", "DeFi", "Analytics", "Infrastructure", "Development", "Communication", "NFTs", "Productivity"];
-
 const PRICING_MODELS = ["All", "per-use", "subscription", "revenue-share", "tiered", "staked"];
 
 const CATEGORY_ICONS: Record<string, string> = {
-  Security: "🛡",
-  DeFi: "📈",
-  Analytics: "📊",
-  Infrastructure: "⚙",
-  Development: "{ }",
-  Communication: "💬",
-  NFTs: "◈",
-  Productivity: "⚡",
+  security: "🛡",
+  "security-audit": "🛡",
+  defi: "📈",
+  "financial-analysis": "📈",
+  data: "📊",
+  "data-extraction": "📊",
+  infrastructure: "⚙",
+  development: "{ }",
+  "code-review": "{ }",
+  "ai-ml": "◈",
+  "text-generation": "◈",
+  "image-generation": "◈",
+  "sentiment-analysis": "◈",
+  translation: "💬",
+  summarization: "⚡",
+  classification: "⚡",
+  search: "✦",
   Uncategorized: "✦",
   All: "✦",
 };
@@ -131,12 +138,24 @@ const CATEGORY_OPTIONS = [
   ["search", "Search"],
   ["financial-analysis", "Financial Analysis"],
   ["security-audit", "Security Audit"],
+  ["development", "Development"],
+  ["security", "Security"],
+  ["data", "Data"],
+  ["ai-ml", "AI/ML"],
+  ["defi", "DeFi"],
+  ["infrastructure", "Infrastructure"],
   ["other", "Other"],
 ] as const;
+
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(CATEGORY_OPTIONS) as Record<string, string>;
 
 function parseOptionalJson(value: string) {
   if (!value.trim()) return undefined;
   return JSON.parse(value);
+}
+
+function categoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] ?? category;
 }
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
@@ -1244,6 +1263,13 @@ export default function SkillMarketplace() {
     invocations: "trust",
   };
 
+  const { data: categorySeedData } = trpc.operator.list.useQuery({
+    limit: 100,
+    offset: 0,
+    sortBy: "trust",
+    ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+  });
+
   const { data: operatorData, isLoading } = trpc.operator.list.useQuery({
     limit: 50,
     offset: 0,
@@ -1258,6 +1284,23 @@ export default function SkillMarketplace() {
     if (!operatorData?.operators) return [];
     return operatorData.operators.map(mapOperatorToSkill);
   }, [operatorData]);
+
+  const availableCategories = useMemo(() => {
+    const source = categorySeedData?.operators ?? [];
+    const present = new Set(
+      source
+        .map((op) => String(op.category || "").trim())
+        .filter(Boolean)
+    );
+
+    return ["All", ...CATEGORY_OPTIONS.map(([value]) => value).filter((value) => present.has(value))];
+  }, [categorySeedData]);
+
+  useEffect(() => {
+    if (category !== "All" && !availableCategories.includes(category)) {
+      setCategory("All");
+    }
+  }, [availableCategories, category]);
 
   const filtered = useMemo(() => {
     let skills = [...allSkills];
@@ -1470,7 +1513,7 @@ export default function SkillMarketplace() {
           {/* Category + Pricing filters */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="flex gap-1 overflow-x-auto flex-1">
-              {CATEGORIES.map((cat) => (
+              {availableCategories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
@@ -1489,7 +1532,7 @@ export default function SkillMarketplace() {
                   }}
                 >
                   {cat !== "All" && CATEGORY_ICONS[cat] && <span className="mr-1">{CATEGORY_ICONS[cat]}</span>}
-                  {cat}
+                  {cat === "All" ? cat : categoryLabel(cat)}
                 </button>
               ))}
             </div>

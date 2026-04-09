@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { BrandIcon, cleanOperatorName } from "./brand-icons";
 import { T } from "./theme";
@@ -11,7 +13,9 @@ import {
   ActionButton,
   MonoValue,
   ProgressBar,
+  ConnectWalletPrompt,
 } from "./primitives";
+import { formatUsd, parseNumericValue } from "./constants";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -95,6 +99,10 @@ type SortKey = "name" | "qualityScore" | "pricePerCall" | "totalInvocations" | "
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export default function OperatorDirectoryPanel() {
+  const { publicKey } = useWallet();
+  const [, navigate] = useLocation();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -105,21 +113,72 @@ export default function OperatorDirectoryPanel() {
   const [sortAsc, setSortAsc] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const operatorsQuery = trpc.operator.list.useQuery(
-    { limit: 50, sortBy: "trust" },
-    { staleTime: 60_000 },
+  const operatorsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 60_000, enabled: queryEnabled },
+  );
+  const recentQuery = trpc.creator.recentInvocationsByWallet.useQuery(
+    { walletAddress, limit: 100 },
+    { staleTime: 30_000, refetchInterval: 30_000, enabled: queryEnabled },
+  );
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 60_000, enabled: queryEnabled },
   );
 
-  const rawOperators: any[] = (operatorsQuery.data as any)?.operators ?? [];
+  const rawOperators: any[] = (operatorsQuery.data as any[]) ?? [];
 
-  // Map real operators to local Operator shape
+  const earningsByOperator = useMemo(() => {
+    const rows = earningsQuery.data?.byOperator ?? [];
+    return new Map(rows.map((row) => [String(row.operatorId), parseNumericValue(row.total)]));
+  }, [earningsQuery.data?.byOperator]);
+
+  const recentByOperator = useMemo(() => {
+    const grouped = new Map<string, Operator["recentInvocations"]>();
+    const usage = new Map<string, number[]>();
+    for (const row of (recentQuery.data as any[] | undefined) ?? []) {
+      const inv = row.invocation ?? row;
+      const operatorId = String(inv.operatorId ?? "");
+
+      const recentEntries = grouped.get(operatorId) ?? [];
+      recentEntries.push({
+        caller: inv.callerWallet ? `${String(inv.callerWallet).slice(0, 6)}...${String(inv.callerWallet).slice(-4)}` : "anonymous",
+        time: inv.createdAt ? new Date(inv.createdAt).toLocaleString() : "just now",
+        status: inv.success ? "Success" : inv.responseMs === 0 ? "Pending" : "Failed",
+        latency: inv.responseMs != null ? `${inv.responseMs}ms` : "--",
+        amount: formatUsd(inv.creatorShare ?? inv.amountPaid),
+      });
+      grouped.set(operatorId, recentEntries.slice(0, 5));
+
+      const buckets = usage.get(operatorId) ?? Array.from({ length: 7 }, () => 0);
+      const createdAt = inv.createdAt ? new Date(inv.createdAt) : null;
+      if (createdAt) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const invocationDay = new Date(createdAt);
+        invocationDay.setHours(0, 0, 0, 0);
+        const diffDays = Math.floor((today.getTime() - invocationDay.getTime()) / 86400000);
+        if (diffDays >= 0 && diffDays < 7) {
+          buckets[6 - diffDays] += 1;
+        }
+      }
+      usage.set(operatorId, buckets);
+    }
+    return { grouped, usage };
+  }, [recentQuery.data]);
+
+  const categoryOptions = useMemo(() => {
+    const unique = Array.from(new Set(rawOperators.map((op) => String(op.category ?? "Other")).filter(Boolean)));
+    return [{ id: "All", label: "All" }, ...unique.map((value) => ({ id: value, label: value.replace(/-/g, " ") }))];
+  }, [rawOperators]);
+
   const OPERATORS_DATA: Operator[] = rawOperators.map((op: any, i: number) => ({
     id: String(op.id ?? `api-${i}`),
     name: op.name ?? "Unknown Operator",
     slug: op.slug ?? "unknown",
     category: op.category ?? "Other",
-    qualityScore: op.qualityScore ?? 50,
-    pricePerCall: op.pricePerCall ? `$${op.pricePerCall}` : "$0.00",
+    qualityScore: Number(op.trustScore ?? 50),
+    pricePerCall: parseNumericValue(op.pricePerCall) === 0 ? "$0.00" : formatUsd(op.pricePerCall),
     totalInvocations: op.totalInvocations ?? 0,
     successRate: op.successfulInvocations && op.totalInvocations
       ? Number(((op.successfulInvocations / op.totalInvocations) * 100).toFixed(1))
@@ -129,10 +188,14 @@ export default function OperatorDirectoryPanel() {
     avgLatency: op.avgResponseMs ? `${op.avgResponseMs}ms` : "0ms",
     creator: op.creatorWallet ? `${op.creatorWallet.slice(0, 6)}...${op.creatorWallet.slice(-4)}` : "unknown",
     description: op.description ?? op.tagline ?? "",
-    recentInvocations: [],
-    weeklyUsage: [0, 0, 0, 0, 0, 0, 0],
+    recentInvocations: recentByOperator.grouped.get(String(op.id ?? `api-${i}`)) ?? [],
+    weeklyUsage: recentByOperator.usage.get(String(op.id ?? `api-${i}`)) ?? [0, 0, 0, 0, 0, 0, 0],
     validatorAttestations: [],
   }));
+
+  if (!queryEnabled) {
+    return <ConnectWalletPrompt />;
+  }
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -184,8 +247,8 @@ export default function OperatorDirectoryPanel() {
   return (
     <div>
       <PageHeader
-        title="Operator Directory"
-        subtitle="Search and filter all registered operators"
+        title="Your Operators Directory"
+        subtitle="Backend-backed operators owned by the connected wallet"
       />
 
       {/* Search + filters */}
@@ -199,7 +262,7 @@ export default function OperatorDirectoryPanel() {
             style={INPUT}
           />
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
-            <FilterChips options={CATEGORIES} active={category} onChange={setCategory} />
+            <FilterChips options={categoryOptions} active={category} onChange={setCategory} />
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
             <FilterChips options={STATUS_OPTIONS} active={statusFilter} onChange={setStatusFilter} />
@@ -291,7 +354,7 @@ export default function OperatorDirectoryPanel() {
               {!operatorsQuery.isLoading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={9} style={{ padding: "32px 16px", textAlign: "center", fontSize: 12, color: T.text20 }}>
-                    No operators found.
+                    No operators found for this wallet.
                   </td>
                 </tr>
               )}
@@ -339,7 +402,7 @@ export default function OperatorDirectoryPanel() {
                       />
                     </td>
                     <td style={{ padding: "12px 12px", textAlign: "center" }}>
-                      <ActionButton label="Invoke" variant="primary" />
+                      <ActionButton label="Open" variant="primary" onClick={() => navigate(`/marketplace/${op.slug}`)} />
                     </td>
                   </tr>
 
@@ -444,7 +507,7 @@ export default function OperatorDirectoryPanel() {
                               style={{ ...INPUT, flex: 1, fontFamily: "'JetBrains Mono', monospace", fontSize: 11 }}
                               readOnly
                             />
-                            <ActionButton label="Invoke" variant="primary" />
+                            <ActionButton label="Open Operator" variant="primary" onClick={() => navigate(`/marketplace/${op.slug}`)} />
                           </div>
                         </div>
                       </td>

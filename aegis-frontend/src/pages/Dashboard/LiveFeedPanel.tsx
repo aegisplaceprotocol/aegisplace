@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
 import { useLiveFeed } from "@/hooks/useLiveFeed";
 import { BrandIcon, cleanOperatorName } from "./brand-icons";
@@ -19,6 +20,7 @@ type RowStatus = "Success" | "Failed" | "Pending";
 interface FeedRow {
   id: string;
   time: string;
+  timestamp: number;
   operator: string;
   caller: string;
   amount: string;
@@ -27,6 +29,21 @@ interface FeedRow {
   traceId: string;
   guardrails: string[];
 }
+
+const parseAmountValue = (value: unknown): number => {
+  if (value == null) return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  if (typeof value === "object" && value !== null && "$numberDecimal" in value) {
+    const parsed = Number.parseFloat(String((value as { $numberDecimal?: unknown }).$numberDecimal ?? "0"));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  const parsed = Number.parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 
 const FEE_BREAKDOWN = [
@@ -57,63 +74,101 @@ const MONO: React.CSSProperties = {
 /* ── Component ────────────────────────────────────────────────────────── */
 
 export default function LiveFeedPanel() {
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("1h");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 30_000, refetchInterval: isPaused ? false : 30_000 });
-  const stats = statsQuery.data as Record<string, any> | undefined;
+  const earningsQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 30_000, refetchInterval: isPaused ? false : 30_000, enabled: queryEnabled },
+  );
+  const operatorsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 30_000, refetchInterval: isPaused ? false : 30_000, enabled: queryEnabled },
+  );
 
-  const recentQuery = trpc.invoke.recent.useQuery(
-    { limit: 25 },
-    { staleTime: 15_000, refetchInterval: isPaused ? false : 15_000 },
+  const recentQuery = trpc.creator.recentInvocationsByWallet.useQuery(
+    { walletAddress, limit: 100 },
+    { staleTime: 15_000, refetchInterval: isPaused ? false : 15_000, enabled: queryEnabled },
   );
   const { events: liveEvents, connected: liveConnected } = useLiveFeed();
+  const ownedOperators = operatorsQuery.data ?? [];
+  const ownedOperatorNames = new Set(ownedOperators.map((op: any) => String(op.name ?? "")));
+  const ownedOperatorSlugs = new Set(ownedOperators.map((op: any) => String(op.slug ?? "")));
 
-  // Map API data to local shape — API returns { invocation, operatorName, operatorSlug }[]
-  const feedRows: FeedRow[] = recentQuery.data
-    ? (recentQuery.data as any[]).map((row: any, i: number) => {
+  const feedRows: FeedRow[] = useMemo(() => (
+    recentQuery.data
+      ? (recentQuery.data as any[]).map((row: any, i: number) => {
         const inv = row.invocation ?? row;
+        const timestamp = inv.createdAt ? new Date(inv.createdAt).getTime() : Date.now();
+        const guardrails = Array.isArray(inv.guardrailViolations) && inv.guardrailViolations.length > 0
+          ? inv.guardrailViolations.map((v: string) => `${v}: Flagged`)
+          : ["No guardrail violations"];
         return {
           id: `inv-${inv.id ?? inv._id ?? i}`,
           time: inv.createdAt ? new Date(inv.createdAt).toLocaleTimeString() : "",
+          timestamp,
           operator: row.operatorName ?? row.operatorSlug ?? inv.operatorName ?? inv.operatorSlug ?? `operator-${inv.operatorId ?? "?"}`,
           caller: inv.callerWallet ? `${String(inv.callerWallet).slice(0, 6)}...${String(inv.callerWallet).slice(-4)}` : "anonymous",
-          amount: inv.amountPaid ? `$${Number(inv.amountPaid).toFixed(3)}` : "$0.000",
+          amount: `$${parseAmountValue(inv.amountPaid).toFixed(3)}`,
           latency: inv.responseMs != null ? `${inv.responseMs}ms` : "--",
           status: (inv.success ? "Success" : inv.responseMs === 0 ? "Pending" : "Failed") as RowStatus,
           traceId: `trace-${inv.id ?? inv._id ?? i}`,
-          guardrails: inv.guardrailViolations?.length
-            ? inv.guardrailViolations.map((v: string) => `${v}: Flagged`)
-            : ["PII Filter: Pass", "Rate Limit: Pass"],
+          guardrails,
         };
       })
-    : [];
+      : []
+  ), [recentQuery.data]);
 
-  // Merge live SSE events on top when available
-  const allRows = liveConnected && liveEvents.length > 0
-    ? [
-        ...liveEvents
-          .filter(e => e.event === "invocation")
-          .slice(0, 5)
-          .map((e, i) => ({
+  const liveRows = useMemo(() => (
+    liveEvents
+      .filter((e) => e.event === "invocation")
+      .filter((e) => {
+        const operatorName = String(e.data.operatorName ?? "");
+        const operatorSlug = String(e.data.operatorSlug ?? "");
+        return ownedOperatorNames.has(operatorName) || ownedOperatorSlugs.has(operatorSlug);
+      })
+      .slice(0, 12)
+      .map((e, i) => ({
             id: e.id || `live-${i}`,
             time: new Date(e.data.timestamp).toLocaleTimeString(),
+            timestamp: Number(e.data.timestamp ?? Date.now()),
             operator: String(e.data.operatorName ?? e.data.operatorSlug ?? `operator-${e.data.operatorId ?? "?"}`),
             caller: e.data.callerWallet ? `${String(e.data.callerWallet).slice(0, 6)}...${String(e.data.callerWallet).slice(-4)}` : "anonymous",
-            amount: e.data.amountPaid ? `$${Number(e.data.amountPaid).toFixed(3)}` : "$0.000",
+        amount: `$${parseAmountValue(e.data.amountPaid).toFixed(3)}`,
             latency: e.data.responseMs != null ? `${e.data.responseMs}ms` : "--",
             status: (e.data.success ? "Success" : "Failed") as RowStatus,
             traceId: `trace-live-${e.id}`,
-            guardrails: ["PII Filter: Pass", "Rate Limit: Pass"],
-          })),
-        ...feedRows,
-      ].slice(0, 25)
-    : feedRows;
+            guardrails: Array.isArray(e.data.guardrailViolations) && e.data.guardrailViolations.length > 0
+              ? (e.data.guardrailViolations as string[]).map((v) => `${v}: Flagged`)
+              : ["No guardrail violations"],
+          }))
+  ), [liveEvents, ownedOperatorNames, ownedOperatorSlugs]);
 
-  const filtered = allRows.filter((r) => {
+  const allRows = useMemo(() => {
+    const merged = liveConnected && liveRows.length > 0 ? [...liveRows, ...feedRows] : feedRows;
+    const deduped = merged.filter((row, index, array) => array.findIndex((candidate) => candidate.id === row.id) === index);
+    return deduped.sort((left, right) => right.timestamp - left.timestamp).slice(0, 100);
+  }, [feedRows, liveConnected, liveRows]);
+
+  const rangeMs = timeRange === "1h"
+    ? 60 * 60 * 1000
+    : timeRange === "6h"
+      ? 6 * 60 * 60 * 1000
+      : timeRange === "24h"
+        ? 24 * 60 * 60 * 1000
+        : 7 * 24 * 60 * 60 * 1000;
+
+  const rangeStart = Date.now() - rangeMs;
+
+  const rangeRows = allRows.filter((row) => row.timestamp >= rangeStart);
+
+  const filtered = rangeRows.filter((r) => {
     if (statusFilter !== "all" && r.status.toLowerCase() !== statusFilter) return false;
     if (searchQuery && !r.operator.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
@@ -122,7 +177,7 @@ export default function LiveFeedPanel() {
   // Top operators derived from real feed rows
   const topOperators: { name: string; invocations: number }[] = (() => {
     const counts: Record<string, number> = {};
-    for (const r of allRows) {
+    for (const r of rangeRows) {
       counts[r.operator] = (counts[r.operator] ?? 0) + 1;
     }
     return Object.entries(counts)
@@ -132,19 +187,36 @@ export default function LiveFeedPanel() {
   })();
 
   // Derived stats from real data
-  const totalInv: number = (stats?.totalInvocations as number) ?? 0;
-  const totalEarnings: number = stats?.totalEarnings ? parseFloat(String(stats.totalEarnings)) : 0;
-  const successCount = allRows.filter(r => r.status === "Success").length;
-  const feedSuccessRate = allRows.length > 0 ? ((successCount / allRows.length) * 100).toFixed(1) : null;
-  const feedAvgLatencyMs = allRows.length > 0
-    ? Math.round(allRows.reduce((acc, r) => acc + (parseInt(r.latency) || 0), 0) / allRows.length)
+  const totalInv = ownedOperators.reduce((sum: number, op: any) => sum + Number(op.totalInvocations ?? 0), 0);
+  const totalEarnings = earningsQuery.data?.total ? parseFloat(earningsQuery.data.total) : 0;
+  const successCount = rangeRows.filter(r => r.status === "Success").length;
+  const feedSuccessRate = rangeRows.length > 0 ? ((successCount / rangeRows.length) * 100).toFixed(1) : null;
+  const feedAvgLatencyMs = rangeRows.length > 0
+    ? Math.round(rangeRows.reduce((acc, r) => acc + (parseInt(r.latency) || 0), 0) / rangeRows.length)
+    : null;
+
+  const errorBuckets = useMemo(() => {
+    const bucketCount = 12;
+    const bucketSize = rangeMs / bucketCount;
+    return Array.from({ length: bucketCount }, (_, index) => {
+      const bucketStart = rangeStart + index * bucketSize;
+      const bucketEnd = bucketStart + bucketSize;
+      const bucketRows = rangeRows.filter((row) => row.timestamp >= bucketStart && row.timestamp < bucketEnd);
+      if (bucketRows.length === 0) return 0;
+      const failed = bucketRows.filter((row) => row.status === "Failed").length;
+      return Number(((failed / bucketRows.length) * 100).toFixed(1));
+    });
+  }, [rangeMs, rangeRows, rangeStart]);
+
+  const errorRate = rangeRows.length > 0
+    ? Number((((rangeRows.filter((row) => row.status === "Failed").length) / rangeRows.length) * 100).toFixed(1))
     : null;
 
   return (
     <div>
       <PageHeader
         title="Live Feed"
-        subtitle="Real-time invocation stream across all operators"
+        subtitle="Real-time invocation stream for operators owned by the connected wallet"
         action={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{
@@ -168,9 +240,9 @@ export default function LiveFeedPanel() {
         marginBottom: 24,
       }}>
         <StatTile label="Total Invocations" value={totalInv > 0 ? totalInv.toLocaleString() : "—"} delta="all-time" />
-        <StatTile label="Success Rate" value={feedSuccessRate ? `${feedSuccessRate}%` : "—"} delta="recent window" accent={T.positive} />
-        <StatTile label="Avg Latency" value={feedAvgLatencyMs != null ? `${feedAvgLatencyMs}ms` : "—"} delta="recent window" accent={T.text50} />
-        <StatTile label="Total Fees" value={totalEarnings > 0 ? `$${Math.floor(totalEarnings).toLocaleString()}` : "—"} delta="all-time" accent={T.text50} />
+        <StatTile label="Success Rate" value={feedSuccessRate ? `${feedSuccessRate}%` : "—"} delta={timeRange} accent={T.positive} />
+        <StatTile label="Avg Latency" value={feedAvgLatencyMs != null ? `${feedAvgLatencyMs}ms` : "—"} delta={timeRange} accent={T.text50} />
+        <StatTile label="Creator Revenue" value={totalEarnings > 0 ? `$${Math.floor(totalEarnings).toLocaleString()}` : "—"} delta="all-time" accent={T.text50} />
       </div>
 
       {/* Filter bar */}
@@ -256,6 +328,13 @@ export default function LiveFeedPanel() {
                 </tr>
               </thead>
               <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ padding: "24px 16px", fontSize: 12, color: T.text20, textAlign: "center" }}>
+                      No live feed data for this wallet in the selected window.
+                    </td>
+                  </tr>
+                )}
                 {filtered.map((row) => (
                   <React.Fragment key={row.id}>
                     <tr
@@ -392,20 +471,20 @@ export default function LiveFeedPanel() {
 
           {/* Error rate mini chart */}
           <Card>
-            <CardHead label="Error Rate (1h)" />
+            <CardHead label={`Error Rate (${timeRange})`} />
             <div style={{ padding: "12px 20px 16px" }}>
               <div style={{
                 fontSize: 28, fontWeight: 400, fontVariantNumeric: "tabular-nums",
                 color: T.text80, letterSpacing: "-0.02em", marginBottom: 8,
               }}>
-                3.2%
+                {errorRate != null ? `${errorRate}%` : "—"}
               </div>
               <div style={{ display: "flex", alignItems: "flex-end", gap: 3, height: 48 }}>
-                {[2.1, 3.4, 2.8, 4.1, 3.6, 2.9, 3.8, 3.2, 2.5, 3.0, 3.5, 3.2].map((v, i) => (
+                {errorBuckets.map((v, i) => (
                   <div key={i} style={{
                     flex: 1,
-                    height: `${(v / 5) * 100}%`,
-                    background: v > 3.5 ? T.negative : v > 2.8 ? T.text50 : T.positive,
+                    height: `${Math.min((v / 100) * 100, 100)}%`,
+                    background: v > 25 ? T.negative : v > 10 ? T.text50 : T.positive,
                     borderRadius: 2,
                     opacity: 0.7,
                     transition: "height 0.3s ease",
@@ -416,7 +495,7 @@ export default function LiveFeedPanel() {
                 display: "flex", justifyContent: "space-between",
                 fontSize: 9, color: T.text20, marginTop: 6,
               }}>
-                <span>-60m</span>
+                <span>-{timeRange}</span>
                 <span>now</span>
               </div>
             </div>

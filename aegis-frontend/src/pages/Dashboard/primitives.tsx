@@ -287,14 +287,15 @@ export function ActionButton({ label, onClick, variant = "ghost" }: {
 }) {
   const isPrimary = variant === "primary";
   const isDanger = variant === "danger";
+  const isDefault = variant === "default";
   return (
     <button onClick={onClick} style={{
       padding: "5px 12px",
       fontSize: 11,
       fontWeight: 400,
-      color: isDanger ? T.negative : isPrimary ? T.text80 : T.text30,
-      background: "transparent",
-      border: `1px solid ${isPrimary ? T.border : isDanger ? "rgba(248,113,113,0.12)" : "transparent"}`,
+      color: isDanger ? T.negative : isPrimary ? T.text80 : isDefault ? T.text50 : T.text30,
+      background: isPrimary ? T.white3 : isDefault ? T.white2 : "transparent",
+      border: `1px solid ${isPrimary ? T.border : isDanger ? "rgba(248,113,113,0.12)" : isDefault ? T.border : "transparent"}`,
       borderRadius: 3,
       cursor: "pointer",
       transition: "all 0.2s ease",

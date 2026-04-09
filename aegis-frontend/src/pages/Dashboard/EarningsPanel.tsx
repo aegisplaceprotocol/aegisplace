@@ -2,48 +2,88 @@
  * Aegis Dashboard. Earnings Panel
  */
 import { useMemo } from "react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { trpc } from "@/lib/trpc";
 import { PremiumAreaChart } from "@/components/PremiumAreaChart";
 import { T } from "./theme";
-import { Card, PageHeader, StatTile, CardHead } from "./primitives";
-import { DEMO_SPARKLINE, DEMO_REVENUE, FEE_SPLIT } from "./constants";
+import { Card, PageHeader, StatTile, CardHead, ConnectWalletPrompt } from "./primitives";
+import { FEE_SPLIT, formatUsd, parseNumericValue } from "./constants";
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function EarningsPanel() {
-  const statsQuery = trpc.stats.overview.useQuery(undefined, { staleTime: 300_000 });
-  const creatorQuery = trpc.creator.earnings.useQuery(undefined, { staleTime: 300_000 });
-  const rawStats = statsQuery.data as Record<string, unknown> | undefined;
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58() ?? "";
+  const queryEnabled = Boolean(walletAddress);
+
+  const creatorQuery = trpc.creator.earningsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const analyticsQuery = trpc.creator.analyticsByWallet.useQuery(
+    { walletAddress, days: 28 },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+  const opsQuery = trpc.creator.operatorsByWallet.useQuery(
+    { walletAddress },
+    { staleTime: 300_000, enabled: queryEnabled },
+  );
+
   const creatorEarnings = creatorQuery.data;
+  const walletOperators = opsQuery.data ?? [];
 
-  // Use creator.earnings for time-windowed breakdown; fall back to stats.overview total
-  const totalEarnings = creatorEarnings?.total
-    ? parseFloat(creatorEarnings.total)
-    : rawStats?.totalEarnings ? parseFloat(String(rawStats.totalEarnings)) : 0;
-  const totalInvocations: number = (rawStats?.totalInvocations as number) ?? 0;
+  const totalEarnings = Math.max(
+    parseNumericValue(creatorEarnings?.total),
+    walletOperators.reduce((sum, op) => sum + parseNumericValue(op.totalEarned), 0),
+  );
+  const totalInvocations = walletOperators.reduce((sum, op) => sum + Number(op.totalInvocations ?? 0), 0);
 
-  const last30d = creatorEarnings?.last30d ? parseFloat(creatorEarnings.last30d) : null;
-  const last7d = creatorEarnings?.last7d ? parseFloat(creatorEarnings.last7d) : null;
+  const last30d = parseNumericValue(creatorEarnings?.last30d);
+  const last7d = parseNumericValue(creatorEarnings?.last7d);
+  const last24h = parseNumericValue(creatorEarnings?.last24h);
+  const pending = parseNumericValue(creatorEarnings?.pending);
+  const settled = parseNumericValue(creatorEarnings?.settled);
 
   const earningsData = useMemo(() => {
-    if (totalEarnings === 0) return DEMO_REVENUE.map((_, i) => ({ date: new Date(Date.now() - (27 - i) * 86400000), value: 0 }));
-    const scale = totalEarnings / (DEMO_REVENUE.reduce((a, b) => a + b, 0) * 100 / DEMO_REVENUE.length);
-    return DEMO_REVENUE.map((v, i) => ({
-      date: new Date(Date.now() - (27 - i) * 86400000),
-      value: v * scale,
-    }));
-  }, [totalEarnings]);
+    const daily = analyticsQuery.data?.daily ?? [];
+    const revenueByDay = new Map(daily.map((entry) => [entry.date, parseNumericValue(entry.revenue)]));
+    const series = [] as { date: Date; value: number }[];
+
+    for (let offset = 27; offset >= 0; offset -= 1) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - offset);
+      series.push({
+        date: new Date(date),
+        value: revenueByDay.get(toDateKey(date)) ?? 0,
+      });
+    }
+
+    return series;
+  }, [analyticsQuery.data]);
 
   const avgPerCall = totalInvocations > 0 ? totalEarnings / totalInvocations : 0;
+  const estimatedGrossFees = totalEarnings > 0 ? totalEarnings / (FEE_SPLIT[0].pct / 100) : 0;
+
+  if (!queryEnabled) {
+    return <ConnectWalletPrompt />;
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <PageHeader title="Earnings" subtitle="Revenue breakdown and historical performance" />
+      <PageHeader title="Earnings" subtitle="Creator earnings and revenue performance for the connected wallet" />
 
       {/* 4 stat tiles */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}>
-        <StatTile label="Total Revenue" value={`$${Math.floor(totalEarnings).toLocaleString()}`} delta="all-time" sub="USDC settled on Solana" />
-        <StatTile label="Last 30 Days" value={last30d !== null ? `$${Math.floor(last30d).toLocaleString()}` : "—"} delta="30-day window" sub="rolling period" />
-        <StatTile label="Last 7 Days" value={last7d !== null ? `$${Math.floor(last7d).toLocaleString()}` : "—"} delta="7-day window" sub="rolling period" />
-        <StatTile label="Avg / Invocation" value={`$${avgPerCall.toFixed(4)}`} delta="blended rate" sub={`${totalInvocations.toLocaleString()} total calls`} />
+        <StatTile label="Total Revenue" value={formatUsd(totalEarnings)} delta={formatUsd(settled)} sub="creator share settled to date" />
+        <StatTile label="Last 30 Days" value={formatUsd(last30d)} delta={formatUsd(last24h)} sub="rolling creator earnings" />
+        <StatTile label="Last 7 Days" value={formatUsd(last7d)} delta={formatUsd(pending)} sub="pending creator share" />
+        <StatTile label="Avg / Invocation" value={formatUsd(avgPerCall)} delta="creator share per call" sub={`${totalInvocations.toLocaleString()} wallet-scoped calls`} />
       </div>
 
       {/* Revenue chart */}
@@ -57,7 +97,7 @@ export default function EarningsPanel() {
           </span>
         } />
         <div style={{ padding: "0 8px 8px", height: 288 }}>
-          <PremiumAreaChart data={earningsData} height={258} formatValue={(v: number) => `$${Math.round(v).toLocaleString()}`} />
+          <PremiumAreaChart data={earningsData} height={258} formatValue={(v: number) => formatUsd(v)} />
         </div>
       </Card>
 
@@ -77,7 +117,7 @@ export default function EarningsPanel() {
               ))}
             </div>
             {FEE_SPLIT.map((seg, i) => {
-              const dollar = totalEarnings * (seg.pct / 100);
+              const dollar = estimatedGrossFees * (seg.pct / 100);
               return (
                 <div key={seg.label} style={{
                   display: "flex", alignItems: "center", gap: 8, padding: "9px 0",
@@ -87,7 +127,7 @@ export default function EarningsPanel() {
                   <span style={{ fontSize: 13, color: T.text50, flex: 1 }}>{seg.label}</span>
                   <span style={{ fontSize: 12, color: T.text25, fontVariantNumeric: "tabular-nums", marginRight: 8 }}>{seg.pct}%</span>
                   <span style={{ fontSize: 13, color: T.text50, fontVariantNumeric: "tabular-nums", fontWeight: 600, minWidth: 72, textAlign: "right" as const }}>
-                    ${Math.floor(dollar).toLocaleString()}
+                    {formatUsd(dollar)}
                   </span>
                 </div>
               );
@@ -100,9 +140,9 @@ export default function EarningsPanel() {
           <CardHead label="Protocol Economics" />
           <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: 20 }}>
             {[
-              { label: "Total Invocations", value: totalInvocations.toLocaleString(), sub: "all-time skill calls" },
-              { label: "Avg Price / Call", value: `$${avgPerCall.toFixed(4)}`, sub: "blended across all skills" },
-              { label: "Burn Rate (est.)", value: `$${Math.floor(totalEarnings * 0.005).toLocaleString()} USDC`, sub: "0.5% of all protocol fees" },
+              { label: "Total Invocations", value: totalInvocations.toLocaleString(), sub: "all-time calls for this wallet's operators" },
+              { label: "Avg Price / Call", value: formatUsd(avgPerCall), sub: "creator share blended across your operators" },
+              { label: "Estimated Gross Fees", value: `${formatUsd(estimatedGrossFees)} USDC`, sub: "derived from creator share and fee split" },
             ].map((m) => (
               <div key={m.label}>
                 <div style={{ fontSize: 11, letterSpacing: "0.04em", fontWeight: 500, color: T.text20, marginBottom: 6 }}>{m.label}</div>
