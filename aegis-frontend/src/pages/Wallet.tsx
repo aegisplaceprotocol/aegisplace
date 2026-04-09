@@ -5,12 +5,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/sections/Footer";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { fadeInView } from "@/lib/animations";
+import { mcpConnectivityUrl } from "@/lib/api";
 
-// The dual MCP config
-const DUAL_MCP_CONFIG = `{
+function buildDualMcpConfig(url: string) {
+  return `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${url}"
     },
     "ows": {
       "command": "ows",
@@ -18,6 +19,7 @@ const DUAL_MCP_CONFIG = `{
     }
   }
 }`;
+}
 
 // The unified bridge config (coming soon)
 const BRIDGE_CONFIG = `{
@@ -72,6 +74,7 @@ function Code({ code, label = "bash" }: { code: string; label?: string }) {
 }
 
 export default function WalletPage() {
+  const dualMcpConfig = buildDualMcpConfig(mcpConnectivityUrl());
   // suppress unused variable warning
   void BRIDGE_CONFIG;
 
@@ -181,7 +184,7 @@ export default function WalletPage() {
               <div className="text-[14px] text-white/65 font-medium mb-3">
                 Connect to Aegis
               </div>
-              <Code code={DUAL_MCP_CONFIG} label="json" />
+              <Code code={dualMcpConfig} label="json" />
               <p className="text-[13px] text-white/30 mt-2">
                 Add to your Claude/Cursor/Windsurf MCP config. Two servers:
                 Aegis (marketplace) + OWS (wallet).

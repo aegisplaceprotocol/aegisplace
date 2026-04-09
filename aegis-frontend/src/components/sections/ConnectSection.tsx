@@ -1,19 +1,23 @@
 import { motion } from "framer-motion";
 import { fadeInView } from "@/lib/animations";
+import { mcpConnectivityUrl } from "@/lib/api";
 
-const MCP_CONFIG = `{
+function buildMcpConfig(url: string) {
+  return `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${url}"
     }
   }
 }`;
+}
 
 const SDK_CODE = `import { AegisClient } from '@aegisprotocol/sdk';
 const aegis = new AegisClient({ wallet: 'agent-treasury' });
 const tools = await aegis.tools(); // 432 operators`;
 
 export default function ConnectSection() {
+  const mcpConfig = buildMcpConfig(mcpConnectivityUrl());
   return (
     <section className="py-24 sm:py-32 border-t border-white/[0.04]">
       <div className="container">
@@ -38,7 +42,7 @@ export default function ConnectSection() {
               <span className="text-[11px] font-mono text-zinc-500">mcp.json</span>
             </div>
             <pre className="p-5 text-[13px] font-mono text-zinc-300 leading-relaxed overflow-x-auto">
-              {MCP_CONFIG}
+              {mcpConfig}
             </pre>
           </div>
 

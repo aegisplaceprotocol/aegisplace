@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import { NvidiaEyeLogo } from "@/components/NvidiaLogo";
 import { useWalletModal } from "@/components/WalletModal";
+import { mcpConnectivityUrl } from "@/lib/api";
 import { trpc, type RouterOutputs } from "@/lib/trpc";
 import { invokeWithPaywall, type PaidInvokeResult } from "@/lib/x402";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
@@ -639,10 +640,12 @@ curl \
 
 # 5. The retry returns the unlocked private SKILL.md result.`;
 
+  const mcpUrl = mcpConnectivityUrl();
+
   const mcpExample = `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${mcpUrl}"
     }
   }
 }`;

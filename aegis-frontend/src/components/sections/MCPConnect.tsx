@@ -3,14 +3,17 @@ import { Link } from "wouter";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { fadeInView } from "@/lib/animations";
+import { mcpConnectivityUrl } from "@/lib/api";
 
-const MCP_CONFIG = `{
+function buildMcpConfig(url: string) {
+  return `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${url}"
     }
   }
 }`;
+}
 
 const TOOLS = [
   { name: "aegis_list_operators", desc: "Browse all operators with filters" },
@@ -30,9 +33,10 @@ const TOOLS = [
 
 export default function MCPConnect() {
   const [copied, setCopied] = useState(false);
+  const mcpConfig = buildMcpConfig(mcpConnectivityUrl());
 
   function copy() {
-    navigator.clipboard.writeText(MCP_CONFIG).then(() => {
+    navigator.clipboard.writeText(mcpConfig).then(() => {
       setCopied(true);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
@@ -66,7 +70,7 @@ export default function MCPConnect() {
               {/* Code block */}
               <div className="border border-white/[0.04] bg-white/[0.015] p-5 relative">
                 <pre className="text-[13px] font-light text-white/50 leading-relaxed overflow-x-auto">
-                  {MCP_CONFIG}
+                  {mcpConfig}
                 </pre>
                 <button
                   onClick={copy}

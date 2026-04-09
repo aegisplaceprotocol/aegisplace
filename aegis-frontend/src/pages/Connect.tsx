@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/sections/Footer";
 import { fadeInView } from "@/lib/animations";
+import { mcpConnectivityUrl } from "@/lib/api";
 
 const TOOLS = [
   { name: "aegisx_launch", description: "Launch a token on Bags.fm with custom fee vaults and creator royalties" },
@@ -18,18 +19,21 @@ const TOOLS = [
   { name: "aegisx_payments", description: "Accept and send micropayments via x402 and Stripe" },
 ];
 
-const CONFIG_JSON = `{
+function buildConfigJson(url: string) {
+  return `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${url}"
     }
   }
 }`;
+}
 
-const DUAL_MCP_CONFIG = `{
+function buildDualMcpConfig(url: string) {
+  return `{
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "${url}"
     },
     "ows": {
       "command": "ows",
@@ -37,6 +41,7 @@ const DUAL_MCP_CONFIG = `{
     }
   }
 }`;
+}
 
 const COMPATIBLE = [
   { name: "Claude", icon: "" },
@@ -74,6 +79,10 @@ function Code({ code, label = "json" }: { code: string; label?: string }) {
 }
 
 export default function Connect() {
+  const mcpUrl = mcpConnectivityUrl();
+  const configJson = buildConfigJson(mcpUrl);
+  const dualMcpConfig = buildDualMcpConfig(mcpUrl);
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Navbar />
@@ -94,7 +103,7 @@ export default function Connect() {
           <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 mb-4">
             MCP Configuration
           </div>
-          <Code code={CONFIG_JSON} label="json" />
+          <Code code={configJson} label="json" />
         </motion.div>
 
         {/* OWS Section */}
@@ -110,7 +119,7 @@ export default function Connect() {
               Connect Aegis with OWS for secure, policy-controlled agent
               payments. Keys never leave your machine.
             </p>
-            <Code code={DUAL_MCP_CONFIG} label="json" />
+            <Code code={dualMcpConfig} label="json" />
             <a
               href="/docs"
               className="inline-flex items-center gap-2 text-[13px] font-medium text-white/50 hover:text-white/80 transition-colors mt-4"
