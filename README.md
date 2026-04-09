@@ -45,13 +45,13 @@ Aegis wraps every AI skill invocation in four guarantees:
 **REST API (live now)**
 ```bash
 # List operators
-curl https://aegisplace.com/api/v1/operators?limit=5
+curl https://api.aegisplace.com/api/v1/operators?limit=5
 
 # Get protocol stats
-curl https://aegisplace.com/api/trpc/stats.overview
+curl https://api.aegisplace.com/api/trpc/stats.overview
 
 # MCP discovery manifest
-curl https://aegisplace.com/api/mcp
+curl https://api.aegisplace.com/mcp
 ```
 
 **MCP Integration (connect any agent)**
@@ -59,7 +59,7 @@ curl https://aegisplace.com/api/mcp
 {
   "mcpServers": {
     "aegis": {
-      "url": "https://aegisplace.com/api/mcp"
+      "url": "https://api.aegisplace.com/mcp"
     }
   }
 }
@@ -116,11 +116,10 @@ Every invocation splits atomically into six parties on Solana:
 | Recipient | Share | Purpose |
 |---|---|---|
 | Skill creator | 85% | Direct payment for providing the skill |
-| Validators | 15% | Quality attestation and dispute resolution |
-| Stakers | 12% | Pro-rata yield for $AEGIS stakers |
-| Treasury | 8% | Protocol development and operations |
-| Insurance | 3% | Dispute resolution pool |
-| Burned | 2% | Permanent supply reduction |
+| Validators | 10% | Quality attestation and dispute resolution |
+| Treasury | 3% | Protocol development and operations |
+| Insurance | 1.5% | Dispute resolution pool |
+| Burned | 0.5% | Permanent supply reduction |
 
 When a skill depends on upstream skills, 5% of the creator share cascades through a depth-weighted royalty graph (max depth 5) via on-chain CPI.
 
@@ -196,26 +195,16 @@ Idea -> Analyst + Architect (plan)
 
 ## MCP Tools
 
-16 tools accessible from any MCP-compatible agent:
+6 live tools accessible from any MCP-compatible agent:
 
 | Tool | Description |
 |---|---|
-| `aegis_list_operators` | List operators with filters |
-| `aegis_search_operators` | Search by name, category, or tag |
-| `aegis_get_operator` | Detailed operator info |
-| `aegis_invoke_skill` | Execute a skill with payment |
-| `aegis_get_trust_score` | 5-dimension trust breakdown |
-| `aegis_get_invocation` | Past invocation details |
-| `aegis_recent_invocations` | Recent invocations feed |
-| `aegis_protocol_stats` | Protocol-wide statistics |
-| `aegis_register_operator` | Register a new operator |
-| `aegis_deactivate_operator` | Deactivate your operator |
-| `aegis_list_validators` | Active validators |
-| `aegis_get_categories` | All 19 categories |
-| `aegis_file_dispute` | File a dispute |
-| `aegis_list_disputes` | List disputes |
-| `aegis_get_royalties` | Creator royalty earnings |
-| `aegis_claim_royalties` | Claim royalties to wallet |
+| `aegis_list_operators` | Browse operators in the Aegis marketplace with optional category, search, sort, limit, and offset filters. |
+| `aegis_get_operator` | Get full public details for a single operator by slug, including pricing, health, invocation counts, and whether it has a private `SKILL.md` payload. |
+| `aegis_invoke_operator` | Invoke an operator and unlock its private `SKILL.md` payload. Paid operators require retrying with `x-payer-wallet` and `x-payment-proof` after checkout. |
+| `aegis_get_trust_score` | Fetch the trust breakdown for a specific operator, including weighted component scores and the overall trust score. |
+| `aegis_search_operators` | Search operators by free text when you do not know the exact slug. |
+| `aegis_get_categories` | List active marketplace categories and the number of operators in each category. |
 
 ---
 
@@ -233,9 +222,9 @@ Idea -> Analyst + Architect (plan)
 
 | Program | ID | Purpose |
 |---|---|---|
-| Operator Registry | `7CHg7hLqGvpdY8tKKeZL6eLgudCszB7e7VnBB1ogUqYR` | Registration, bonds, 6-way fee split, settlement |
-| Royalty Registry | `FrXBFm4WdqBHosZJ8rMyT9FHNvRXuSVzxqGBbH7nCWs6` | Dependency graph, royalty cascade, per-creator vaults |
-| Governance | `6TwiJJSscSFpSQA1PU8uYoJHGwgxaprEPJSpKfRireSn` | Proposals, voting, execution |
+| Operator Registry | `HiDGqc9NX4dbERfqAyq2skF3Tk5vWEjXwsrrtSWxi19v` | Registration, bonds, 6-way fee split, settlement |
+| Royalty Registry | `8KAWrDAwgGihNr49VRu2Wvsf8n1dHkjFtUt53M1D9T7a` | Dependency graph, royalty cascade, per-creator vaults |
+| Governance | `G15ETEBeHKaCvfDHmpdE9o6XEfy3bBDCGcG5kAsGXdrD` | Proposals, voting, execution |
 | $AEGIS Token | `4qbCffZLLApr1bdstAaJcrhF8ZAACJFWS7bm4ycgBAGS` | Forced buy on invocation, permanent burn per tx |
 
 All programs built with [Anchor](https://www.anchor-lang.com/) 0.30.1. Checked arithmetic with u128 intermediates. PDA-verified accounts.
@@ -287,21 +276,31 @@ pnpm test         # Run test suite
 
 ```
 aegis/
-├── client/              # React 19 + Vite frontend (49 pages)
-├── server/              # Express + tRPC backend (60+ procedures)
+├── aegis-frontend/        # React 19 + Vite web app
+├── aegis-backend/         # Express + tRPC API, MCP server, jobs, scripts
 ├── programs/
-│   ├── aegis/           # Core protocol (Anchor/Rust)
-│   ├── royalty-registry/ # Royalty cascade program
-│   └── aegis-governance/ # On-chain governance
+│   ├── aegis/             # Core settlement and registry program
+│   ├── aegis-governance/  # On-chain governance program
+│   └── royalty-registry/  # Royalty graph and payout program
 ├── packages/
-│   ├── sdk/             # @aegis/sdk
-│   ├── royalty-sdk/     # @aegis/royalty-sdk
-│   ├── python-sdk/      # aegis-python
-│   ├── cli/             # @aegis/cli
-│   ├── gateway/         # API gateway middleware
-│   └── elizaos-plugin/  # ElizaOS integration
-├── shared/              # Shared types and constants
-└── tests/               # Integration tests
+│   ├── cli/               # AegisX CLI
+│   ├── demo-video/        # Demo and presentation assets
+│   ├── elizaos-plugin/    # ElizaOS integration package
+│   ├── gateway/           # Gateway and middleware package
+│   ├── python-sdk/        # Python client SDK
+│   ├── royalty-sdk/       # Royalty client SDK
+│   └── sdk/               # TypeScript client SDK
+├── shared/                # Shared types, constants, and core utilities
+├── tests/                 # Anchor and protocol integration tests
+├── e2e/                   # Playwright end-to-end tests
+├── guardrails/            # NeMo Guardrails configs and safety policies
+├── patches/               # Patched third-party dependencies
+├── vendor/                # Vendored build/runtime dependencies
+├── test-ledger/           # Local validator state and snapshots
+├── Anchor.toml            # Anchor workspace config
+├── Cargo.toml             # Rust workspace manifest
+├── package.json           # PNPM workspace scripts
+└── docker-compose.yml     # Local service orchestration
 ```
 
 ---
