@@ -46,7 +46,7 @@ pub enum AegisError {
     #[msg("Individual fee bps exceeds 10000")]
     InvalidFeeBpsValue,
 
-    /// The operator price must be greater than zero.
+    /// Reserved legacy error variant from the original paid-only pricing model.
     #[msg("Operator price must be greater than zero")]
     ZeroPrice,
 
@@ -78,8 +78,8 @@ pub enum AegisError {
     #[msg("Duplicate accounts where distinct accounts are required")]
     DuplicateAccounts,
 
-    /// Operator price is below the minimum floor of 10,000 base units ($0.01 USDC).
-    #[msg("Operator price is below the minimum floor")]
+    /// Operator price must be zero for free operators or at least 10,000 base units ($0.01 USDC).
+    #[msg("Operator price must be zero for free listings or meet the minimum paid floor")]
     PriceTooLow,
 
     /// Trust score delta exceeds the maximum allowed per update (+/- 500).
