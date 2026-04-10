@@ -290,7 +290,8 @@ pnpm test         # Run test suite
 │   ├── python-sdk/        # Python client SDK
 │   ├── royalty-sdk/       # Royalty client SDK
 │   └── sdk/               # TypeScript client SDK
-├── shared/                # Shared types, constants, and core utilities
+├── aegis-backend/shared/  # Backend-local shared types and constants
+├── aegis-frontend/shared/ # Frontend-local shared types and constants
 ├── tests/                 # Anchor and protocol integration tests
 ├── e2e/                   # Playwright end-to-end tests
 ├── guardrails/            # NeMo Guardrails configs and safety policies
@@ -299,7 +300,6 @@ pnpm test         # Run test suite
 ├── test-ledger/           # Local validator state and snapshots
 ├── Anchor.toml            # Anchor workspace config
 ├── Cargo.toml             # Rust workspace manifest
-├── package.json           # PNPM workspace scripts
 └── docker-compose.yml     # Local service orchestration
 ```
 

@@ -24,5 +24,4 @@ export const ENV = {
   guardrailsServerUrl: process.env.GUARDRAILS_SERVER_URL ?? "http://localhost:4001",
   guardrailsEnabled: (process.env.GUARDRAILS_ENABLED ?? "true") === "true",
   frontendUrls,
-  serveFrontend: (process.env.SERVE_FRONTEND ?? "false") === "true",
 };

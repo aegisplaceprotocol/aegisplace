@@ -210,13 +210,6 @@ async function startServer() {
     }
   });
 
-  if (ENV.serveFrontend) {
-    // A2A agent.json (redirect to agent-card.json which is served as static)
-    app.get("/.well-known/agent.json", (_req, res) => {
-      res.redirect(301, "/.well-known/agent-card.json");
-    });
-  }
-
   // SSE live feed endpoint
   app.get("/api/feed", handleSSE);
 
@@ -230,16 +223,6 @@ async function startServer() {
   );
 
   const server = createServer(app);
-
-  if (ENV.serveFrontend) {
-    if (ENV.isProduction) {
-      const { serveStatic } = await import("./vite");
-      serveStatic(app);
-    } else {
-      const { setupVite } = await import("./vite");
-      await setupVite(app, server);
-    }
-  }
 
   const requestedPort = parseInt(process.env.PORT ?? "3000", 10);
   const port = await findAvailablePort(requestedPort);
