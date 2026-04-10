@@ -123,7 +123,7 @@ export class AegisClient {
       params: { name: toolName, arguments: args as Record<string, unknown> },
     };
 
-    const res = await fetch(`${this.baseUrl}/api/mcp`, {
+    const res = await fetch(`${this.baseUrl}/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -97,7 +97,7 @@ export default function ConnectPanel() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch(apiUrl("/api/mcp"))
+    fetch(apiUrl("/mcp"))
       .then(async (response) => {
         if (!response.ok) {
           throw new Error(`Discovery failed with status ${response.status}`);

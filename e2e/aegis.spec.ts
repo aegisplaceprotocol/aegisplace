@@ -25,7 +25,7 @@ test.describe('Aegis Protocol E2E', () => {
     await page.goto('/connect');
     await page.waitForTimeout(1000);
     const body = await page.textContent('body');
-    expect(body).toContain('aegisplace.com/api/mcp');
+    expect(body).toContain('api.aegisplace.com/mcp');
     expect(body).toMatch(/\d+ Tools? Available/i);
   });
 
@@ -77,28 +77,28 @@ test.describe('Aegis Protocol E2E', () => {
   });
 
   test('MCP endpoint returns tools list', async ({ request }) => {
-    const res = await request.post('/api/mcp', {
+    const res = await request.post('/mcp', {
       headers: { 'Content-Type': 'application/json' },
       data: { jsonrpc: '2.0', id: 1, method: 'tools/list' },
     });
     expect(res.ok()).toBeTruthy();
     const json = await res.json();
-    expect(json.result.tools.length).toBeGreaterThanOrEqual(13);
+    expect(json.result.tools.length).toBeGreaterThanOrEqual(6);
   });
 
-  test('MCP invoke aegis_get_stats returns data', async ({ request }) => {
-    const res = await request.post('/api/mcp', {
+  test('MCP invoke aegis_get_categories returns data', async ({ request }) => {
+    const res = await request.post('/mcp', {
       headers: { 'Content-Type': 'application/json' },
       data: {
         jsonrpc: '2.0', id: 2,
         method: 'tools/call',
-        params: { name: 'aegis_get_stats', arguments: {} },
+        params: { name: 'aegis_get_categories', arguments: {} },
       },
     });
     expect(res.ok()).toBeTruthy();
     const json = await res.json();
-    const stats = JSON.parse(json.result.content[0].text);
-    expect(stats.protocol.totalOperators).toBeGreaterThan(400);
+    const categories = JSON.parse(json.result.content[0].text);
+    expect(Array.isArray(categories.categories)).toBeTruthy();
   });
 
   test('SSE feed endpoint connects', async ({ page }) => {

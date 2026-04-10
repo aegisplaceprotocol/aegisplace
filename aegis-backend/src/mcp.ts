@@ -913,7 +913,7 @@ async function executeTool(
 }
 
 // ────────────────────────────────────────────────────────────
-// MCP JSON-RPC 2.0 Handler (POST /api/mcp)
+// MCP JSON-RPC 2.0 Handler (POST /mcp)
 // ────────────────────────────────────────────────────────────
 
 export async function handleMCP(req: Request, res: Response) {
@@ -1092,7 +1092,7 @@ export async function handleMCP(req: Request, res: Response) {
 }
 
 // ────────────────────────────────────────────────────────────
-// MCP Discovery (GET /api/mcp)
+// MCP Discovery (GET /mcp)
 // ────────────────────────────────────────────────────────────
 
 export function handleMCPDiscovery(_req: Request, res: Response) {
@@ -1115,6 +1115,6 @@ export function handleMCPDiscovery(_req: Request, res: Response) {
     ],
     resourceTemplates: RESOURCE_TEMPLATES,
     prompts: PROMPTS.map((prompt) => ({ name: prompt.name, description: prompt.description })),
-    endpoint: "/api/mcp",
+    endpoint: "/mcp",
   });
 }

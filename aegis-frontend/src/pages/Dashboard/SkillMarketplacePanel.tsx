@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -107,6 +107,7 @@ export default function SkillMarketplacePanel() {
   const [sort, setSort] = useState("Most Popular");
   const [pricingFilter, setPricingFilter] = useState("All");
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [detailDescriptionExpanded, setDetailDescriptionExpanded] = useState(false);
 
   const operatorsQuery = trpc.creator.operatorsByWallet.useQuery(
     { walletAddress },
@@ -191,6 +192,10 @@ export default function SkillMarketplacePanel() {
 
     return result;
   }, [search, category, sort, pricingFilter, skillItems]);
+
+  useEffect(() => {
+    setDetailDescriptionExpanded(false);
+  }, [selectedSkill?.id]);
 
   if (!queryEnabled) {
     return <ConnectWalletPrompt />;
@@ -395,9 +400,58 @@ export default function SkillMarketplacePanel() {
             }
           />
           <div style={{ padding: 20 }}>
-            <div style={{ fontSize: 13, color: T.text50, lineHeight: 1.6, marginBottom: 20 }}>
-              {selectedSkill.description}
-            </div>
+            {(() => {
+              const shouldCollapseDescription = selectedSkill.description.length > 420 || selectedSkill.description.split(/\r?\n/).length > 6;
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ position: "relative" }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        color: T.text50,
+                        lineHeight: 1.6,
+                        whiteSpace: "break-spaces",
+                        maxHeight: shouldCollapseDescription && !detailDescriptionExpanded ? 210 : "none",
+                        overflow: shouldCollapseDescription && !detailDescriptionExpanded ? "hidden" : "visible",
+                      }}
+                    >
+                      {selectedSkill.description}
+                    </div>
+                    {shouldCollapseDescription && !detailDescriptionExpanded && (
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          pointerEvents: "none",
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 64,
+                          background: `linear-gradient(180deg, rgba(10,10,11,0) 0%, ${T.bg} 100%)`,
+                        }}
+                      />
+                    )}
+                  </div>
+                  {shouldCollapseDescription && (
+                    <button
+                      type="button"
+                      onClick={() => setDetailDescriptionExpanded((value) => !value)}
+                      style={{
+                        marginTop: 12,
+                        padding: 0,
+                        border: "none",
+                        background: "transparent",
+                        color: T.accent,
+                        fontSize: 12,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {detailDescriptionExpanded ? "Collapse" : "Expand"}
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Performance stats */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 20 }}>

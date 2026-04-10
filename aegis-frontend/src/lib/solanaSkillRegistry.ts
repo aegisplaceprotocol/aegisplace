@@ -118,8 +118,8 @@ async function getAnchorDiscriminator(name: string): Promise<Uint8Array> {
 
 export function priceToBaseUnits(pricePerCall: string): bigint {
   const value = Number.parseFloat(pricePerCall);
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new Error("Price per call must be a positive USDC amount");
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("Price per call must be a non-negative USDC amount");
   }
   return BigInt(Math.round(value * 1_000_000));
 }

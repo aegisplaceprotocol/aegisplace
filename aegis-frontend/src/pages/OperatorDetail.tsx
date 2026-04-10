@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -514,6 +514,7 @@ export default function OperatorDetail() {
   const invokeResultRef = useRef<HTMLDivElement>(null);
   const [invokeLoading, setInvokeLoading] = useState(false);
   const [invokeResult, setInvokeResult] = useState<PaidInvokeResult | null>(null);
+  const [aboutExpanded, setAboutExpanded] = useState(false);
 
   // ── Data fetching ────────────────────────────────────────────────────────
   const { data: operator, isLoading, error } = trpc.operator.bySlug.useQuery(
@@ -536,6 +537,10 @@ export default function OperatorDetail() {
     { operatorId: operatorHistoryId },
     { enabled: !!operatorHistoryId }
   );
+
+  useEffect(() => {
+    setAboutExpanded(false);
+  }, [slug, operator?.description, operator?.tagline]);
 
   const handleInvoke = async () => {
     if (!operator || invokeLoading) return;
@@ -576,6 +581,8 @@ export default function OperatorDetail() {
   if (error || !operator) return <NotFoundState slug={slug} />;
 
   // ── Computed values ──────────────────────────────────────────────────────
+  const aboutDescription = operator.description || operator.tagline || "No detailed description available.";
+  const shouldCollapseAbout = aboutDescription.length > 420 || aboutDescription.split(/\r?\n/).length > 6;
   const price = parseDecimal(operator.pricePerCall);
   const priceStr = fmtPrice(price);
   const successRate = operator.totalInvocations > 0
@@ -600,7 +607,7 @@ export default function OperatorDetail() {
   const unlockedSkill = extractUnlockedSkill(invokeResult);
 
   // ── Code examples (dynamic with real slug) ───────────────────────────────
-  const invokeUrl = `https://aegisplace.com/api/v1/operators/${slug}/invoke`;
+  const invokeUrl = `https://api.aegisplace.com/api/v1/operators/${slug}/invoke`;
   const checkoutUrl = `https://aegisplace.com/checkout?operatorSlug=${slug}`;
 
   const curlExample = `# 1. Start with a normal invoke request. No payment headers yet.
@@ -932,16 +939,53 @@ print(response.json()["result"])`;
                   {/* Full description */}
                   <section>
                     <SectionHeading>About this skill</SectionHeading>
-                    <p style={{
-                      fontSize: 14,
-                      color: T.text50,
-                      lineHeight: 1.8,
-                      fontFamily: FONT_SANS,
-                      whiteSpace: "pre-wrap",
-                      margin: 0,
-                    }}>
-                      {operator.description || operator.tagline || "No detailed description available."}
-                    </p>
+                    <div style={{ position: "relative" }}>
+                      <p style={{
+                        fontSize: 14,
+                        color: T.text50,
+                        lineHeight: 1.8,
+                        fontFamily: FONT_SANS,
+                        whiteSpace: "pre-wrap",
+                        margin: 0,
+                        maxHeight: shouldCollapseAbout && !aboutExpanded ? 210 : "none",
+                        overflow: shouldCollapseAbout && !aboutExpanded ? "hidden" : "visible",
+                      }}>
+                        {aboutDescription}
+                      </p>
+                      {shouldCollapseAbout && !aboutExpanded && (
+                        <div
+                          aria-hidden="true"
+                          style={{
+                            pointerEvents: "none",
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: 72,
+                            background: "linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,0.94) 100%)",
+                          }}
+                        />
+                      )}
+                    </div>
+                    {shouldCollapseAbout && (
+                      <button
+                        type="button"
+                        onClick={() => setAboutExpanded((value) => !value)}
+                        style={{
+                          marginTop: 14,
+                          padding: "0",
+                          border: "none",
+                          background: "transparent",
+                          color: T.accent,
+                          fontSize: 12,
+                          fontFamily: FONT_SANS,
+                          letterSpacing: "0.02em",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {aboutExpanded ? "Collapse" : "Expand"}
+                      </button>
+                    )}
                   </section>
 
                   {/* Technical details */}

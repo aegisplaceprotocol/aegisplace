@@ -173,9 +173,9 @@ async function startServer() {
   registerAuthRoutes(app);
 
   // MCP endpoint
-  app.use("/api/mcp", mcpLimiter);
-  app.post("/api/mcp", handleMCP);
-  app.get("/api/mcp", handleMCPDiscovery);
+  app.use("/mcp", mcpLimiter);
+  app.post("/mcp", handleMCP);
+  app.get("/mcp", handleMCPDiscovery);
 
   // REST API v1
   app.use("/api/v1", restApi);

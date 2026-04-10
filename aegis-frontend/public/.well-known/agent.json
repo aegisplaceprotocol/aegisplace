@@ -5,7 +5,7 @@
   "url": "https://aegisplace.com",
   "capabilities": {
     "mcp": {
-      "endpoint": "https://mcp.aegisplace.com/api/mcp",
+      "endpoint": "https://api.aegisplace.com/mcp",
       "transport": ["http", "sse"]
     },
     "rest": {

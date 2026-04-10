@@ -92,6 +92,8 @@ export function SkillUploadPanel({
   const slugValue = sanitizeSlug(skillSlug || skillName);
   const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
   const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
+  const numericPrice = Number.parseFloat(priceAmount);
+  const isFreeSkill = Number.isFinite(numericPrice) && numericPrice === 0;
   const canAdvanceForStep = (currentStep: number) =>
     (currentStep === 1 && Boolean(skillName.trim() && slugValue && skillCategory)) ||
     (currentStep === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && priceAmount.trim())) ||
@@ -426,12 +428,22 @@ export function SkillUploadPanel({
                 <div className="text-sm text-white/80">{slugValue || "not-set"}</div>
               </div>
               <div className="p-4" style={cardStyle}>
-                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Description</div>
-                <div className="text-xs text-white/60">{publicDescription || "No description provided"}</div>
+                <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Public Description</div>
+                <div
+                  className="max-h-56 overflow-auto rounded-lg border border-white/6 bg-black/20 p-3 text-xs leading-relaxed text-white/60"
+                  style={{ whiteSpace: "break-spaces" }}
+                >
+                  {publicDescription || "No description provided"}
+                </div>
               </div>
               <div className="p-4" style={cardStyle}>
                 <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Private SKILL.md</div>
-                <div className="text-xs text-white/60">{privateSkill || "No private skill content provided"}</div>
+                <div
+                  className="max-h-64 overflow-auto rounded-lg border border-white/6 bg-black/20 p-3 text-xs leading-relaxed text-white/60"
+                  style={{ whiteSpace: "break-spaces" }}
+                >
+                  {privateSkill || "No private skill content provided"}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4" style={cardStyle}>
@@ -440,7 +452,9 @@ export function SkillUploadPanel({
                 </div>
                 <div className="p-4" style={cardStyle}>
                   <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Pricing</div>
-                  <div className="text-sm text-white/80">{priceAmount ? `$${priceAmount}/call` : "Not set"}</div>
+                  <div className="text-sm text-white/80">
+                    {priceAmount ? (isFreeSkill ? "Free" : `$${priceAmount}/call`) : "Not set"}
+                  </div>
                 </div>
               </div>
               <div className="p-4" style={cardStyle}>
@@ -450,7 +464,9 @@ export function SkillUploadPanel({
               <div className="rounded-[5px] border border-[#10B981]/15 bg-[#10B981]/4 p-4">
                 <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-[#10B981]">How You Will Earn</div>
                 <p className="text-xs leading-relaxed text-white/55">
-                  Every time an operator unlocks your private SKILL.md, the paywall charges {priceAmount ? `$${priceAmount}` : "$0.05"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.
+                  {isFreeSkill
+                    ? "This listing will be published as a free skill. Agents can unlock the private SKILL.md without a paywall while the creator-owned listing is still recorded on Solana and the public metadata stays openly discoverable."
+                    : `Every time an operator unlocks your private SKILL.md, the paywall charges ${priceAmount ? `$${priceAmount}` : "$0.05"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.`}
                 </p>
               </div>
               <div className="p-4" style={cardStyle}>

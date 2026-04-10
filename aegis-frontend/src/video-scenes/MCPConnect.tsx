@@ -5,7 +5,7 @@ const JSON_LINES = [
   '{',
   '  "mcpServers": {',
   '    "aegis": {',
-  '      "url": "https://aegisplace.com/api/mcp"',
+  '      "url": "https://api.aegisplace.com/mcp"',
   '    }',
   '  }',
   '}',
