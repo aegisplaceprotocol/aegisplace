@@ -19,9 +19,9 @@
     "types": ["vite/client"],
     "paths": {
       "@/*": ["src/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["shared/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "../shared/**/*.ts", "../aegis-backend/src/routers.ts"],
+  "include": ["src", "vite.config.ts", "shared/**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }

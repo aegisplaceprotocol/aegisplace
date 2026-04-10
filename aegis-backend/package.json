@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.17.0",
   "engines": {
-    "node": ">=20.17.0"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch src/_core/index.ts",
-    "build": "esbuild src/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --alias:@shared=../shared",
+    "build": "esbuild src/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --alias:@shared=./shared",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
@@ -32,7 +33,7 @@
     "mongoose": "^9.3.3",
     "nanoid": "^5.1.5",
     "pino": "^10.3.1",
-    "superjson": "^1.13.3",
+    "superjson": "^2.2.6",
     "tweetnacl": "^1.0.3",
     "zod": "^4.1.12"
   },

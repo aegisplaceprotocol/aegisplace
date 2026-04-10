@@ -32,6 +32,14 @@ const T = {
 
 const FONT_SANS = "'DM Sans', 'Helvetica Neue', sans-serif";
 const FONT_MONO = "'DM Mono', 'SF Mono', 'Fira Code', monospace";
+const GRID_LINK_STYLE = {
+  display: "block",
+  width: "100%",
+  height: "100%",
+  minWidth: 0,
+  textDecoration: "none",
+  color: "inherit",
+} as const;
 
 /* ─────────────────────────────────────────────────────────────────────────────
    TYPES
@@ -814,6 +822,9 @@ function TrendingCard({
         border: `1px solid ${hovered ? T.borderHover : T.border}`,
         borderRadius: 10,
         padding: "22px 20px 18px",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
         cursor: "pointer",
         transition: "background 0.2s ease, border-color 0.2s ease",
         position: "relative",
@@ -992,6 +1003,9 @@ function RecentCard({ op, index = 0 }: { op: Operator; index?: number }) {
         border: `1px solid ${hovered ? T.borderHover : T.border}`,
         borderRadius: 10,
         padding: "22px 20px 18px",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
         cursor: "pointer",
         transition: "background 0.2s ease, border-color 0.2s ease",
         display: "flex",
@@ -1162,6 +1176,9 @@ function SkillCard({ op, index = 0 }: { op: Operator; index?: number }) {
         border: `1px solid ${hovered ? T.borderHover : T.border}`,
         borderRadius: 8,
         padding: "20px",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
         cursor: "pointer",
         transition: "background 0.2s ease, border-color 0.2s ease",
         display: "flex",
@@ -1924,24 +1941,35 @@ export default function SkillsMarketplace() {
 
         .sm-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
           gap: 14px;
+          align-items: stretch;
         }
         .trending-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
           gap: 14px;
+          align-items: stretch;
         }
         .recent-grid {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
           gap: 14px;
+          align-items: stretch;
+        }
+        .sm-grid > *,
+        .trending-grid > *,
+        .recent-grid > * {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          height: 100%;
         }
 
         @media (max-width: 1200px) {
-          .sm-grid { grid-template-columns: repeat(2, 1fr); }
-          .trending-grid { grid-template-columns: repeat(2, 1fr); }
-          .recent-grid { grid-template-columns: repeat(2, 1fr); }
+          .sm-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+          .trending-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+          .recent-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
         }
         @media (max-width: 860px) {
           .desktop-sidebar { display: none !important; }
@@ -1952,8 +1980,8 @@ export default function SkillsMarketplace() {
         }
         @media (max-width: 700px) {
           .sm-grid { grid-template-columns: 1fr; }
-          .trending-grid { grid-template-columns: repeat(2, 1fr); }
-          .recent-grid { grid-template-columns: repeat(2, 1fr); }
+          .trending-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+          .recent-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
           .hero-stats { grid-template-columns: repeat(2, 1fr) !important; }
           .featured-inner { flex-direction: column !important; }
         }
@@ -2194,7 +2222,7 @@ export default function SkillsMarketplace() {
                 <Link
                   key={op.slug || op.name}
                   href={`/marketplace/${op.slug}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  style={GRID_LINK_STYLE}
                 >
                   <TrendingCard op={op} rank={i + 1} index={i} />
                 </Link>
@@ -2244,7 +2272,7 @@ export default function SkillsMarketplace() {
                 <Link
                   key={op.slug || op.name}
                   href={`/marketplace/${op.slug}`}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  style={GRID_LINK_STYLE}
                 >
                   <RecentCard op={op} index={i} />
                 </Link>
@@ -2396,7 +2424,7 @@ export default function SkillsMarketplace() {
                       <Link
                         key={op.slug || op.name || i}
                         href={`/marketplace/${op.slug}`}
-                        style={{ textDecoration: "none", color: "inherit" }}
+                        style={GRID_LINK_STYLE}
                       >
                         <SkillCard op={op} index={i} />
                       </Link>

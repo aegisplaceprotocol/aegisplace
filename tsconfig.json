@@ -13,7 +13,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["aegis-frontend/src/*"],
-      "@shared/*": ["shared/*"]
+      "@shared/*": ["aegis-backend/shared/*", "aegis-frontend/shared/*"]
     }
   },
   "ts-node": {
@@ -22,6 +22,6 @@
     },
     "esm": false
   },
-  "include": ["aegis-backend/src/**/*.ts", "aegis-frontend/src/**/*.ts", "shared/**/*.ts", "tests/**/*.ts", "vite.config.ts"],
+  "include": ["aegis-backend/src/**/*.ts", "aegis-backend/shared/**/*.ts", "aegis-frontend/src/**/*.ts", "aegis-frontend/shared/**/*.ts", "tests/**/*.ts", "vite.config.ts"],
   "exclude": ["node_modules"]
 }

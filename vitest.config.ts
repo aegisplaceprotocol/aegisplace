@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(projectRoot, "client", "src"),
-      "@shared": path.resolve(projectRoot, "shared"),
+      "@shared": path.resolve(projectRoot, "aegis-backend", "shared"),
     },
   },
   test: {

@@ -236,7 +236,7 @@ function TrustRing({ score, size = 48 }: { score: number; size?: number }) {
 
 function SkeletonCard() {
   return (
-    <div className="card-standard p-5">
+    <div className="card-standard flex h-full flex-col p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <div className="h-4 skeleton-shimmer w-3/4 mb-2" />
@@ -254,7 +254,7 @@ function SkeletonCard() {
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between pt-3 border-t border-white/4">
+      <div className="mt-auto flex items-center justify-between border-t border-white/4 pt-3">
         <div className="h-4 skeleton-shimmer w-24" />
         <div className="h-4 skeleton-shimmer w-16" />
       </div>
@@ -266,10 +266,10 @@ function SkeletonCard() {
 
 function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="card-glass p-4 hover:border-white/10 transition-all group">
+    <div className="card-glass group flex h-full flex-col p-4 transition-all hover:border-white/10">
       <div className="text-[9px] font-bold text-white/40 tracking-widest uppercase mb-2">{label}</div>
       <div className="text-xl font-normal text-[#10B981] tracking-tight">{value}</div>
-      {sub && <div className="text-[10px] text-white/40 mt-1">{sub}</div>}
+      {sub && <div className="mt-auto pt-1 text-[10px] text-white/40">{sub}</div>}
     </div>
   );
 }
@@ -282,8 +282,9 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
   return (
     <button
       onClick={() => onSelect(skill)}
-      className="w-full text-left group relative"
+        className="group relative h-full w-full text-left"
       style={{
+        display: "block",
         background: "var(--tier-1)",
         border: "1px solid rgba(255,255,255,0.06)",
         borderTop: "1px solid rgba(16,185,129,0.20)",
@@ -305,14 +306,14 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
         el.style.boxShadow = "none";
       }}
     >
-      <div className="p-5">
+      <div className="flex h-full flex-col p-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-1.5">
               {/* Category icon */}
               <span className="text-[11px] text-white/35 font-mono">{catIcon}</span>
-              <span className="text-sm font-medium text-white/90 group-hover:text-white transition-colors tracking-[-0.025em]">
+              <span className="line-clamp-2 text-sm font-medium text-white/90 group-hover:text-white transition-colors tracking-[-0.025em]">
                 {skill.name}
               </span>
               {skill.trending && (
@@ -366,7 +367,7 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
         </div>
 
         {/* Description */}
-        <p className="text-xs text-white/50 leading-relaxed mb-4 line-clamp-2">{skill.description}</p>
+          <p className="mb-4 min-h-11 text-xs leading-relaxed text-white/50 line-clamp-2">{skill.description}</p>
 
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-3 mb-4">
@@ -400,27 +401,29 @@ function SkillCard({ skill, onSelect }: { skill: MarketplaceSkill; onSelect: (s:
         </div>
 
         {/* Tags */}
-        {skill.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {skill.tags.slice(0, 3).map((t) => (
-              <span
-                key={t}
-                className="text-[9px] font-medium px-2 py-0.5"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  color: "rgba(255,255,255,0.40)",
-                  borderRadius: "3px",
-                }}
-              >
-                {t}
-              </span>
-            ))}
+          <div className="mb-3 min-h-5.5">
+            {skill.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {skill.tags.slice(0, 3).map((t) => (
+                  <span
+                    key={t}
+                    className="px-2 py-0.5 text-[9px] font-medium"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      color: "rgba(255,255,255,0.40)",
+                      borderRadius: "3px",
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
-        )}
 
         {/* Pricing + Earnings */}
         <div
-          className="flex items-center justify-between pt-3"
+            className="mt-auto flex items-center justify-between pt-3"
           style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
         >
           <div className="flex items-center gap-2">
@@ -1211,16 +1214,16 @@ function RevenueSimulator() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mt-6">
+      <div className="mt-6 grid auto-rows-fr grid-cols-2 items-stretch gap-3">
         <div
-          className="p-4 text-center"
+          className="flex h-full flex-col justify-center p-4 text-center"
           style={{ border: "1px solid rgba(16,185,129,0.20)", background: "rgba(16,185,129,0.06)", borderRadius: "5px" }}
         >
           <div className="text-[8px] font-bold text-white/40 tracking-wider mb-1">MONTHLY</div>
           <div className="text-2xl font-semibold tracking-tight" style={{ color: "#10B981" }}>{formatMoney(monthly)}</div>
         </div>
         <div
-          className="p-4 text-center"
+          className="flex h-full flex-col justify-center p-4 text-center"
           style={{ border: "1px solid rgba(16,185,129,0.20)", background: "rgba(16,185,129,0.06)", borderRadius: "5px" }}
         >
           <div className="text-[8px] font-bold text-white/40 tracking-wider mb-1">YEARLY</div>
@@ -1400,7 +1403,7 @@ export default function SkillMarketplace() {
               </div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-3 lg:w-[320px]">
+              <div className="grid auto-rows-fr grid-cols-2 items-stretch gap-3 lg:w-[320px]">
                 <StatCard label="TOTAL PAID TO CREATORS" value={formatMoney(totalEarnings)} sub="and growing daily" />
                 <StatCard label="TOTAL SKILL CALLS" value={formatNum(totalInvocations)} sub="across all skills" />
                 <StatCard label="ACTIVE CREATORS" value={totalCreators.toString()} sub="earning revenue" />
@@ -1566,11 +1569,17 @@ export default function SkillMarketplace() {
 
           {/* Skill Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div
+              className="grid auto-rows-fr justify-center gap-3"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 360px))" }}
+            >
               {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div
+              className="grid auto-rows-fr justify-center gap-3"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 360px), 360px))" }}
+            >
               {filtered.map((skill) => (
                 <SkillCard key={skill.id} skill={skill} onSelect={setSelectedSkill} />
               ))}
@@ -1663,7 +1672,7 @@ export default function SkillMarketplace() {
           </div>
 
           {/* How Creators Earn */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-12 grid auto-rows-fr grid-cols-1 items-stretch gap-4 md:grid-cols-3">
             {[
               { num: "1", title: "Build Something Useful", desc: "Create a skill that solves a real problem. Security scanning, data analysis, trading strategies, document processing. If agents need it, someone will pay for it." },
               { num: "2", title: "Upload and Set Your Price", desc: "Upload your code, choose your pricing model (per-use, subscription, revenue share, or staked), and set your price. We handle the rest: hosting, scaling, billing, and security." },
@@ -1671,7 +1680,7 @@ export default function SkillMarketplace() {
             ].map((item) => (
               <div
                 key={item.num}
-                className="card-standard p-6 hover:border-white/12 transition-all"
+                className="card-standard flex h-full flex-col p-6 transition-all hover:border-white/12"
               >
                 <div
                   className="text-3xl font-bold mb-3"

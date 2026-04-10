@@ -59,20 +59,14 @@ interface DbOperator {
 /* ─────────────────────────────────────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────────────────────────────────────── */
-const CATEGORY_MAP: Record<string, string> = {
-  "code-review":        "Development",
-  "sentiment-analysis": "Data",
-  "data-extraction":    "Data",
-  "image-generation":   "AI / ML",
-  "text-generation":    "AI / ML",
-  "translation":        "AI / ML",
-  "summarization":      "AI / ML",
-  "classification":     "Data",
-  "search":             "Infrastructure",
-  "financial-analysis": "DeFi",
-  "security-audit":     "Security",
-  "other":              "Other",
-};
+function formatCategoryLabel(category: string): string {
+  if (!category) return "Other";
+  return category
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 function shortWallet(w: string): string {
   if (!w) return "";
@@ -169,7 +163,7 @@ function SkeletonCard({ index = 0 }: { index?: number }) {
 ───────────────────────────────────────────────────────────────────────────── */
 function OperatorCard({ op, index = 0 }: { op: DbOperator; index?: number }) {
   const [hovered, setHovered] = useState(false);
-  const displayCategory = CATEGORY_MAP[op.category] || op.category;
+  const displayCategory = formatCategoryLabel(op.category);
   const pricePerCall = parseDecimal(op.pricePerCall);
 
   return (
@@ -345,7 +339,7 @@ export default function Marketplace() {
     const ops = (data?.operators || []) as DbOperator[];
     const present = new Set(
       ops
-        .map((op) => CATEGORY_MAP[op.category] || op.category)
+        .map((op) => op.category)
         .filter(Boolean)
     );
 
@@ -357,8 +351,7 @@ export default function Marketplace() {
     const counts = new Map<string, number>();
 
     for (const op of ops) {
-      const displayCategory = CATEGORY_MAP[op.category] || op.category;
-      counts.set(displayCategory, (counts.get(displayCategory) || 0) + 1);
+      counts.set(op.category, (counts.get(op.category) || 0) + 1);
     }
 
     return counts;
@@ -373,7 +366,7 @@ export default function Marketplace() {
   const operators = useMemo(() => {
     const ops = (data?.operators || []) as DbOperator[];
     if (category === "All") return ops;
-    return ops.filter(op => (CATEGORY_MAP[op.category] || op.category) === category);
+    return ops.filter(op => op.category === category);
   }, [data, category]);
 
   const topPerformers = useMemo(() =>
@@ -627,7 +620,7 @@ export default function Marketplace() {
                 }}
               >
                 <span className="cat-label" style={{ color: "inherit", transition: "color 0.2s ease" }}>
-                  {cat}
+                  {cat === "All" ? cat : formatCategoryLabel(cat)}
                 </span>
                 <span style={{
                   fontSize: 9, color: isActive ? T.text50 : T.text20,
@@ -792,7 +785,7 @@ export default function Marketplace() {
             {/* All Operators Grid */}
             <div style={{ marginBottom: 56 }}>
               <SectionHeader
-                label={category === "All" ? "All Operators" : category}
+                label={category === "All" ? "All Operators" : formatCategoryLabel(category)}
               />
 
               {operators.length === 0 ? (
