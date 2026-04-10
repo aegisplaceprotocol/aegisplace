@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { ConnectionProvider, WalletProvider, useWallet } from "@solana/wallet-adapter-react";
-import { WalletModalProvider } from "@/components/WalletModal";
+import { WalletModalProvider, WALLET_AUTH_REQUEST_EVENT } from "@/components/WalletModal";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { apiUrl } from "@/lib/api";
 import { trpc } from "@/lib/trpc";
@@ -30,12 +30,26 @@ async function parseErrorMessage(response: Response, fallback: string): Promise<
 
 function WalletAuthSync() {
   const { publicKey, connected, signMessage } = useWallet();
-  const { isAuthenticated, user, refresh } = useAuth();
+  const { isAuthenticated, sessionChecked, user, refresh } = useAuth();
   const utils = trpc.useUtils();
   const authAttempted = useRef<string | null>(null);
+  const authRequested = useRef(false);
 
   useEffect(() => {
-    if (!connected || !publicKey || !signMessage) return;
+    if (typeof window === "undefined") return;
+
+    const handleAuthRequested = () => {
+      authRequested.current = true;
+    };
+
+    window.addEventListener(WALLET_AUTH_REQUEST_EVENT, handleAuthRequested);
+    return () => {
+      window.removeEventListener(WALLET_AUTH_REQUEST_EVENT, handleAuthRequested);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!connected || !publicKey || !signMessage || !sessionChecked) return;
 
     const wallet = publicKey.toBase58();
     const typedUser = user as { openId?: string; walletAddress?: string } | null;
@@ -43,11 +57,14 @@ function WalletAuthSync() {
 
     if (isAuthenticated && authenticatedWallet === wallet) {
       authAttempted.current = wallet;
+      authRequested.current = false;
       return;
     }
 
+    if (!authRequested.current) return;
     if (authAttempted.current === wallet) return;
     authAttempted.current = wallet;
+    authRequested.current = false;
 
     (async () => {
       try {
@@ -83,11 +100,12 @@ function WalletAuthSync() {
         toast.error(message);
       }
     })();
-  }, [connected, isAuthenticated, publicKey, refresh, signMessage, user, utils]);
+  }, [connected, isAuthenticated, publicKey, refresh, sessionChecked, signMessage, user, utils]);
 
   useEffect(() => {
     if (!connected) {
       authAttempted.current = null;
+      authRequested.current = false;
     }
   }, [connected]);
 

@@ -2,6 +2,13 @@ import { useCallback, useEffect, useState, createContext, useContext, type React
 import { useWallet, type Wallet } from "@solana/wallet-adapter-react";
 import { WalletReadyState } from "@solana/wallet-adapter-base";
 
+export const WALLET_AUTH_REQUEST_EVENT = "aegis:wallet-connect-requested";
+
+function notifyWalletConnectRequested() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(WALLET_AUTH_REQUEST_EVENT));
+}
+
 /* ---- Context for controlling modal visibility ---- */
 interface WalletModalContextState {
   visible: boolean;
@@ -18,7 +25,14 @@ export function useWalletModal() {
 }
 
 export function WalletModalProvider({ children }: { children: ReactNode }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisibleState] = useState(false);
+  const setVisible = useCallback((open: boolean) => {
+    if (open) {
+      notifyWalletConnectRequested();
+    }
+    setVisibleState(open);
+  }, []);
+
   return (
     <WalletModalContext.Provider value={{ visible, setVisible }}>
       {children}

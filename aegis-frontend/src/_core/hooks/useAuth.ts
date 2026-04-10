@@ -37,12 +37,14 @@ export function useAuth() {
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,
+      sessionChecked: meQuery.isFetched,
       error: meQuery.error ?? logoutMutation.error ?? null,
       isAuthenticated: Boolean(meQuery.data),
     };
   }, [
     meQuery.data,
     meQuery.error,
+    meQuery.isFetched,
     meQuery.isLoading,
     logoutMutation.error,
     logoutMutation.isPending,
