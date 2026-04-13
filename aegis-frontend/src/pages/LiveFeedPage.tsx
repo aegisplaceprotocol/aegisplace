@@ -317,7 +317,7 @@ export default function LiveFeedPage() {
                     { label: "Invocation Engine", status: "OPERATIONAL", ok: true },
                     { label: "Trust Validator", status: "OPERATIONAL", ok: true },
                     { label: "x402 Gateway", status: "SIMULATED", ok: true },
-                    { label: "Solana RPC", status: "DEVNET", ok: true },
+                    { label: "Solana RPC", status: "MAINNET", ok: true },
                   ].map(item => (
                     <div key={item.label} className="flex items-center justify-between">
                       <span className="text-[12px] text-white/40">{item.label}</span>

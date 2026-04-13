@@ -64,6 +64,7 @@ export interface ProgramPaymentVerificationParams {
 let connection: Connection | null = null;
 
 export function getUsdcMintForCluster(cluster = ENV.solanaCluster): string {
+  if (ENV.usdcMint) return ENV.usdcMint;
   return CLUSTER_USDC_MINTS[cluster] || CLUSTER_USDC_MINTS.devnet;
 }
 

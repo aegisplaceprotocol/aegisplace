@@ -214,7 +214,7 @@ function WalletModalDialog() {
         <div className="mx-6 mb-4 flex items-center gap-3 px-3.5 py-2.5 rounded bg-white/[0.02] border border-white/[0.04]">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/70 animate-live-glow" />
-            <span className="text-[11px] text-zinc-500">Solana Devnet</span>
+            <span className="text-[11px] text-zinc-500">Solana Mainnet</span>
           </div>
           <div className="w-px h-3 bg-white/[0.06]" />
           <span className="text-[11px] text-zinc-500">x402 Payments</span>

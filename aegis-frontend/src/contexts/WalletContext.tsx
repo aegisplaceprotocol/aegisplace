@@ -116,7 +116,7 @@ export default function SolanaWalletProvider({ children }: Props) {
   const endpoint = useMemo(() => {
     const custom = import.meta.env.VITE_SOLANA_RPC_URL;
     if (custom) return custom;
-    return clusterApiUrl("devnet");
+    return clusterApiUrl("mainnet-beta");
   }, []);
 
   const wallets = useMemo(() => [

@@ -13,7 +13,7 @@ export default function CreateSkill() {
           <div className="max-w-2xl">
             <h1 className="text-4xl font-normal tracking-tight text-white md:text-5xl">Create a skill with on-chain presence.</h1>
             <p className="mt-3 text-sm leading-6 text-white/60 md:text-base">
-              This flow registers the skill in the Aegis Solana devnet program first, then publishes the markdown listing metadata used by the frontend, REST API, and MCP server.
+              This flow registers the skill in the Aegis Solana mainnet program first, then publishes the markdown listing metadata used by the frontend, REST API, and MCP server.
             </p>
           </div>
           <Link href="/skill-marketplace" className="w-fit rounded-md border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:border-white/20 hover:text-white">
