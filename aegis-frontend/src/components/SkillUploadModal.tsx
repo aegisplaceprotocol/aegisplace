@@ -33,6 +33,8 @@ const CATEGORY_OPTIONS = [
   ["other", "Other"],
 ] as const;
 
+const MIN_PRICE_USDC = 0.0005;
+
 type OnChainCluster = "devnet" | "mainnet-beta" | "testnet";
 
 export function SkillUploadPanel({
@@ -93,10 +95,17 @@ export function SkillUploadPanel({
   const authReady = Boolean(isAuthenticated && walletAddress && (!sessionWallet || sessionWallet === walletAddress));
   const uploadEnabled = Boolean(connected && publicKey && sendTransaction && authReady) && !submitting && !registerMutation.isPending;
   const numericPrice = Number.parseFloat(priceAmount);
-  const isFreeSkill = Number.isFinite(numericPrice) && numericPrice === 0;
+  const hasValidMinimumPrice = Number.isFinite(numericPrice) && numericPrice >= MIN_PRICE_USDC;
+  const priceValidationMessage = !priceAmount.trim()
+    ? "Set a price of at least $0.0005 USDC per call"
+    : !Number.isFinite(numericPrice)
+      ? "Enter a valid numeric price"
+      : numericPrice < MIN_PRICE_USDC
+        ? "Minimum price is $0.0005 USDC per call"
+        : null;
   const canAdvanceForStep = (currentStep: number) =>
     (currentStep === 1 && Boolean(skillName.trim() && slugValue && skillCategory)) ||
-    (currentStep === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && priceAmount.trim())) ||
+    (currentStep === 2 && Boolean(publicDescription.trim() && privateSkill.trim() && hasValidMinimumPrice)) ||
     currentStep === 3 ||
     currentStep === 4;
   const canAdvance = canAdvanceForStep(step);
@@ -130,6 +139,11 @@ export function SkillUploadPanel({
 
     if (!slugValue) {
       toast.error("Provide a valid skill slug");
+      return;
+    }
+
+    if (!hasValidMinimumPrice) {
+      toast.error("Set the price to at least 0.0005 USDC per call before publishing");
       return;
     }
 
@@ -329,7 +343,10 @@ export function SkillUploadPanel({
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-white/55">Price / Call</label>
                 <input
-                  type="text"
+                  type="number"
+                  min="0.0005"
+                  step="0.000001"
+                  inputMode="decimal"
                   value={priceAmount}
                   onChange={(event) => setPriceAmount(event.target.value)}
                   placeholder="0.050000"
@@ -338,6 +355,9 @@ export function SkillUploadPanel({
                   onFocus={(event) => Object.assign(event.currentTarget.style, inputFocusStyle)}
                   onBlur={(event) => Object.assign(event.currentTarget.style, inputStyle)}
                 />
+                <p className={`mt-1 text-[11px] ${priceValidationMessage ? "text-[#f59e0b]" : "text-white/45"}`}>
+                  {priceValidationMessage ?? "Minimum price is $0.0005 USDC per call"}
+                </p>
               </div>
             </div>
             <div className="mt-4">
@@ -453,7 +473,7 @@ export function SkillUploadPanel({
                 <div className="p-4" style={cardStyle}>
                   <div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-white/30">Pricing</div>
                   <div className="text-sm text-white/80">
-                    {priceAmount ? (isFreeSkill ? "Free" : `$${priceAmount}/call`) : "Not set"}
+                    {hasValidMinimumPrice ? `$${numericPrice.toFixed(6)}/call` : "Minimum is $0.0005"}
                   </div>
                 </div>
               </div>
@@ -464,9 +484,7 @@ export function SkillUploadPanel({
               <div className="rounded-[5px] border border-[#10B981]/15 bg-[#10B981]/4 p-4">
                 <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-[#10B981]">How You Will Earn</div>
                 <p className="text-xs leading-relaxed text-white/55">
-                  {isFreeSkill
-                    ? "This listing will be published as a free skill. Agents can unlock the private SKILL.md without a paywall while the creator-owned listing is still recorded on Solana and the public metadata stays openly discoverable."
-                    : `Every time an operator unlocks your private SKILL.md, the paywall charges ${priceAmount ? `$${priceAmount}` : "$0.05"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.`}
+                  Every time an operator unlocks your private SKILL.md, the paywall charges {hasValidMinimumPrice ? `$${numericPrice.toFixed(6)}` : "$0.0005 or more"} and records the creator-owned listing on Solana while the public metadata stays openly discoverable.
                 </p>
               </div>
               <div className="p-4" style={cardStyle}>

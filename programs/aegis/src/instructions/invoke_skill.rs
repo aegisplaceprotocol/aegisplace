@@ -22,8 +22,8 @@ pub fn handler(ctx: Context<InvokeSkill>) -> Result<()> {
 
     // Operator must be active to accept invocations.
     require!(operator.is_active, AegisError::OperatorNotActive);
-    // Safety net: free operators are valid at 0, otherwise enforce the paid floor.
-    require!(operator.price_usdc_base == 0 || operator.price_usdc_base >= 10_000, AegisError::PriceTooLow);
+    // Safety net: free operators are valid at 0, otherwise enforce the 0.0005 USDC paid floor.
+    require!(operator.price_usdc_base == 0 || operator.price_usdc_base >= 500, AegisError::PriceTooLow);
 
     let config = &ctx.accounts.config;
     let amount = operator.price_usdc_base;

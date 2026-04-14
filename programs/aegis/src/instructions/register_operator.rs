@@ -20,8 +20,8 @@ pub fn handler(
     require!(name.len() <= 64, AegisError::NameTooLong);
     require!(slug.len() <= 64, AegisError::SlugTooLong);
     require!(metadata_uri.len() <= 200, AegisError::MetadataUriTooLong);
-    // Free operators are allowed at 0. Paid operators must respect the $0.01 floor.
-    require!(price_usdc_base == 0 || price_usdc_base >= 10_000, AegisError::PriceTooLow);
+    // Free operators are allowed at 0. Paid operators must respect the $0.0005 floor.
+    require!(price_usdc_base == 0 || price_usdc_base >= 500, AegisError::PriceTooLow);
     require!(
         slug
             .bytes()

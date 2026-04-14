@@ -78,8 +78,8 @@ pub enum AegisError {
     #[msg("Duplicate accounts where distinct accounts are required")]
     DuplicateAccounts,
 
-    /// Operator price must be zero for free operators or at least 10,000 base units ($0.01 USDC).
-    #[msg("Operator price must be zero for free listings or meet the minimum paid floor")]
+    /// Operator price must be zero for free operators or at least 500 base units ($0.0005 USDC).
+    #[msg("Operator price must be zero for free listings or at least 0.0005 USDC")]
     PriceTooLow,
 
     /// Trust score delta exceeds the maximum allowed per update (+/- 500).
